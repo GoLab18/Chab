@@ -1,5 +1,5 @@
-import 'package:chatise_app/components/button_template.dart';
-import 'package:chatise_app/components/custom_textfield.dart';
+import 'package:chab/components/button_template.dart';
+import 'package:chab/components/custom_textfield.dart';
 import 'package:flutter/material.dart';
 
 class RegisterPage extends StatelessWidget {

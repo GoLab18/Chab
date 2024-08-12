@@ -1,5 +1,5 @@
-import 'package:chatise_app/pages/login_page.dart';
-import 'package:chatise_app/pages/register_page.dart';
+import 'package:chab/pages/login_page.dart';
+import 'package:chab/pages/register_page.dart';
 import 'package:flutter/material.dart';
 
 class LoginRegister extends StatefulWidget {

@@ -1,4 +1,4 @@
-package com.example.chatise_app
+package com.example.chab
 
 import io.flutter.embedding.android.FlutterActivity
 

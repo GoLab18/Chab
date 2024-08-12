@@ -1,5 +1,5 @@
-import 'package:chatise_app/authentication/login_register.dart';
-import 'package:chatise_app/themes/light_mode.dart';
+import 'package:chab/authentication/login_register.dart';
+import 'package:chab/themes/light_mode.dart';
 import 'package:flutter/material.dart';
 
 void main() {

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "chatise_app" "\0"
+            VALUE "FileDescription", "chab" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "chatise_app" "\0"
+            VALUE "InternalName", "chab" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "chatise_app.exe" "\0"
-            VALUE "ProductName", "chatise_app" "\0"
+            VALUE "OriginalFilename", "chab.exe" "\0"
+            VALUE "ProductName", "chab" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -1,6 +1,6 @@
 {
-    "name": "chatise_app",
-    "short_name": "chatise_app",
+    "name": "chab",
+    "short_name": "chab",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
