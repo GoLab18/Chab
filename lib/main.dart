@@ -1,4 +1,4 @@
-import 'package:chab/authentication/login_register.dart';
+import 'package:chab/authentication/auth_gate.dart';
 import 'package:chab/firebase_options.dart';
 import 'package:chab/themes/light_mode.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: "Chatise",
       theme: lightMode,
-      home: const LoginRegister()
+      home: const AuthGate()
     );
   }
 }
