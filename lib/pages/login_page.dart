@@ -1,3 +1,4 @@
+import 'package:chab/authentication/auth_service.dart';
 import 'package:chab/components/button_template.dart';
 import 'package:chab/components/custom_textfield.dart';
 import 'package:flutter/material.dart';
@@ -13,8 +14,27 @@ class LoginPage extends StatelessWidget {
     required this.toggleRegisterPage
   });
 
-  void login() {
+  void login(BuildContext context) async {
+    final authService = AuthService();
 
+    try {
+      await authService.signInWithEmailAndPassword(
+        _emailController.text,
+        _pwdController.text
+      );
+    } catch (e) {
+      // Check for async purposes, so that the dialog shows if the widget is still in the widget tree
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(
+              e.toString()
+            )
+          )
+        );
+      }
+    }
   }
 
   @override
@@ -80,7 +100,7 @@ class LoginPage extends StatelessWidget {
               // login button
               ButtonTemplate(
                 buttonText: "Login",
-                onButtonPressed: login
+                onButtonPressed: () => login(context)
               ),
           
               const SizedBox(height: 20),
