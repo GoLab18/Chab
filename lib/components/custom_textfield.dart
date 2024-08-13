@@ -15,6 +15,7 @@ class CustomTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: inputController,
       obscureText: isObscured,
       decoration: InputDecoration(
         filled: true,
