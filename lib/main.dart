@@ -1,28 +1,25 @@
-import 'package:chab/authentication/auth_gate.dart';
 import 'package:chab/firebase_options.dart';
-import 'package:chab/themes/light_mode.dart';
+import 'package:chab/my_app.dart';
+import 'package:chab/util/shared_preferences_util.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:user_repository/user_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  /// Initialize firebase
   await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+    options: DefaultFirebaseOptions.currentPlatform
   );
 
-  runApp(const MyApp());
-}
+  await SharedPreferencesUtil.init();
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "Chatise",
-      theme: lightMode,
-      home: const AuthGate()
-    );
-  }
+  runApp(
+    RepositoryProvider(
+      create: (context) => FirebaseUserRepository(),
+      child: const MyApp()
+    )
+  );
 }
