@@ -5,10 +5,14 @@ import 'package:chab/components/drawer_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class CustomDrawer extends StatelessWidget {
+class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
 
+  @override
+  State<CustomDrawer> createState() => _CustomDrawerState();
+}
 
+class _CustomDrawerState extends State<CustomDrawer> {
   void logout() {
     context.read<SignInBloc>().add(SignOutRequested());
     context.read<AuthBloc>().add(const AuthUserChanged());
@@ -17,40 +21,62 @@ class CustomDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      shape: const BeveledRectangleBorder(),
       child: Center(
         child: ListView(
-          padding: const EdgeInsets.all(10),
           children: [
-            DrawerHeader(
-              child: Icon(
-                Icons.message_sharp,
-                color: Theme.of(context).colorScheme.primary
-              )
+            const DrawerBar(
+
             ),
-        
+            
+            Divider(
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+
+            // Profile
+            DrawerTile(
+              tileIcon: Icons.person_outline,
+              title: "Profile",
+              onTap: () {}
+            ),
+
+            Divider(
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+
+            // New Group
+            DrawerTile(
+              tileIcon: Icons.group_add_outlined,
+              title: "New Group",
+              onTap: () {}
+            ),
+
+            // Add Friends
+            DrawerTile(
+              tileIcon: Icons.person_add_alt_1_outlined,
+              title: "Add Friends",
+              onTap: () {}
+            ),
+
+            Divider(
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+
+            // Settings
+            DrawerTile(
+              tileIcon: Icons.settings_outlined,
+              title: "Settings",
+              onTap: () {}
+            ),
+
             // Logout
-            ListTile(
-              onTap: () => logout(),
-              leading: const Icon(
-                Icons.logout_outlined
-              ),
-              title: Center(
-                child: Text(
-                  "Logout",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold
-                  )
-                ),
-              ),
-              titleAlignment: ListTileTitleAlignment.center,
-              trailing: const Icon(
-                Icons.arrow_back
-              )
+            DrawerTile(
+              tileIcon: Icons.logout_outlined,
+              title: "Logout",
+              onTap: logout
             )
           ]
-        ),
+        )
       )
     );
   }
