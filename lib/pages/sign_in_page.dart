@@ -24,6 +24,9 @@ class _SignInPageState extends State<SignInPage> {
   bool isObscured = true;
   bool signInTriggered = false;
 
+  String? error;
+  bool isErrorVisible = false;
+
   void toggleObscuredText() {
     setState(() {
       isObscured = !isObscured;
@@ -112,24 +115,54 @@ class _SignInPageState extends State<SignInPage> {
 
                 const SizedBox(height: 10),
 
-                // Sign in button
                 BlocListener<SignInBloc, SignInState>(
                   listener: (context, state) {
                     setState(() {
-                      if (state is SignInSuccess) signInTriggered = false;
-                      if (state is SignInPending) signInTriggered = true;
-                      if (state is SignInFailure) signInTriggered = false;
+                      if (state is SignInSuccess) {
+                        isErrorVisible = false;
+                        signInTriggered = false;
+                      } else if (state is SignInPending) {
+                        signInTriggered = true;
+                      } else if (state is SignInFailure) {
+                        error = state.error;
+                        isErrorVisible = true;
+                        signInTriggered = false;
+                      }
                     });
                   },
                   child: !signInTriggered
-                    ? ButtonTemplate(
-                      buttonText: "Sign In",
-                      onButtonPressed: login
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+
+                        // Sign in button
+                        ButtonTemplate(
+                          buttonText: "Sign In",
+                          onButtonPressed: login
+                        ),
+                        
+                        // Error message
+                        Visibility(
+                          visible: isErrorVisible,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Center(
+                              child: Text(
+                                error ?? "",
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color.fromARGB(255, 209, 53, 42)
+                                )
+                              )
+                            )
+                          )
+                        )
+                      ]
                     )
                     : Center(
                       child: CircularProgressIndicator(
                         color: Theme.of(context).colorScheme.primary
-                      ),
+                      )
                     )
                 ),
 

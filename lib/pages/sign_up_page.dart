@@ -26,8 +26,10 @@ class _SignUpPageState extends State<SignUpPage> {
   IconData iconPassword = Icons.visibility;
   bool isObscuredPwd = true;
   bool isObscuredConfirmPwd = true;
-
   bool signUpTriggered = false;
+
+  String? error;
+  bool isErrorVisible = false;
 
   void register() {
     if (_formKey.currentState!.validate()) {
@@ -163,19 +165,49 @@ class _SignUpPageState extends State<SignUpPage> {
 
                 const SizedBox(height: 10),
 
-                // Sign up button
                 BlocListener<SignUpBloc, SignUpState>(
                   listener: (context, state) {
                     setState(() {
-                      if (state is SignUpSuccess) signUpTriggered = false;
-                      if (state is SignUpPending) signUpTriggered = true;
-                      if (state is SignUpFailure) signUpTriggered = false;
+                      if (state is SignUpSuccess) {
+                        isErrorVisible = false;
+                        signUpTriggered = false;
+                      } else if (state is SignUpPending) {
+                        signUpTriggered = true;
+                      } else if (state is SignUpFailure) {
+                        error = state.error;
+                        isErrorVisible = true;
+                        signUpTriggered = false;
+                      }
                     });
                   },
                   child: !signUpTriggered
-                    ? ButtonTemplate(
-                      buttonText: "Sign Up",
-                      onButtonPressed: register
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+
+                        // Sign up button
+                        ButtonTemplate(
+                          buttonText: "Sign Up",
+                          onButtonPressed: register
+                        ),
+                        
+                        // Error message
+                        Visibility(
+                          visible: isErrorVisible,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Center(
+                              child: Text(
+                                error ?? "",
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color.fromARGB(255, 209, 53, 42)
+                                )
+                              )
+                            )
+                          )
+                        )
+                      ]
                     )
                     : Center(
                       child: CircularProgressIndicator(
