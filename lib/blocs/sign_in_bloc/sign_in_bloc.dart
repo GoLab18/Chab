@@ -15,12 +15,12 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
     on<SignInRequested>((event, emit) async {
       emit(SignInPending());
 
-      try {
-        await userRepository.signIn(event.email, event.password);
+      String? error = await userRepository.signIn(event.email, event.password);
 
+      if (error == null) {
         emit(SignInSuccess());
-      } catch (e) {
-        emit(const SignInFailure());
+      } else {
+        emit(SignInFailure(error));
       }
     });
 
