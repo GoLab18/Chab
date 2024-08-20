@@ -33,11 +33,17 @@ class _SignUpPageState extends State<SignUpPage> {
     if (_formKey.currentState!.validate()) {
       Usr usr = Usr.empty;
 
-      usr.copyWith(
-          email: _emailController.text, name: _usernameController.text);
+      usr = usr.copyWith(
+        email: _emailController.text,
+        name: _usernameController.text
+      );
 
       context.read<SignUpBloc>().add(
-          SignUpRequested(user: usr, password: _confirmPwdController.text));
+        SignUpRequested(
+          user: usr,
+          password: _confirmPwdController.text
+        )
+      );
     }
   }
 
@@ -173,8 +179,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     : Center(
                       child: CircularProgressIndicator(
                         color: Theme.of(context).colorScheme.primary
-                      ),
-                    ),
+                      )
+                    )
                 ),
 
                 const SizedBox(height: 20),
