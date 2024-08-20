@@ -1,14 +1,17 @@
-import 'package:chab/authentication/auth_service.dart';
+import 'package:chab/blocs/auth_bloc/auth_bloc.dart';
+import 'package:chab/blocs/sign_in_bloc/sign_in_bloc.dart';
+import 'package:chab/components/drawer_bar.dart';
+import 'package:chab/components/drawer_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
 
 
   void logout() {
-    final authService = AuthService();
-    
-    authService.signOut();
+    context.read<SignInBloc>().add(SignOutRequested());
+    context.read<AuthBloc>().add(const AuthUserChanged());
   }
 
   @override
