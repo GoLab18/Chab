@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "828149451183",
-    "project_id": "chab-4a61e",
-    "storage_bucket": "chab-4a61e.appspot.com"
+    "project_number": "800575881697",
+    "project_id": "chab-bb409",
+    "storage_bucket": "chab-bb409.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:828149451183:android:171259ba2819cdab8cc75a",
+        "mobilesdk_app_id": "1:800575881697:android:2d493f5a4dbca05b54d2a0",
         "android_client_info": {
           "package_name": "com.example.chab"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDwe1yc1-xRCAA_fwI9vqtlRTEIYlofPCQ"
+          "current_key": "AIzaSyBZkse9EE6nyRwOYH_qSaLzgIcOsZ0HzdQ"
         }
       ],
       "services": {

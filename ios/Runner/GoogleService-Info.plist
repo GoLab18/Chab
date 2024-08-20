@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyD0VmUVkLvwzXsA3QrMOYYRR3RBu4jy0g8</string>
+	<string>AIzaSyC_tz_Nbw6TZhKrn9lJ9PRHR5lSOQ8y0lE</string>
 	<key>GCM_SENDER_ID</key>
-	<string>828149451183</string>
+	<string>800575881697</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.example.chatiseApp</string>
 	<key>PROJECT_ID</key>
-	<string>chab-4a61e</string>
+	<string>chab-bb409</string>
 	<key>STORAGE_BUCKET</key>
-	<string>chab-4a61e.appspot.com</string>
+	<string>chab-bb409.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:828149451183:ios:c3b142da337b8f2b8cc75a</string>
+	<string>1:800575881697:ios:c8345cb2da70f4da54d2a0</string>
 </dict>
 </plist>

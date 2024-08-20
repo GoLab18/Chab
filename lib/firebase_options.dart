@@ -50,19 +50,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDwe1yc1-xRCAA_fwI9vqtlRTEIYlofPCQ',
-    appId: '1:828149451183:android:171259ba2819cdab8cc75a',
-    messagingSenderId: '828149451183',
-    projectId: 'chab-4a61e',
-    storageBucket: 'chab-4a61e.appspot.com',
+    apiKey: 'AIzaSyBZkse9EE6nyRwOYH_qSaLzgIcOsZ0HzdQ',
+    appId: '1:800575881697:android:2d493f5a4dbca05b54d2a0',
+    messagingSenderId: '800575881697',
+    projectId: 'chab-bb409',
+    storageBucket: 'chab-bb409.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyD0VmUVkLvwzXsA3QrMOYYRR3RBu4jy0g8',
-    appId: '1:828149451183:ios:c3b142da337b8f2b8cc75a',
-    messagingSenderId: '828149451183',
-    projectId: 'chab-4a61e',
-    storageBucket: 'chab-4a61e.appspot.com',
+    apiKey: 'AIzaSyC_tz_Nbw6TZhKrn9lJ9PRHR5lSOQ8y0lE',
+    appId: '1:800575881697:ios:c8345cb2da70f4da54d2a0',
+    messagingSenderId: '800575881697',
+    projectId: 'chab-bb409',
+    storageBucket: 'chab-bb409.appspot.com',
     iosBundleId: 'com.example.chatiseApp',
   );
+
 }
