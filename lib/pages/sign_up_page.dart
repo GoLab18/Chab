@@ -95,6 +95,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   hintText: "Username..",
                   inputController: _usernameController,
                   keyboardType: TextInputType.emailAddress,
+                  validator: (String? textField) => validateUsername(textField),
                   prefixIconData: Icons.person_2_outlined
                 ),
 
@@ -136,7 +137,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   hintText: "Confirm password..",
                   inputController: _confirmPwdController,
                   keyboardType: TextInputType.visiblePassword,
-                  validator: (String? textField) => validatePassword(textField),
+                  validator: (String? textField) => validateConfirmPassword(textField, _pwdController.text),
                   prefixIconData: Icons.lock_outline,
                   isObscured: isObscuredConfirmPwd,
                   suffixIconButtonData: isObscuredConfirmPwd
