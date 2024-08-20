@@ -38,10 +38,11 @@ class Usr extends Equatable {
     String? name,
     String? picture
   }) {
-    return Usr(id: id ?? this.id,
-    email: email ?? this.email,
-    name: name ?? this.name,
-    picture: picture ?? this.picture
+    return Usr(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      picture: picture ?? this.picture
     );
   }
   
