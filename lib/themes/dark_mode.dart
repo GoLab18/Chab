@@ -10,6 +10,7 @@ ThemeData darkMode = ThemeData(
     inversePrimary: Color.fromARGB(255, 210, 234, 221),
     error: Color.fromARGB(255, 176, 0, 32)
   ),
+  hintColor: const Color.fromARGB(255, 153, 177, 164),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
     foregroundColor: Color.fromARGB(255, 210, 234, 221),
     backgroundColor: Color.fromARGB(255, 38, 94, 58)
