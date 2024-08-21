@@ -1,6 +1,7 @@
-import 'package:chab/components/custom_app_bar.dart';
-import 'package:chab/components/custom_drawer.dart';
 import 'package:flutter/material.dart';
+
+import '../components/custom_app_bar.dart';
+import '../components/drawer/custom_drawer.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
