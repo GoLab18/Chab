@@ -1,9 +1,10 @@
 import 'package:chab/blocs/auth_bloc/auth_bloc.dart';
 import 'package:chab/blocs/sign_in_bloc/sign_in_bloc.dart';
-import 'package:chab/components/drawer_bar.dart';
-import 'package:chab/components/drawer_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'drawer_bar.dart';
+import 'drawer_tile.dart';
 
 class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
