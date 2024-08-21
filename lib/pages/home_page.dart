@@ -1,3 +1,4 @@
+import 'package:chab/components/custom_app_bar.dart';
 import 'package:chab/components/custom_drawer.dart';
 import 'package:flutter/material.dart';
 
@@ -6,10 +7,10 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      drawer: const CustomDrawer(),
-      body: const Column()
+    return const Scaffold(
+      appBar: CustomAppBar(),
+      drawer: CustomDrawer(),
+      body: Column()
     );
   }
 }
