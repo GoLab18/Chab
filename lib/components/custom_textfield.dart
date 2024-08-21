@@ -54,6 +54,9 @@ class CustomTextField extends StatelessWidget {
           color: Theme.of(context).colorScheme.tertiary
         ),
         errorText: errorText,
+        errorStyle: TextStyle(
+          color: Theme.of(context).colorScheme.error
+        ),
         filled: true,
         fillColor: Theme.of(context).colorScheme.secondary,
         enabledBorder: OutlineInputBorder(

@@ -6,7 +6,8 @@ ThemeData lightMode = ThemeData(
     primary: Color.fromARGB(255, 34, 85, 52),
     secondary: Color.fromARGB(255, 133, 193, 153),
     tertiary: Color.fromARGB(255, 210, 234, 221),
-    inversePrimary: Color.fromARGB(255, 24, 58, 38)
+    inversePrimary: Color.fromARGB(255, 24, 58, 38),
+    error: Color.fromARGB(255, 209, 53, 42)
   ),
   hintColor: const Color.fromARGB(255, 147, 164, 186),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(

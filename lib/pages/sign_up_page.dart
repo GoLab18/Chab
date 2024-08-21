@@ -199,9 +199,9 @@ class _SignUpPageState extends State<SignUpPage> {
                             child: Center(
                               child: Text(
                                 error ?? "",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
-                                  color: Color.fromARGB(255, 209, 53, 42)
+                                  color: Theme.of(context).colorScheme.error
                                 )
                               )
                             )
