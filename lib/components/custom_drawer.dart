@@ -21,13 +21,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      width: 260,
       shape: const BeveledRectangleBorder(),
       child: Center(
         child: ListView(
           children: [
-            const DrawerBar(
 
-            ),
+            // Bar with user info and theme toggle
+            const DrawerBar(),
             
             Divider(
               color: Theme.of(context).colorScheme.inversePrimary,
