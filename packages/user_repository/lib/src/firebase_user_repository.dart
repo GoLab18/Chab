@@ -69,8 +69,10 @@ class FirebaseUserRepository implements UserRepository {
           return 'Invalid email';
         case 'wrong-password':
           return 'Wrong password';
+        case 'invalid-credential':
+          return 'Wrong password';
         case 'user-not-found':
-          return 'Account not found corresponding to the email';
+          return 'Account corresponding to this email not found';
         case 'too-many-requests':
           return 'Too many attempts, try again later';
         case 'user-disabled':
