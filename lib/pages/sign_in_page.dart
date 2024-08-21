@@ -173,9 +173,9 @@ class _SignInPageState extends State<SignInPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account? ",
+                      "Don't have an account?  ",
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.tertiary
+                        color: Theme.of(context).colorScheme.primary
                       )
                     ),
                     GestureDetector(

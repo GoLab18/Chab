@@ -223,9 +223,9 @@ class _SignUpPageState extends State<SignUpPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Already have an account? ",
+                      "Already have an account?  ",
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.tertiary
+                          color: Theme.of(context).colorScheme.primary
                         )
                     ),
                     GestureDetector(
