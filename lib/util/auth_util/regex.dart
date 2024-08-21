@@ -36,6 +36,20 @@ String? validatePassword(String? password) {
   return null;
 }
 
+/// Email validation for login
+String? loginEmail(String? email) {
+  if (email!.isEmpty) return "Email must be provided";
+  
+  return null;
+}
+
+/// Password validation for login
+String? loginPassword(String? password) {
+  if (password!.isEmpty) return 'Password must be provided';
+  
+  return null;
+}
+
 /// Returns an error message regarding confirmation password's requirements,
 /// if all are met, falls back to a null value
 String? validateConfirmPassword(String? password, String? confirmPassword) {

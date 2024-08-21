@@ -82,7 +82,7 @@ class _SignInPageState extends State<SignInPage> {
                   hintText: "Email..",
                   inputController: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  validator: (String? textField) => validateEmail(textField),
+                  validator: (String? textField) => loginEmail(textField),
                   prefixIconData: Icons.email_outlined
                 ),
 
@@ -93,7 +93,7 @@ class _SignInPageState extends State<SignInPage> {
                   hintText: "Password..",
                   inputController: _pwdController,
                   keyboardType: TextInputType.visiblePassword,
-                  validator: (String? textField) => validatePassword(textField),
+                  validator: (String? textField) => loginPassword(textField),
                   prefixIconData: Icons.lock_outline,
                   isObscured: isObscured,
                   suffixIconButtonData: isObscured
