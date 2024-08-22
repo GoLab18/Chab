@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-import '../entities/usr_entity.dart';
+/// The type definition for a JSON-serializable [Map].
+typedef JsonMap = Map<String, dynamic>;
 
 class Usr extends Equatable {
   final String id;
@@ -43,23 +44,23 @@ class Usr extends Equatable {
     );
   }
   
-  /// Conversion to entity object for serialization utility.
-  UsrEntity toEntity() {
-    return UsrEntity(
-      id: id,
-      email: email,
-      name: name,
-      picture: picture
-    );
+  /// Data serialization for database storage.
+  JsonMap toDocument() {
+    return {
+      "id": id,
+      "email": email,
+      "name": name,
+      "picture": picture
+    };
   }
-
-  /// Conversion from the entity object.
-  static Usr fromEntity(UsrEntity entity) {
+  
+  /// Database data deserialization.
+  static Usr fromDocument(JsonMap doc) {
     return Usr(
-      id: entity.id,
-      email: entity.email,
-      name: entity.name,
-      picture: entity.picture
+      id: doc["id"] as String,
+      email: doc["email"] as String,
+      name: doc["name"] as String,
+      picture: doc["picture"] as String
     );
   }
 }

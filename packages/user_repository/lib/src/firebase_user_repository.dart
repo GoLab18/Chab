@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:user_repository/src/models/usr.dart';
-import 'entities/usr_entity.dart';
 import 'util/result.dart';
 
 class FirebaseUserRepository {
@@ -89,6 +88,7 @@ class FirebaseUserRepository {
     }
   }
 
+  /// Sends a reset password email to a specified [email].
   Future<void> resetPassword(String email) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(
@@ -101,7 +101,7 @@ class FirebaseUserRepository {
 
   Future<void> setUserData(Usr user) async {
     try {
-      await usersCollection.doc(user.id).set(user.toEntity().toDocument());
+      await usersCollection.doc(user.id).set(user.toDocument());
     } catch (e) {
       throw Exception(e);
     }
@@ -110,7 +110,7 @@ class FirebaseUserRepository {
   Future<Usr> getUsr(String usrId) async {
     try {
       return await usersCollection.doc(usrId).get().then((value) =>
-        Usr.fromEntity(UsrEntity.fromDocument(value.data()!))
+        Usr.fromDocument(value.data()!)
       );
     } catch (e) {
       throw Exception(e);
