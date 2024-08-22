@@ -2,10 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:user_repository/src/models/usr.dart';
 import 'entities/usr_entity.dart';
-import 'user_repo.dart';
 import 'util/result.dart';
 
-class FirebaseUserRepository implements UserRepository {
+class FirebaseUserRepository {
   late final FirebaseAuth _firebaseAuth;
   final CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore.instance.collection("users");
 
@@ -13,7 +12,6 @@ class FirebaseUserRepository implements UserRepository {
     FirebaseAuth? firebaseAuth
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
 
-  @override
   Stream<User?> get user {
     return _firebaseAuth.authStateChanges().map<User?>((User? fbUser) {
       return fbUser;
@@ -22,7 +20,6 @@ class FirebaseUserRepository implements UserRepository {
 
   /// Connects to firebase authentication and signs up
   /// Returns appropriate [Result] type on success or failure
-  @override
   Future<Result<Usr, String>> signUp(Usr user, String password) async {
     try {
       UserCredential newUser = await _firebaseAuth.createUserWithEmailAndPassword(
@@ -54,7 +51,6 @@ class FirebaseUserRepository implements UserRepository {
   /// Connects to firebase authentication and signs in
   /// Returns null if sign in was successful
   /// Returns appropriate errors if sign in was unsuccessful
-  @override
   Future<String?> signIn(String email, String password) async {
     try {
       await _firebaseAuth.signInWithEmailAndPassword(
@@ -85,7 +81,6 @@ class FirebaseUserRepository implements UserRepository {
     }
   }
 
-  @override
   Future<void> signOut() async {
     try {
       await _firebaseAuth.signOut();
@@ -94,7 +89,6 @@ class FirebaseUserRepository implements UserRepository {
     }
   }
 
-  @override
   Future<void> resetPassword(String email) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(
@@ -105,23 +99,21 @@ class FirebaseUserRepository implements UserRepository {
     }
   }
 
-  @override
   Future<void> setUserData(Usr user) async {
     try {
       await usersCollection.doc(user.id).set(user.toEntity().toDocument());
-    } on FirebaseAuthException catch (e) {
-      throw Exception(e.code);
+    } catch (e) {
+      throw Exception(e);
     }
   }
 
-  @override
   Future<Usr> getUsr(String usrId) async {
     try {
       return await usersCollection.doc(usrId).get().then((value) =>
         Usr.fromEntity(UsrEntity.fromDocument(value.data()!))
       );
-    } on FirebaseAuthException catch (e) {
-      throw Exception(e.code);
+    } catch (e) {
+      throw Exception(e);
     }
   }
 }
