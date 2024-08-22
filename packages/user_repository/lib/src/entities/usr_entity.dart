@@ -7,7 +7,7 @@ class UsrEntity extends Equatable{
   final String id;
   final String email;
   final String name;
-  final String? picture;
+  final String picture;
 
   const UsrEntity({
     required this.id,
@@ -19,6 +19,7 @@ class UsrEntity extends Equatable{
   @override
   List<Object?> get props => [id, email, name, picture];
 
+  /// Data serialization for database storage.
   JsonMap toDocument() {
     return {
       "id": id,
@@ -28,22 +29,13 @@ class UsrEntity extends Equatable{
     };
   }
   
+  /// Database data deserialization.
   static UsrEntity fromDocument(JsonMap doc) {
     return UsrEntity(
       id: doc["id"] as String,
       email: doc["email"] as String,
       name: doc["name"] as String,
-      picture: doc["picture"] as String?
+      picture: doc["picture"] as String
     );
-  }
-  
-  @override
-  String toString() {
-    return '''UsrEntity: {
-    id: $id
-    email: $email
-    name: $name
-    picture: $picture
-    }''';
   }
 }

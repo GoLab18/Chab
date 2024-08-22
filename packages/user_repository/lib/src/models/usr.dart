@@ -1,12 +1,12 @@
 import 'package:equatable/equatable.dart';
 
-import '../entities/entities.dart';
+import '../entities/usr_entity.dart';
 
 class Usr extends Equatable {
   final String id;
   final String email;
   final String name;
-  final String? picture;
+  final String picture;
 
   const Usr({
     required this.id,
@@ -25,13 +25,10 @@ class Usr extends Equatable {
     picture: ""
   );
 
-  /// Getter for checking if the user is empty
+  /// Getter for checking if the user is empty.
   bool get isEmpty => this == Usr.empty;
 
-  /// Getter for checking if the user is not empty
-  bool get isNotEmpty => this != Usr.empty;
-
-  /// Returns a copy of `user` with the given values
+  /// Returns a copy of the user with the given values.
   Usr copyWith({
     String? id,
     String? email,
@@ -46,6 +43,7 @@ class Usr extends Equatable {
     );
   }
   
+  /// Conversion to entity object for serialization utility.
   UsrEntity toEntity() {
     return UsrEntity(
       id: id,
@@ -55,6 +53,7 @@ class Usr extends Equatable {
     );
   }
 
+  /// Conversion from the entity object.
   static Usr fromEntity(UsrEntity entity) {
     return Usr(
       id: entity.id,
