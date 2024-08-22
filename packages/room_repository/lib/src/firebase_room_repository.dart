@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:room_repository/room_repository.dart';
 
+import 'models/models.dart';
 import 'util/chat_room_tuple.dart';
 
 class FirebaseRoomRepository {
