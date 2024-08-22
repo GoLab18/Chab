@@ -21,6 +21,9 @@ dependencies:
   user_repository:
     path: packages/user_repository
 
+  room_repository:
+    path: packages/room_repository
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
