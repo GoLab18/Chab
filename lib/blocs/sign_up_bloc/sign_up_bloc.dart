@@ -7,7 +7,7 @@ part 'sign_up_event.dart';
 part 'sign_up_state.dart';
 
 class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
-  final UserRepository userRepository;
+  final FirebaseUserRepository userRepository;
 
   SignUpBloc({
     required this.userRepository

@@ -10,7 +10,7 @@ part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final UserRepository userRepository;
+  final FirebaseUserRepository userRepository;
   late final StreamSubscription<User?> userSubscription;
 
   AuthBloc({

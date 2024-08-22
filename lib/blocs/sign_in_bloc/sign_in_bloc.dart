@@ -7,7 +7,7 @@ part 'sign_in_event.dart';
 part 'sign_in_state.dart';
 
 class SignInBloc extends Bloc<SignInEvent, SignInState> {
-  final UserRepository userRepository;
+  final FirebaseUserRepository userRepository;
   
   SignInBloc({
     required this.userRepository
