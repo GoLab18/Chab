@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../components/account_tile.dart';
 import '../components/button_template.dart';
 import 'home_page.dart';
 
@@ -21,30 +22,9 @@ class ChangeAccountPage extends StatelessWidget {
               itemCount: accountsAmount + 1, // +1 is for the text field
               itemBuilder: (BuildContext context, int index) {
                 if (index < accountsAmount) {
-                  return ListTile(
-                    leading: CircleAvatar(
-                      // TODO child widget null if image is there
-                      // backgroundImage: Image.asset(),
-                      // foregroundImage: Image.asset(),
-                      // onForegroundImageError: (exception, stackTrace) {
-                        
-                      // }
-                      child: Icon(
-                        Icons.person_outlined,
-                        color: Theme.of(context).colorScheme.inversePrimary
-                      ),
-                    ),
-                    title: Text(
-                      // TODO Display username
-                      "Username",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.inversePrimary
-                      )
-                    ),
-                    trailing: Icon(
-                      Icons.check_circle_outlined,
-                      color: Theme.of(context).colorScheme.inversePrimary
-                    )
+                  return const AccountTile(
+                    username: 'Username',
+                    isUsedNow: true
                   );
                 } else {
                   // Information text
