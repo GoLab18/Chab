@@ -1,5 +1,5 @@
 name: chab
-description: "A new Flutter project."
+description: "A chat app made with flutter and firebase."
 publish_to: 'none'
 
 version: 1.0.0
@@ -23,6 +23,9 @@ dependencies:
 
   room_repository:
     path: packages/room_repository
+    
+  image_picker: ^1.1.2
+  image_cropper: ^8.0.2
 
 dev_dependencies:
   flutter_test:
