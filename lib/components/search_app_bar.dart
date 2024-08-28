@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const CustomAppBar({super.key});
+class SearchAppBar extends StatefulWidget implements PreferredSizeWidget {
+  const SearchAppBar({super.key});
 
   @override
-  State<CustomAppBar> createState() => _CustomAppBarState();
+  State<SearchAppBar> createState() => _SearchAppBarState();
   
   // PreferredSizeWidget interface implementation
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
-class _CustomAppBarState extends State<CustomAppBar> {
+class _SearchAppBarState extends State<SearchAppBar> {
   bool isInSearchMode = false;
 
   // Replaces the app bar components with the search bar
