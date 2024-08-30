@@ -35,7 +35,7 @@ class _DrawerBarState extends State<DrawerBar> {
                 children: [
                   
                   // Profile picture
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 40,
                     // TODO
                     // backgroundImage: Image.asset(),
@@ -43,6 +43,11 @@ class _DrawerBarState extends State<DrawerBar> {
                     // onForegroundImageError: (exception, stackTrace) {
                       
                     // }
+                    backgroundColor: Theme.of(context).colorScheme.tertiary,
+                    child: Icon(
+                      Icons.person_outlined,
+                      color: Theme.of(context).colorScheme.inversePrimary
+                    )
                   ),
               
                   // Dark mode toggle
