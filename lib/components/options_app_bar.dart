@@ -4,10 +4,14 @@ import '../pages/change_account_page.dart';
 
 class OptionsAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? titleText;
+  final bool isInEditState;
+  final VoidCallback? onEditStateFinished;
   
   const OptionsAppBar({
     super.key,
-    this.titleText
+    this.titleText,
+    this.isInEditState = false,
+    this.onEditStateFinished
   });
 
   @override
@@ -36,8 +40,16 @@ class OptionsAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: false,
       titleSpacing: 0,
       leadingWidth: 30,
-      actions: <PopupMenuButton<String>>[
-        PopupMenuButton<String>(
+      actions: [
+        isInEditState
+        ? IconButton(
+          onPressed: onEditStateFinished,
+          icon: Icon(
+            Icons.check,
+            color: Theme.of(context).colorScheme.inversePrimary
+          )
+        )
+        : PopupMenuButton<String>(
           color: Theme.of(context).colorScheme.secondary,
           icon: Icon(
             Icons.more_vert_outlined,
