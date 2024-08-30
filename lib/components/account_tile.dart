@@ -23,7 +23,7 @@ class AccountTile extends StatelessWidget {
         child: Icon(
           Icons.person_outlined,
           color: Theme.of(context).colorScheme.inversePrimary
-        ),
+        )
       ),
       title: Text(
         // TODO Display username
