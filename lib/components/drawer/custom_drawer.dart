@@ -3,6 +3,8 @@ import 'package:chab/blocs/sign_in_bloc/sign_in_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/change_usr_info_bloc/change_usr_info_bloc.dart';
+import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../pages/profile_page.dart';
 import 'drawer_bar.dart';
 import 'drawer_tile.dart';
@@ -18,6 +20,27 @@ class _CustomDrawerState extends State<CustomDrawer> {
   void logout() {
     context.read<SignInBloc>().add(SignOutRequested());
     context.read<AuthBloc>().add(const AuthUserChanged());
+  }
+
+  void openProfilePage() {
+    Navigator.pop(context);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext pageContext) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(
+              value: context.read<UsrBloc>(),
+            ),
+            BlocProvider.value(
+              value: context.read<ChangeUsrInfoBloc>(),
+            )
+          ],
+          child: const ProfilePage()
+        )
+      )
+    );
   }
 
   @override
@@ -40,14 +63,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             DrawerTile(
               tileIcon: Icons.person_outline,
               title: "Profile",
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (BuildContext context) => const ProfilePage()
-                  )
-                );
-              }
+              onTap: openProfilePage
             ),
 
             Divider(
