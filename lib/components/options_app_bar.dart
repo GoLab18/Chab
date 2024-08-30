@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import '../pages/change_account_page.dart';
 
 class OptionsAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const OptionsAppBar({super.key});
+  final String? titleText;
+  
+  const OptionsAppBar({
+    super.key,
+    this.titleText
+  });
 
   @override
   // PreferredSizeWidget interface implementation
@@ -15,6 +20,19 @@ class OptionsAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Theme.of(context).colorScheme.secondary,
       elevation: 10,
       automaticallyImplyLeading: true,
+      title: (titleText != null)
+      ? Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Text(
+          titleText!,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.inversePrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold
+          )
+        )
+      )
+      : null,
       centerTitle: false,
       titleSpacing: 0,
       leadingWidth: 30,
@@ -50,8 +68,8 @@ class OptionsAppBar extends StatelessWidget implements PreferredSizeWidget {
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.inversePrimary
                     )
-                  ),
-                ],
+                  )
+                ]
               )
             )
           ]
