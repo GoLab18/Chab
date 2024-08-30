@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:user_repository/src/models/usr.dart';
 import 'util/result.dart';
 
@@ -99,19 +102,46 @@ class FirebaseUserRepository {
     }
   }
 
-  Future<void> setUserData(Usr user) async {
-    try {
-      await usersCollection.doc(user.id).set(user.toDocument());
-    } catch (e) {
-      throw Exception(e);
-    }
-  }
-
   Future<Usr> getUsr(String usrId) async {
     try {
       return await usersCollection.doc(usrId).get().then((value) =>
         Usr.fromDocument(value.data()!)
       );
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  /// Sets user fields like email, username etc.
+  Future<void> setUserData(Usr user) async {
+    try {
+      await usersCollection.doc(user.id).update({
+        "name": user.name,
+        "email": user.email
+      });
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  /// Function for strictly adding and updating user profile pictures
+  Future<String> uploadPicture(String userId, String pictureStorageUrl) async {
+    try {
+      Reference firebaseStorageRef = FirebaseStorage.instance.ref().child(
+        "$userId/ProfilePictures/${userId}_pic"
+      );
+
+      File imageFile = File(pictureStorageUrl);
+
+      await firebaseStorageRef.putFile(imageFile);
+
+      String picUrl = await firebaseStorageRef.getDownloadURL();
+
+      await usersCollection.doc(userId).update({
+        "picture": picUrl
+      });
+
+      return picUrl;
     } catch (e) {
       throw Exception(e);
     }
