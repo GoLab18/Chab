@@ -40,7 +40,7 @@ class _ChatRoomsListPageState extends State<ChatRoomsListPage> {
                 )
               : const IsEmptyMessageWidget();
           } else if (state.status == ChatRoomStatus.loading) {
-            const CircularProgressIndicator();
+            return const CircularProgressIndicator();
           } else if (state.status == ChatRoomStatus.failure) {
             return Text(
               "Loading error",
