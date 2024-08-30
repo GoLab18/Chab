@@ -21,5 +21,13 @@ class UsrBloc extends Bloc<UsrEvent, UsrState> {
         emit(const UsrState.failure());
       }
     });
+
+    on<UpdateUser>((event, emit) {
+      try {
+        emit(UsrState.success(event.updatedUser));
+      } catch (e) {
+        emit(const UsrState.failure());
+      }
+    });
   }
 }
