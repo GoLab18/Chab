@@ -15,42 +15,44 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (BuildContext context, AuthState state) {
-          if (state.status == AuthStatus.authenticated) {
-            return RepositoryProvider(
-              create: (context) => FirebaseRoomRepository(),
-              child: MultiBlocProvider(
-                providers: [
-                  BlocProvider(
-                    create: (context) => RoomBloc(
-                      roomRepository: context.read<FirebaseRoomRepository>()
-                    ),
-                  ),
-                  BlocProvider(
-                    create: (BuildContext context) => UsrBloc(
-                      userRepository: context.read<FirebaseUserRepository>()
-                    )..add(
-                      GetUser(
-                        userId: state.user!.uid
-                      )
-                    )
-                  ),
-                  BlocProvider(
-                    create: (BuildContext context) => ChangeUsrInfoBloc(
-                      userRepository: context.read<FirebaseUserRepository>()
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (BuildContext context, AuthState state) {
+        if (state.status == AuthStatus.authenticated) {
+          return RepositoryProvider(
+            create: (context) => FirebaseRoomRepository(),
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (context) => RoomBloc(
+                    roomRepository: context.read<FirebaseRoomRepository>()
+                  )..add(
+                    UserRoomsRequested(
+                      userId: state.user!.uid
                     )
                   )
-                ],
-                child: const HomePage()
-              )
-            );
-          } else {
-            return const LoginRegister();
-          }
+                ),
+                BlocProvider(
+                  create: (BuildContext context) => UsrBloc(
+                    userRepository: context.read<FirebaseUserRepository>()
+                  )..add(
+                    GetUser(
+                      userId: state.user!.uid
+                    )
+                  )
+                ),
+                BlocProvider(
+                  create: (BuildContext context) => ChangeUsrInfoBloc(
+                    userRepository: context.read<FirebaseUserRepository>()
+                  )
+                )
+              ],
+              child: const HomePage()
+            )
+          );
+        } else {
+          return const LoginRegister();
         }
-      )
+      }
     );
   }
 }
