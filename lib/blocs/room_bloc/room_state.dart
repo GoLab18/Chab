@@ -6,7 +6,7 @@ enum ChatRoomStatus {
   failure
 }
 
-class RoomState extends Equatable {
+class RoomState {
   final ChatRoomTuple? roomTuple;
   final List<Room>? roomsList;
   final ChatRoomStatus status;
@@ -25,7 +25,4 @@ class RoomState extends Equatable {
   }) : this(roomTuple: roomTuple, roomsList: roomsList, status: ChatRoomStatus.success);
 
   const RoomState.failure() : this(status: ChatRoomStatus.failure);
-  
-  @override
-  List<Object> get props => [];
 }
