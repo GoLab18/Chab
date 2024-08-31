@@ -1,3 +1,4 @@
+import 'package:chab/pages/chat_rooms_list_page.dart';
 import 'package:flutter/material.dart';
 
 import '../components/search_app_bar.dart';
@@ -11,7 +12,7 @@ class HomePage extends StatelessWidget {
     return const Scaffold(
       appBar: SearchAppBar(),
       drawer: CustomDrawer(),
-      body: Column()
+      body: ChatRoomsListPage()
     );
   }
 }
