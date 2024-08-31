@@ -52,7 +52,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
         child: ListView(
           children: [
 
-            // Bar with user info and theme toggle
+            // Bar with user info, status and theme toggle
             const DrawerBar(),
             
             Divider(
