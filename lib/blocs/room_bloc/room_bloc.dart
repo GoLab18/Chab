@@ -13,7 +13,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
   }) : super(const RoomState.loading()) {
     on<RoomWithMessagesRequested>((event, emit) async {
       try {
-         ChatRoomTuple roomTuple = await roomRepository.getRoomWithMessages(event.roomId);
+        ChatRoomTuple roomTuple = await roomRepository.getRoomWithMessages(event.roomId);
         
         emit(RoomState.success(roomTuple: roomTuple));
       } catch (e) {
@@ -23,7 +23,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
 
     on<UserRoomsRequested>((event, emit) async {
       try {
-         List<Room> roomsList = await roomRepository.getUserRooms(event.userId);
+        List<Room> roomsList = await roomRepository.getUserRooms(event.userId);
         
         emit(RoomState.success(roomsList: roomsList));
       } catch (e) {
