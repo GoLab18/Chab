@@ -87,7 +87,7 @@ class Room extends Equatable {
       lastMessageContent: doc["lastMessageContent"] as String,
       lastMessageHasPicture: doc["lastMessageHasPicture"] as bool,
       lastMessageTimestamp: doc["lastMessageTimestamp"] as Timestamp,
-      members: doc["members"] as List<String>,
+      members: (doc["members"] as List<dynamic>).cast<String>(),
       name: doc["name"] as String,
       picture: doc["picture"] as String
     );
