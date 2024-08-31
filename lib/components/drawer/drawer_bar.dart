@@ -3,6 +3,8 @@ import 'package:chab/util/shared_preferences_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/usr_bloc/usr_bloc.dart';
+
 class DrawerBar extends StatefulWidget {
   const DrawerBar({super.key});
 
@@ -23,26 +25,27 @@ class _DrawerBarState extends State<DrawerBar> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.only(
+        left: 8,
+        right: 8,
+        top: 8
+      ),
       child: ConstrainedBox(
         constraints: const BoxConstraints.expand(height: 140),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   
                   // Profile picture
                   CircleAvatar(
-                    radius: 40,
-                    // TODO
-                    // backgroundImage: Image.asset(),
-                    // foregroundImage: Image.asset(),
-                    // onForegroundImageError: (exception, stackTrace) {
-                      
-                    // }
+                    radius: 36,
+                    foregroundImage: NetworkImage(context.read<UsrBloc>().state.user!.picture),
                     backgroundColor: Theme.of(context).colorScheme.tertiary,
                     child: Icon(
                       Icons.person_outlined,
@@ -64,29 +67,32 @@ class _DrawerBarState extends State<DrawerBar> {
               ),
             ),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-
-                // Username
-                Text(
-                  // TODO change it for the username
-                  "",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.inversePrimary
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+              
+                  // Username
+                  Text(
+                    context.read<UsrBloc>().state.user!.name,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.inversePrimary
+                    )
+                  ),
+                  
+                  // Username
+                  Text(
+                    // TODO change it for: online, offline, unseen accordingly etc.
+                    // (either based on the database field or idk, shared_references?)
+                    // Status choice menu (?)
+                    "online",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.tertiary
+                    )
                   )
-                ),
-                
-                // Username
-                Text(
-                  // TODO change it for: online, offline, unseen accordingly etc.
-                  // (either based on the database field or idk, shared_references?)
-                  "",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.tertiary
-                  )
-                )
-              ]
+                ]
+              ),
             )
           ],
         ),
