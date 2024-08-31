@@ -3,27 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../blocs/room_bloc/room_bloc.dart';
 import '../components/is_empty_message_widget.dart';
-import '../components/user_list_tile.dart';
+import '../components/chat_room_tile.dart';
 
-class ChatRoomsListPage extends StatefulWidget {
+class ChatRoomsListPage extends StatelessWidget {
   const ChatRoomsListPage({super.key});
-
-  @override
-  State<ChatRoomsListPage> createState() => _ChatRoomsListPageState();
-}
-
-class _ChatRoomsListPageState extends State<ChatRoomsListPage> {
-  bool isEmpty = true;
-
-  // TODO
-  // @override
-  // void initState() {
-  //   context.read<RoomBloc>().add(UserRoomsRequested(
-  //     userId: 
-  //   ));
-
-  //   super.initState();
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -31,13 +14,19 @@ class _ChatRoomsListPageState extends State<ChatRoomsListPage> {
       child: BlocBuilder<RoomBloc, RoomState>(
         builder: (context, state) {
           if (state.status == ChatRoomStatus.success) {
-            return state.roomsList != null 
-              ? ListView.builder(
-                  itemCount: state.roomsList!.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return const UserListTile();
-                  }
-                )
+            return state.roomsList!.isNotEmpty
+              ? Padding(
+                padding: const EdgeInsets.all(10),
+                child: SizedBox(
+                  child: ListView.separated(
+                    itemCount: state.roomsList!.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return ChatRoomTile(state.roomsList![index]);
+                    },
+                    separatorBuilder: (BuildContext context, int index) => const SizedBox(height: 16)
+                  ),
+                ),
+              )
               : const IsEmptyMessageWidget();
           } else if (state.status == ChatRoomStatus.loading) {
             return const CircularProgressIndicator();
