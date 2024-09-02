@@ -5,7 +5,8 @@ import 'package:image_picker/image_picker.dart';
 
 import '../blocs/change_usr_info_bloc/change_usr_info_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
-import '../components/editable_field.dart';
+import '../components/fields/dynamic_editable_field.dart';
+import '../components/fields/editable_field.dart';
 import '../components/options_app_bar.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -18,10 +19,10 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late TextEditingController _usernameController;
   late TextEditingController _emailController;
-  late TextEditingController _captionController;
+  late TextEditingController _bioController;
   late FocusNode _usernameFocusNode;
   late FocusNode _emailFocusNode;
-  late FocusNode _captionFocusNode;
+  late FocusNode _bioFocusNode;
 
   // Boolean flag for handling edit state of user fields and the confirmation button
   bool _isInEditState = false;
@@ -32,22 +33,28 @@ class _ProfilePageState extends State<ProfilePage> {
   // Boolean flag for showing circular progress indicator if update not finished yet for user email
   bool _isEmailLoaded = true;
 
+  // Boolean flag for showing circular progress indicator if update not finished yet for user bio
+  bool _isBioLoaded = true;
+
   // Boolean flag for handling ChangeUserData event and _isUsernameLoaded flag
-  bool usernameChanged = false;
+  bool _usernameChanged = false;
 
   // Boolean flag for handling ChangeUserData event and _isEmailLoaded flag
-  bool emailChanged = false;
+  bool _emailChanged = false;
+
+  // Boolean flag for handling ChangeUserData event and _isBioLoaded flag
+  bool _bioChanged = false;
 
   @override
   void initState() {
     super.initState();
     
-    _usernameController = TextEditingController();
-    _emailController = TextEditingController();
-    _captionController = TextEditingController();
+    _usernameController = TextEditingController(text: context.read<UsrBloc>().state.user!.name);
+    _emailController = TextEditingController(text: context.read<UsrBloc>().state.user!.email);
+    _bioController = TextEditingController(text: context.read<UsrBloc>().state.user!.bio);
     _usernameFocusNode = FocusNode()..addListener(handleFocusChange);
     _emailFocusNode = FocusNode()..addListener(handleFocusChange);
-    _captionFocusNode = FocusNode()..addListener(handleFocusChange);
+    _bioFocusNode = FocusNode()..addListener(handleFocusChange);
   }
 
   Future<void> uploadUserPicture() async {
@@ -93,18 +100,18 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     if (croppedImage != null) {
-      context.read<ChangeUsrInfoBloc>().add(
+      mounted ? context.read<ChangeUsrInfoBloc>().add(
         UploadPicture(
-          picture: croppedImage!.path,
+          picture: croppedImage.path,
           userId: context.read<UsrBloc>().state.user!.id
         )
-      );
+      ) : null;
     }
   }
 
   void handleFocusChange() {
     bool previousIsInEditState = _isInEditState;
-    _isInEditState = _usernameFocusNode.hasFocus || _emailFocusNode.hasFocus || _captionFocusNode.hasFocus;
+    _isInEditState = _usernameFocusNode.hasFocus || _emailFocusNode.hasFocus || _bioFocusNode.hasFocus;
     
     if (previousIsInEditState  != _isInEditState) setState(() {});
   }
@@ -112,17 +119,19 @@ class _ProfilePageState extends State<ProfilePage> {
   void onEditStateFinished() {
     _usernameFocusNode.unfocus();
     _emailFocusNode.unfocus();
-    _captionFocusNode.unfocus();
+    _bioFocusNode.unfocus();
 
-    usernameChanged = _usernameController.text != context.read<UsrBloc>().state.user!.name;
-    emailChanged = _emailController.text != context.read<UsrBloc>().state.user!.email;
+    _usernameChanged = _usernameController.text != context.read<UsrBloc>().state.user!.name;
+    _emailChanged = _emailController.text != context.read<UsrBloc>().state.user!.email;
+    _bioChanged = _bioController.text != context.read<UsrBloc>().state.user!.bio;
 
-    if (usernameChanged || emailChanged) {
+    if (_usernameChanged || _emailChanged || _bioChanged) {
       context.read<ChangeUsrInfoBloc>().add(
         ChangeUsrData(
           context.read<UsrBloc>().state.user!.copyWith(
-            email: emailChanged ? _emailController.text : null,
-            name: usernameChanged ? _usernameController.text : null
+            email: _emailChanged ? _emailController.text : null,
+            name: _usernameChanged ? _usernameController.text : null,
+            bio: _bioChanged ? _bioController.text : null
           )
         )
       );
@@ -137,13 +146,13 @@ class _ProfilePageState extends State<ProfilePage> {
   void dispose() {
     _usernameController.dispose();
     _emailController.dispose();
-    _captionController.dispose();
+    _bioController.dispose();
     _usernameFocusNode.removeListener(handleFocusChange);
     _emailFocusNode.removeListener(handleFocusChange);
-    _captionFocusNode.removeListener(handleFocusChange);
+    _bioFocusNode.removeListener(handleFocusChange);
     _usernameFocusNode.dispose();
     _emailFocusNode.dispose();
-    _captionFocusNode.dispose();
+    _bioFocusNode.dispose();
 
     super.dispose();
   }
@@ -161,19 +170,23 @@ class _ProfilePageState extends State<ProfilePage> {
             )
           );
         } else if (state is ChangeUsrDataSuccess) {
-          if (usernameChanged) _isUsernameLoaded = true;
-          if (emailChanged) _isEmailLoaded = true;
+          if (_usernameChanged) _isUsernameLoaded = true;
+          if (_emailChanged) _isEmailLoaded = true;
+          if (_bioChanged) _isBioLoaded = true;
+
           context.read<UsrBloc>().add(UpdateUser(updatedUser: state.user));
         } else if (state is ChangeUsrDataPending) {
-          if (usernameChanged) _isUsernameLoaded = false;
-          if (emailChanged) _isEmailLoaded = false;
+          if (_usernameChanged) _isUsernameLoaded = false;
+          if (_emailChanged) _isEmailLoaded = false;
+          if (_bioChanged) _isBioLoaded = false;
         }
       },
       child: BlocBuilder<UsrBloc, UsrState>(
         builder: (context, state) {
           if (state.status == UsrStatus.success) {
-            _usernameController.text = state.user!.name;
-            _emailController.text = state.user!.email;
+            if (_usernameChanged) _usernameController.text = state.user!.name;
+            if (_emailChanged) _emailController.text = state.user!.email;
+            if (_bioChanged) _bioController.text = state.user!.bio;
           }
 
           return Scaffold(
@@ -199,9 +212,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           children: [
                             CircleAvatar(
                               radius: 50,
-                              foregroundImage: (state.user!.picture.isNotEmpty)
-                                  ? NetworkImage(state.user!.picture)
-                                  : null,
+                              foregroundImage: state.user!.picture.isNotEmpty
+                                ? NetworkImage(state.user!.picture)
+                                : null,
                               child: Icon(
                                 Icons.person_outlined,
                                 color: Theme.of(context).colorScheme.inversePrimary
@@ -235,12 +248,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
 
                       // Username
-                      EditableField(
+                      DynamicEditableField(
                         controller: _usernameController,
                         focusNode: _usernameFocusNode,
                         keyboardType: TextInputType.text,
                         description: "Username",
-                        isUpdatedTextLoaded: _isUsernameLoaded
+                        isUpdatedTextLoaded: _isUsernameLoaded,
+                        maxChars: 20,
+                        hintText: "Username.."
                       ),
 
                       // Email
@@ -249,7 +264,19 @@ class _ProfilePageState extends State<ProfilePage> {
                         focusNode: _emailFocusNode,
                         keyboardType: TextInputType.text,
                         description: "Email",
-                        isUpdatedTextLoaded: _isEmailLoaded
+                        isUpdatedTextLoaded: _isEmailLoaded,
+                        hintText: "Email.."
+                      ),
+
+                      // Bio
+                      DynamicEditableField(
+                        controller: _bioController,
+                        focusNode: _bioFocusNode,
+                        keyboardType: TextInputType.text,
+                        description: "Your bio",
+                        isUpdatedTextLoaded: _isBioLoaded,
+                        maxChars: 70,
+                        hintText: "Present yourself.."
                       )
                     ]
                   )
