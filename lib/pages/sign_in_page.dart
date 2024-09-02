@@ -1,9 +1,10 @@
-import 'package:chab/util/auth_util/regex.dart';
-import 'package:chab/blocs/sign_in_bloc/sign_in_bloc.dart';
-import 'package:chab/components/button_template.dart';
-import 'package:chab/components/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../blocs/sign_in_bloc/sign_in_bloc.dart';
+import '../components/button_template.dart';
+import '../components/fields/custom_textfield.dart';
+import '../util/auth_util/regex.dart';
 
 class SignInPage extends StatefulWidget {
   final void Function()? toggleSignUpPage;
