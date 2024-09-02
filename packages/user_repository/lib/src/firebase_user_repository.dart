@@ -117,7 +117,8 @@ class FirebaseUserRepository {
     try {
       await usersCollection.doc(user.id).update({
         "name": user.name,
-        "email": user.email
+        "email": user.email,
+        "bio": user.bio
       });
     } catch (e) {
       throw Exception(e);
