@@ -8,22 +8,25 @@ class Usr extends Equatable {
   final String email;
   final String name;
   final String picture;
+  final String bio;
 
   const Usr({
     required this.id,
     required this.email,
     required this.name,
-    required this.picture
+    required this.picture,
+    required this.bio
   });
 
   @override
-  List<Object?> get props => [id, email, name, picture];
+  List<Object?> get props => [id, email, name, picture, bio];
 
   static const empty = Usr(
     id: "",
     email: "",
     name: "",
-    picture: ""
+    picture: "",
+    bio: ""
   );
 
   /// Getter for checking if the user is empty.
@@ -34,13 +37,15 @@ class Usr extends Equatable {
     String? id,
     String? email,
     String? name,
-    String? picture
+    String? picture,
+    String? bio
   }) {
     return Usr(
       id: id ?? this.id,
       email: email ?? this.email,
       name: name ?? this.name,
-      picture: picture ?? this.picture
+      picture: picture ?? this.picture,
+      bio: bio ?? this.bio
     );
   }
   
@@ -50,7 +55,8 @@ class Usr extends Equatable {
       "id": id,
       "email": email,
       "name": name,
-      "picture": picture
+      "picture": picture,
+      "bio": bio
     };
   }
   
@@ -60,7 +66,8 @@ class Usr extends Equatable {
       id: doc["id"] as String,
       email: doc["email"] as String,
       name: doc["name"] as String,
-      picture: doc["picture"] as String
+      picture: doc["picture"] as String,
+      bio: doc["bio"] as String
     );
   }
 }
