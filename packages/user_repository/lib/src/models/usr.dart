@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
 /// The type definition for a JSON-serializable [Map].
@@ -8,20 +9,29 @@ class Usr extends Equatable {
   final String email;
   final String name;
   final String picture;
-  final String bio;
 
-  const Usr({
+  /// Few words about the user.
+  final String bio;
+  
+  /// User creation date.
+  /// Isn't overriden on edit.
+  late final Timestamp timestamp;
+
+  Usr({
     required this.id,
     required this.email,
     required this.name,
     required this.picture,
-    required this.bio
-  });
+    required this.bio,
+    Timestamp? timestamp
+  }) {
+    this.timestamp = timestamp ?? Timestamp.now();
+  }
 
   @override
-  List<Object?> get props => [id, email, name, picture, bio];
+  List<Object?> get props => [id, email, name, picture, bio, timestamp];
 
-  static const empty = Usr(
+  static Usr empty = Usr(
     id: "",
     email: "",
     name: "",
@@ -56,7 +66,8 @@ class Usr extends Equatable {
       "email": email,
       "name": name,
       "picture": picture,
-      "bio": bio
+      "bio": bio,
+      "timestamp": timestamp
     };
   }
   
@@ -67,7 +78,8 @@ class Usr extends Equatable {
       email: doc["email"] as String,
       name: doc["name"] as String,
       picture: doc["picture"] as String,
-      bio: doc["bio"] as String
+      bio: doc["bio"] as String,
+      timestamp: doc["timestamp"] as Timestamp
     );
   }
 }
