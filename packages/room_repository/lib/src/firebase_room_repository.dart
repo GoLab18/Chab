@@ -6,34 +6,49 @@ import 'util/chat_room_tuple.dart';
 class FirebaseRoomRepository {
   final roomsCollection = FirebaseFirestore.instance.collection("rooms");
 
-  /// Fetches a single room with all it's data and messages.
+  /// Fetches a single room with a [Message]s [List] Stream.
   Future<ChatRoomTuple> getRoomWithMessages(String roomId) async {
     Room room = await roomsCollection.doc(roomId).get().then((value) =>
       Room.fromDocument(value.data()!)
     );
-
-    List<Message> messages = await roomsCollection.doc(roomId).collection("messages").get().then((value) =>
-      value.docs.map<Message>(
-        (doc) => Message.fromDocument(doc.data())
-      ).toList()
-    );
+    // Maybe return only the messagesStream bcs the room data can be passed down to the chat Widget? (possible sync problems)
+    Stream<List<Message>> messagesStream = roomsCollection
+      .doc(roomId)
+      .collection("messages")
+      .orderBy(
+        "timestamp",
+        descending: false
+      )
+      .snapshots().map((QuerySnapshot<Map<String, dynamic>> snapshot) => 
+        snapshot.docs.map(
+          (doc) => Message.fromDocument(doc.data())
+        ).toList()
+      );
 
     return ChatRoomTuple(
       room: room,
-      messages: messages
+      messagesStream: messagesStream
     );
   }
 
-  /// Fetches a [Room]s [List] that the user with id [userId] is apart of.
-  Future<List<Room>> getUserRooms(String userId) async {
-    return await roomsCollection.where(
-      "members",
-      arrayContains: userId
-    ).get().then((value) => 
-      value.docs.map<Room>(
-        (doc) => Room.fromDocument(doc.data())
-      ).toList()
-    );
+  /// Fetches a Stream with [Room]s [List] that the user with id [userId] is apart of.
+  Stream<List<Room>> getUserRooms(String userId) async* {
+    yield* roomsCollection
+      .where(
+        "members",
+        arrayContains: userId
+      )
+      .orderBy(
+        "lastMessageTimestamp",
+        descending: true
+      )
+      .limit(20)
+      .snapshots()
+      .map((QuerySnapshot<Map<String, dynamic>> snapshot) => 
+        snapshot.docs.map<Room>(
+          (doc) => Room.fromDocument(doc.data())
+        ).toList()
+      );
   }
 
   /// Adds a new room to the firebase rooms collection.
