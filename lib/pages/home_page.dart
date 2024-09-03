@@ -1,7 +1,7 @@
 import 'package:chab/pages/chat_rooms_list_page.dart';
 import 'package:flutter/material.dart';
 
-import '../components/search_app_bar.dart';
+import '../components/app_bars/search_app_bar.dart';
 import '../components/drawer/custom_drawer.dart';
 
 class HomePage extends StatelessWidget {

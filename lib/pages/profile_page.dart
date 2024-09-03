@@ -7,7 +7,7 @@ import '../blocs/change_usr_info_bloc/change_usr_info_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/fields/dynamic_editable_field.dart';
 import '../components/fields/editable_field.dart';
-import '../components/options_app_bar.dart';
+import '../components/app_bars/options_app_bar.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
