@@ -70,7 +70,7 @@ class DateUtil {
       return "${itemInitDate.day} ${months[itemInitDate.month]}";
     } else if (difference.inDays >= 1) {
       // String for dates more than a day ago
-      return "${getFormatedInitTime(itemInitDate)} ${days[itemInitDate.weekday]}";
+      return days[itemInitDate.weekday].toString();
     } else {
       // String for dates within a day
       return getFormatedInitTime(itemInitDate);
