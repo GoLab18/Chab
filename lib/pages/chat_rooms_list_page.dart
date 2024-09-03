@@ -15,17 +15,13 @@ class ChatRoomsListPage extends StatelessWidget {
         builder: (context, state) {
           if (state.status == ChatRoomStatus.success) {
             return state.roomsList!.isNotEmpty
-              ? Padding(
-                padding: const EdgeInsets.all(10),
-                child: SizedBox(
-                  child: ListView.separated(
-                    itemCount: state.roomsList!.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return ChatRoomTile(state.roomsList![index]);
-                    },
-                    separatorBuilder: (BuildContext context, int index) => const SizedBox(height: 16)
-                  ),
-                ),
+              ? SizedBox(
+                child: ListView.builder(
+                  itemCount: state.roomsList!.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return ChatRoomTile(state.roomsList![index]);
+                  }
+                )
               )
               : const IsEmptyMessageWidget();
           } else if (state.status == ChatRoomStatus.loading) {
