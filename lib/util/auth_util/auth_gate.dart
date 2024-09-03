@@ -5,7 +5,7 @@ import 'package:user_repository/user_repository.dart';
 
 import '../../blocs/auth_bloc/auth_bloc.dart';
 import '../../blocs/change_usr_info_bloc/change_usr_info_bloc.dart';
-import '../../blocs/room_bloc/room_bloc.dart';
+import '../../blocs/rooms_bloc/rooms_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../pages/home_page.dart';
 import 'login_register.dart';
@@ -23,7 +23,7 @@ class AuthGate extends StatelessWidget {
             child: MultiBlocProvider(
               providers: [
                 BlocProvider(
-                  create: (context) => RoomBloc(
+                  create: (context) => RoomsBloc(
                     roomRepository: context.read<FirebaseRoomRepository>()
                   )..add(
                     UserRoomsRequested(
