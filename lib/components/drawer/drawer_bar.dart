@@ -19,11 +19,16 @@ class DrawerBar extends StatelessWidget {
       child: BlocBuilder<UsrBloc, UsrState>(
         builder: (context, state) {
           if (state.status == UsrStatus.failure) {
-            return Text(
-              "Loading error",
-              style: TextStyle(
-                fontSize: 20,
-                color: Theme.of(context).colorScheme.inversePrimary
+            return ConstrainedBox(
+              constraints: const BoxConstraints.expand(height: 140),
+              child: Center(
+                child: Text(
+                  "Loading error",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Theme.of(context).colorScheme.inversePrimary
+                  )
+                )
               )
             );
           }
@@ -64,7 +69,7 @@ class DrawerBar extends StatelessWidget {
                         )
                       )
                     ]
-                  ),
+                  )
                 ),
     
                 Padding(
@@ -89,7 +94,7 @@ class DrawerBar extends StatelessWidget {
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Theme.of(context).colorScheme.inversePrimary,
-                          ),
+                          )
                         ),
                       
                       // Status
