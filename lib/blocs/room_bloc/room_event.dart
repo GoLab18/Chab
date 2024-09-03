@@ -17,14 +17,3 @@ final class RoomWithMessagesRequested extends RoomEvent {
   @override
   List<Object> get props => [roomId];
 }
-
-final class UserRoomsRequested extends RoomEvent {
-  final String userId;
-
-  const UserRoomsRequested({
-    required this.userId
-  });
-  
-  @override
-  List<Object> get props => [userId];
-}

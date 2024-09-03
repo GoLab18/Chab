@@ -15,17 +15,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
       try {
         ChatRoomTuple roomTuple = await roomRepository.getRoomWithMessages(event.roomId);
         
-        emit(RoomState.success(roomTuple: roomTuple));
-      } catch (e) {
-        emit(const RoomState.failure());
-      }
-    });
-
-    on<UserRoomsRequested>((event, emit) async {
-      try {
-        List<Room> roomsList = await roomRepository.getUserRooms(event.userId);
-        
-        emit(RoomState.success(roomsList: roomsList));
+        emit(RoomState.success(roomTuple));
       } catch (e) {
         emit(const RoomState.failure());
       }
