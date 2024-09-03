@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:room_repository/room_repository.dart';
 
+import '../blocs/room_bloc/room_bloc.dart';
+import '../blocs/rooms_bloc/rooms_bloc.dart';
 import '../pages/chat_room_page.dart';
 import '../util/date_util.dart';
 
@@ -24,10 +27,22 @@ class ChatRoomTile extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (BuildContext context) => const ChatRoomPage()
-              ),
+                builder: (BuildContext pageContext) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider.value(
+                      value: context.read<RoomsBloc>() 
+                    ),
+                    BlocProvider(
+                      create: (BuildContext roomBlocContext) => RoomBloc(
+                        roomRepository: context.read<FirebaseRoomRepository>()
+                      )..add(RoomWithMessagesRequested(roomId: room.id))
+                    )
+                  ],
+                  child: const ChatRoomPage()
+                )
+              )
             );
-          },
+          }
         ),
       child: Padding(
         padding: const EdgeInsets.all(8),
@@ -95,14 +110,13 @@ class ChatRoomTile extends StatelessWidget {
                     bottom: 2
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical:  6),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Chat room name
                         Text(
-                          // room.name,
                           room.name,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.inversePrimary
@@ -152,7 +166,7 @@ class ChatRoomTile extends StatelessWidget {
                           ]
                         )
                       ]
-                    ),
+                    )
                   )
                 )
               )
