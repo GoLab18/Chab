@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:room_repository/room_repository.dart';
 
 import '../blocs/room_bloc/room_bloc.dart';
-import '../blocs/rooms_bloc/rooms_bloc.dart';
+import '../blocs/usr_bloc/usr_bloc.dart';
 import '../pages/chat_room_page.dart';
 import '../util/date_util.dart';
 
@@ -30,7 +30,7 @@ class ChatRoomTile extends StatelessWidget {
                 builder: (BuildContext pageContext) => MultiBlocProvider(
                   providers: [
                     BlocProvider.value(
-                      value: context.read<RoomsBloc>() 
+                      value: context.read<UsrBloc>()
                     ),
                     BlocProvider(
                       create: (BuildContext roomBlocContext) => RoomBloc(
