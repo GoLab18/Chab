@@ -4,6 +4,8 @@ import 'package:equatable/equatable.dart';
 import '../util/typedefs.dart';
 
 class Message extends Equatable {
+  final String id;
+  
   /// Message content.
   final String content;
 
@@ -25,9 +27,10 @@ class Message extends Equatable {
   late final Timestamp timestamp;
 
   Message({
+    required this.id,
     required this.content,
     this.edited = false,
-    required this.picture,
+    this.picture = "",
     List<String>? seenBy,
     required this.senderId,
     Timestamp? timestamp
@@ -37,11 +40,11 @@ class Message extends Equatable {
   }
   
   @override
-  List<Object?> get props => [content, edited, seenBy, senderId, timestamp];
+  List<Object?> get props => [id, content, edited, picture, seenBy, senderId, timestamp];
 
   static Message empty = Message(
+    id: "",
     content: "",
-    picture: "",
     senderId: ""
   );
 
@@ -50,6 +53,7 @@ class Message extends Equatable {
 
   /// Returns a copy of the message with the given values.
   Message copyWith({
+    String? id,
     String? content,
     bool? edited,
     String? picture,
@@ -57,6 +61,7 @@ class Message extends Equatable {
     String? senderId
   }) {
     return Message(
+      id: id ?? this.id,
       content: content ?? this.content,
       edited: edited ?? this.edited,
       picture: picture ?? this.picture,
@@ -68,6 +73,7 @@ class Message extends Equatable {
   /// Data serialization for database storage.
   JsonMap toDocument() {
     return {
+      "id": id,
       "content": content,
       "edited": edited,
       "picture": picture,
@@ -80,6 +86,7 @@ class Message extends Equatable {
   /// Database data deserialization.
   static Message fromDocument(JsonMap doc) {
     return Message(
+      id: doc["id"] as String,
       content: doc["content"] as String,
       edited: doc["edited"] as bool,
       picture: doc["picture"] as String,
