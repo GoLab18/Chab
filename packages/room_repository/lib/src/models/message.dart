@@ -83,7 +83,7 @@ class Message extends Equatable {
       content: doc["content"] as String,
       edited: doc["edited"] as bool,
       picture: doc["picture"] as String,
-      seenBy: doc["seenBy"] as List<String>,
+      seenBy: (doc["seenBy"] as List<dynamic>).cast<String>(),
       senderId: doc["senderId"] as String,
       timestamp: doc["timestamp"] as Timestamp
     );
