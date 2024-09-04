@@ -11,13 +11,13 @@ class FirebaseRoomRepository {
     Room room = await roomsCollection.doc(roomId).get().then((value) =>
       Room.fromDocument(value.data()!)
     );
-    // Maybe return only the messagesStream bcs the room data can be passed down to the chat Widget? (possible sync problems)
+    
     Stream<List<Message>> messagesStream = roomsCollection
       .doc(roomId)
       .collection("messages")
       .orderBy(
         "timestamp",
-        descending: false
+        descending: true
       )
       .snapshots().map((QuerySnapshot<Map<String, dynamic>> snapshot) => 
         snapshot.docs.map(
