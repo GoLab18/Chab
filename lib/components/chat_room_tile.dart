@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:room_repository/room_repository.dart';
 
+import '../blocs/message_bloc/message_bloc.dart';
 import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../pages/chat_room_page.dart';
@@ -36,6 +37,11 @@ class ChatRoomTile extends StatelessWidget {
                       create: (BuildContext roomBlocContext) => RoomBloc(
                         roomRepository: context.read<FirebaseRoomRepository>()
                       )..add(RoomWithMessagesRequested(roomId: room.id))
+                    ),
+                    BlocProvider(
+                      create: (BuildContext messageBlocContext) => MessageBloc(
+                        roomRepository: context.read<FirebaseRoomRepository>()
+                      )
                     )
                   ],
                   child: const ChatRoomPage()
