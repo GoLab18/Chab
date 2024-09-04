@@ -101,8 +101,8 @@ class ChatRoomAppBar extends StatelessWidget implements PreferredSizeWidget {
                               )
                             )
                           ]
-                        ),
-                      ),
+                        )
+                      )
                     )
                   )
                 )
