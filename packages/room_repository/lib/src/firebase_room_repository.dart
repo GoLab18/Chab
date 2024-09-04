@@ -58,7 +58,14 @@ class FirebaseRoomRepository {
 
   /// Adds a new message to the firebase messages subcollection.
   Future<void> addMessage(String roomId, Message message) async {
-    await roomsCollection.doc(roomId).collection("messages").add(message.toDocument());
+    // Get a reference to the messages subcollection
+    CollectionReference<Map<String, dynamic>> messagesCollection = roomsCollection.doc(roomId).collection("messages");
+    
+    // Generate a new document reference (contains the ID that will be stored in it).
+    DocumentReference docRef = messagesCollection.doc();
+
+    // Set the message with the ID.
+    await docRef.set(message.copyWith(id: docRef.id).toDocument());
   }
 
   /// Updates a room in the firestore.
@@ -67,8 +74,8 @@ class FirebaseRoomRepository {
   }
 
   /// Updates a message in the firestore
-  Future<void> updateMessage(String roomId, String messageId, Message updatedMsg) async {
-    await roomsCollection.doc(roomId).collection("messages").doc(messageId).update(updatedMsg.toDocument());
+  Future<void> updateMessage(String roomId, Message updatedMsg) async {
+    await roomsCollection.doc(roomId).collection("messages").doc(updatedMsg.id).update(updatedMsg.toDocument());
   }
 
   /// Deletes a room from to the firebase rooms collection.
