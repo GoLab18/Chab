@@ -56,7 +56,7 @@ class ChatRoomsListPage extends StatelessWidget {
             );
           }
 
-          throw Exception("Non-existent room_bloc state");
+          throw Exception("Non-existent rooms_bloc state");
         }
       ),
     );
