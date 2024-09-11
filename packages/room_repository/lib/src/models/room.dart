@@ -21,15 +21,16 @@ class Room extends Equatable {
   /// Last message picture.
   late final Timestamp lastMessageTimestamp;
 
-  /// A representation of firebase array.
-  /// Holds a [List] of chat room's members' ids.
-  late final List<String> members;
+  // Last message sender ID.
+  final String lastMessageSenderId;
 
   /// Chat room's name.
-  final String name;
+  /// Stays null if it's a private chat.
+  final String? name;
 
   /// Chat room's picture.
-  final String picture;
+  /// Stays null if it's a private chat.
+  final String? picture;
 
   /// Room creation date.
   /// Isn't overriden on edit.
@@ -40,25 +41,25 @@ class Room extends Equatable {
     this.isPrivate = true,
     required this.lastMessageContent,
     this.lastMessageHasPicture = false,
+    required this.lastMessageSenderId,
     Timestamp? lastMessageTimestamp,
-    List<String>? members,
     required this.name,
     required this.picture,
     Timestamp? timestamp
   }) {
-    this.members = members ?? List.empty();
     this.lastMessageTimestamp = lastMessageTimestamp ?? Timestamp.now();
     this.timestamp = timestamp ?? Timestamp.now();
   }
   
   @override
-  List<Object?> get props => [id, isPrivate, lastMessageContent, lastMessageHasPicture, lastMessageTimestamp, members, name, picture, timestamp];
+  List<Object?> get props => [id, isPrivate, lastMessageContent, lastMessageHasPicture, lastMessageTimestamp, name, picture, timestamp];
 
   static Room empty = Room(
     id: "",
     lastMessageContent: "",
-    name: "",
-    picture: ""
+    lastMessageSenderId: "",
+    name: null,
+    picture: null
   );
 
   /// Getter for checking if the chat room is empty.
@@ -70,8 +71,8 @@ class Room extends Equatable {
     bool? isPrivate,
     String? lastMessageContent,
     bool? lastMessageHasPicture,
+    String? lastMessageSenderId,
     Timestamp? lastMessageTimestamp,
-    List<String>? members,
     String? name,
     String? picture
   }) {
@@ -80,8 +81,8 @@ class Room extends Equatable {
       isPrivate: isPrivate ?? this.isPrivate,
       lastMessageContent: lastMessageContent ?? this.lastMessageContent,
       lastMessageHasPicture: lastMessageHasPicture ?? this.lastMessageHasPicture,
+      lastMessageSenderId: lastMessageSenderId ?? this.lastMessageSenderId,
       lastMessageTimestamp: lastMessageTimestamp ?? this.lastMessageTimestamp,
-      members: members ?? this.members,
       name: name ?? this.name,
       picture: picture ?? this.picture
     );
@@ -95,9 +96,8 @@ class Room extends Equatable {
       "lastMessageContent": lastMessageContent,
       "lastMessageHasPicture": lastMessageHasPicture,
       "lastMessageTimestamp": lastMessageTimestamp,
-      "members": members,
-      "name": name,
-      "picture": picture,
+      if (name != null) "name": name,
+      if (picture != null) "picture": picture,
       "timestamp": timestamp
     };
   }
@@ -109,10 +109,10 @@ class Room extends Equatable {
       isPrivate: doc["isPrivate"] as bool,
       lastMessageContent: doc["lastMessageContent"] as String,
       lastMessageHasPicture: doc["lastMessageHasPicture"] as bool,
+      lastMessageSenderId: doc["lastMessageSenderId"] as String,
       lastMessageTimestamp: doc["lastMessageTimestamp"] as Timestamp,
-      members: (doc["members"] as List<dynamic>).cast<String>(),
-      name: doc["name"] as String,
-      picture: doc["picture"] as String,
+      name: doc["name"] as String?,
+      picture: doc["picture"] as String?,
       timestamp: doc["timestamp"] as Timestamp
     );
   }
