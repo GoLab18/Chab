@@ -1,10 +1,18 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'models/models.dart';
 import 'util/chat_room_tuple.dart';
 
 class FirebaseRoomRepository {
-  final roomsCollection = FirebaseFirestore.instance.collection("rooms");
+  late final FirebaseFirestore firestoreInstance;
+  late final CollectionReference<Map<String, dynamic>> roomsCollection;
+  
+  FirebaseRoomRepository() {
+    firestoreInstance = FirebaseFirestore.instance;
+    roomsCollection = firestoreInstance.collection("rooms");
+  }
 
   /// Fetches a single room with a [Message]s [List] Stream.
   Future<ChatRoomTuple> getRoomWithMessages(String roomId) async {
@@ -19,7 +27,8 @@ class FirebaseRoomRepository {
         "timestamp",
         descending: true
       )
-      .snapshots().map((QuerySnapshot<Map<String, dynamic>> snapshot) => 
+      .snapshots()
+      .map((QuerySnapshot<Map<String, dynamic>> snapshot) => 
         snapshot.docs.map(
           (doc) => Message.fromDocument(doc.data())
         ).toList()
