@@ -75,6 +75,14 @@ class FirebaseRoomRepository {
 
     // Set the message with the ID.
     await docRef.set(message.copyWith(id: docRef.id).toDocument());
+
+    // Make it the latest message in the chat room.
+    await roomsCollection.doc(roomId).update({
+      'lastMessageContent': message.content,
+      'lastMessageHasPicture': message.picture.isEmpty ? false : true,
+      "lastMessageSenderId": message.senderId,
+      'lastMessageTimestamp': message.timestamp
+    });
   }
 
   /// Updates a room in the firestore.
