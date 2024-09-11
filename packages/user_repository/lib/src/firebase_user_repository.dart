@@ -14,7 +14,10 @@ class FirebaseUserRepository {
 
   FirebaseUserRepository({
     FirebaseAuth? firebaseAuth
-  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
+    usersCollection = FirebaseFirestore.instance.collection("users");
+    roomsCollection = FirebaseFirestore.instance.collection("rooms");
+  }
 
   Stream<User?> get user {
     return _firebaseAuth.authStateChanges().map<User?>((User? fbUser) {
