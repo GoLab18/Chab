@@ -41,23 +41,39 @@ class FirebaseRoomRepository {
   }
 
   /// Fetches a Stream with [Room]s [List] that the user with id [userId] is apart of.
-  Stream<List<Room>> getUserRooms(String userId) async* {
-    yield* roomsCollection
-      .where(
-        "members",
-        arrayContains: userId
-      )
-      .orderBy(
-        "lastMessageTimestamp",
-        descending: true
-      )
-      .limit(20)
-      .snapshots()
-      .map((QuerySnapshot<Map<String, dynamic>> snapshot) => 
-        snapshot.docs.map<Room>(
-          (doc) => Room.fromDocument(doc.data())
-        ).toList()
-      );
+  Future<Stream<List<Room>>> getUserRooms(String userId) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await firestoreInstance
+        .collectionGroup("members")
+        .where("userId", isEqualTo: userId)
+        .get();
+
+      List<String> roomsIds = querySnapshot
+        .docs
+        .map((doc) =>
+          doc.data()["roomId"] as String
+        )
+        .toList();
+
+      return roomsCollection
+        .where(
+          FieldPath.documentId,
+          whereIn: roomsIds
+        )
+        .orderBy(
+          "lastMessageTimestamp",
+          descending: true
+        )
+        .snapshots()
+        .map((QuerySnapshot<Map<String, dynamic>> snapshot) =>
+          snapshot.docs.map<Room>(
+            (doc) => Room.fromDocument(doc.data())
+          ).toList()
+        );
+      
+    } on FirebaseException catch (e) {
+      throw Exception(e);
+    }
   }
 
   /// Adds a new room to the firebase rooms collection.
