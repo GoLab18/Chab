@@ -36,9 +36,11 @@ class ChatRoomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 // Chat room photo
                 CircleAvatar(
                   radius: 24,
-                  foregroundImage: (state.status == ChatRoomStatus.success && state.roomTuple!.room.picture.isNotEmpty)
-                    ? NetworkImage(state.roomTuple!.room.picture)
-                    : null,
+                  foregroundImage: (state.status == ChatRoomStatus.success
+                    && state.roomTuple!.room.picture != null
+                    && state.roomTuple!.room.picture!.isNotEmpty)
+                      ? NetworkImage(state.roomTuple!.room.picture!)
+                      : null,
                   backgroundColor: Theme.of(context).colorScheme.tertiary,
                   child: Icon(
                     Icons.person_outlined,
