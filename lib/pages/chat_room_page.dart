@@ -158,21 +158,23 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                     )
                   ),
                   suffixIcon: IconButton(
-                    onPressed: isSendButtonEnabled
-                      ? () {
-                        context.read<MessageBloc>().add(AddMessage(
-                        roomId: context.read<RoomBloc>().state.roomTuple!.room.id,
-                        message: Message(
-                          id: "", // Will be auto generated in the backend.
-                          content: newMessageController.text,
-                          senderId: context.read<UsrBloc>().state.user!.id
-                        )
-                      ));
+                    onPressed: () {
+                      if (isSendButtonEnabled) {
+                        context.read<MessageBloc>().add(
+                          AddMessage(
+                            roomId: context.read<RoomBloc>().state.roomTuple!.room.id,
+                            message: Message(
+                              id: "", // Will be auto generated in the backend.
+                              content: newMessageController.text,
+                              senderId: context.read<UsrBloc>().state.user!.id
+                            )
+                          )
+                        );
 
                         newMessageController.clear();
                         FocusScope.of(context).unfocus();
                       }
-                      : null,
+                    },
                     icon: Icon(
                       Icons.send_outlined,
                       color: isSendButtonEnabled
