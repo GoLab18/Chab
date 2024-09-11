@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -151,5 +152,85 @@ class FirebaseUserRepository {
     } catch (e) {
       throw Exception(e);
     }
+  }
+
+  /// Fetches private chat room members' ids.
+  Future<List<String>> getPrivateChatRoomMembersIds(String roomId) async {
+    QuerySnapshot<Map<String, dynamic>> membersSnapshot = await roomsCollection
+      .doc(roomId)
+      .collection("members")
+      .get();
+
+    return membersSnapshot.docs.map((doc) => doc.id).toList();
+
+    // return await FirebaseFirestore
+    //   .instance
+    //   .collection("rooms")
+    //   .doc(roomId)
+    //   .get()
+    //   .then((value) =>
+    //     (value.data()!["members"] as List<dynamic>).cast<String>()
+    //   ).catchError((error) =>
+    //     throw Exception(error)
+    //   );
+  }
+
+  /// Fetches group chat room members' ids stream.
+  Stream<List<String>> getGroupChatRoomMembersIdsStream(String roomId) {
+    return roomsCollection
+      .doc(roomId)
+      .collection("members")
+      .snapshots()
+      .map((snapshot) =>
+        snapshot.docs.map((doc) => doc.id).toList()
+      );
+
+    // return FirebaseFirestore
+    //   .instance
+    //   .collection("rooms")
+    //   .doc(roomId)
+    //   .snapshots()
+    //   .map((snapshot) =>
+    //     (snapshot.data()!["members"] as List<dynamic>).cast<String>()
+    //   );
+  }
+
+  /// Fetches private chat room members Stream.
+  Stream<List<Usr>> getPrivateChatRoomMembersStream(List<String> roomMembersIds) {
+    return usersCollection
+      .where("id", whereIn: roomMembersIds)
+      .snapshots()
+      .map((QuerySnapshot<Map<String, dynamic>> snapshot) =>
+        snapshot
+        .docs
+        .map(
+          (doc) => Usr.fromDocument(doc.data())
+        )
+        .toList()
+      );
+  }
+
+  /// Fetches group chat room members Stream.
+  /// Updates happen incrementally based on changes in group chat room members.
+  Stream<List<Usr>> getGroupChatRoomMembersStream(String roomId) {
+  return roomsCollection
+      .doc(roomId)
+      .collection("members")
+      .snapshots()
+      .map((QuerySnapshot<Map<String, dynamic>> snapshot) =>
+        snapshot.docs.map((doc) => doc.id).toList()
+      )
+      .asyncExpand((List<String> roomMembersIds )=>
+        usersCollection
+          .where(FieldPath.documentId, whereIn: roomMembersIds)
+          .snapshots()
+          .map((QuerySnapshot<Map<String, dynamic>> userSnapshot) =>
+            userSnapshot
+            .docs
+            .map((QueryDocumentSnapshot<Map<String, dynamic>> doc) =>
+              Usr.fromDocument(doc.data())
+            )
+            .toList()
+          ));
   }
 }
