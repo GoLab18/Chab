@@ -8,7 +8,9 @@ import 'util/result.dart';
 
 class FirebaseUserRepository {
   late final FirebaseAuth _firebaseAuth;
-  final CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore.instance.collection("users");
+  late final FirebaseFirestore firestoreInstance;
+  late final CollectionReference<Map<String, dynamic>> usersCollection;
+  late final CollectionReference<Map<String, dynamic>> roomsCollection;
 
   FirebaseUserRepository({
     FirebaseAuth? firebaseAuth
