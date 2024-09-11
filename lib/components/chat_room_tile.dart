@@ -16,6 +16,23 @@ class ChatRoomTile extends StatelessWidget {
     {super.key}
   );
 
+  String _getUserNames(List<Usr> users) {
+    int maxChars = 33;
+    String finalString = "";
+
+    for (Usr user in users) {
+      String newChars = "${user.name}, ";
+
+      if (finalString.length + newChars.length <= maxChars) {
+        finalString += newChars;
+      } else {
+        return finalString.substring(0, finalString.length - 2);
+      }
+    }
+    
+    return finalString.substring(0, finalString.length - 2);
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
