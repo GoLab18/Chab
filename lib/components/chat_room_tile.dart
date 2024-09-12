@@ -103,7 +103,7 @@ class ChatRoomTile extends StatelessWidget {
                 if (room.isPrivate) {
                   privateChatFriend = (usersList[0].id == context.read<UsrBloc>().state.user!.id)
                     ? usersList[1]
-                    : usersList[2];
+                    : usersList[0];
                 }
 
                 return Row(
