@@ -17,5 +17,6 @@ ThemeData darkMode = ThemeData(
   ),
   drawerTheme: const DrawerThemeData(
     backgroundColor: Color.fromARGB(255, 38, 94, 58)
-  )
+  ),
+  dividerColor: const Color.fromARGB(255, 34, 83, 51)
 );

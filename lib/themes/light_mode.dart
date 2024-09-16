@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 ThemeData lightMode = ThemeData(
   colorScheme: const ColorScheme.light(
     surface: Color.fromARGB(255, 182, 229, 199),
-    primary: Color.fromARGB(255, 34, 85, 52),
+    primary: Color.fromARGB(255, 54, 131, 81),
     secondary: Color.fromARGB(255, 122, 195, 146),
     tertiary: Color.fromARGB(255, 99, 157, 122),
     inversePrimary: Color.fromARGB(255, 24, 58, 38),
@@ -16,5 +16,6 @@ ThemeData lightMode = ThemeData(
   ),
   drawerTheme: const DrawerThemeData(
     backgroundColor: Color.fromARGB(255, 133, 193, 153)
-  )
+  ),
+  dividerColor: const Color.fromARGB(255, 40, 100, 61)
 );
