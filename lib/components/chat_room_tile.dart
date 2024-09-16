@@ -209,7 +209,7 @@ class ChatRoomTile extends StatelessWidget {
                                         
                                         // Last message's timestamp
                                         Text(
-                                          DateUtil.getCurrentDate(room.lastMessageTimestamp.toDate()),
+                                          DateUtil.getLastMessageDate(room.lastMessageTimestamp.toDate()),
                                           style: TextStyle(
                                             color: Theme.of(context).colorScheme.tertiary
                                           )
@@ -383,7 +383,7 @@ class ChatRoomTile extends StatelessWidget {
                                             
                                             // Last message's timestamp
                                             Text(
-                                              DateUtil.getCurrentDate(room.lastMessageTimestamp.toDate()),
+                                              DateUtil.getLastMessageDate(room.lastMessageTimestamp.toDate()),
                                               style: TextStyle(
                                                 color: Theme.of(context).colorScheme.tertiary
                                               )
