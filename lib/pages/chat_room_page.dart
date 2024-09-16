@@ -125,7 +125,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                       }
                     );
                   }
-              
+                  
                   throw Exception("Non-existent room_bloc state");
                 }
               )
