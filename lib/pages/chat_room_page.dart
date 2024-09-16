@@ -9,6 +9,8 @@ import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/app_bars/chat_room_app_bar.dart';
 import '../components/is_empty_message_widget.dart';
+import '../components/message_sequence_date.dart';
+import '../util/date_util.dart';
 
 class ChatRoomPage extends StatefulWidget {
   const ChatRoomPage({super.key});
@@ -97,18 +99,31 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         if (!snapshot.hasData || snapshot.data!.isEmpty) return const IsEmptyMessageWidget();
                         
                         final messages = snapshot.data;
+
+                        DateUtil dateUtil = DateUtil()..lastMessageDateTime = messages![0].timestamp.toDate();
               
                         return Padding(
                           padding: const EdgeInsets.all(8),
                           child: ListView.separated(
                             reverse: true,
                             controller: scrollController,
-                            itemCount: messages!.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 8),
+                            itemCount: messages.length,
+                            separatorBuilder: (context, index) {
+                              DateTime messageDateTime = messages[index].timestamp.toDate();
+
+                              String msgSequenceDate = dateUtil.getMessageSequenceDate(messageDateTime);
+
+                              dateUtil.lastMessageDateTime = messageDateTime;
+
+                              return msgSequenceDate.isEmpty
+                                ? const SizedBox(height: 8)
+                                : MessageSequenceDate(msgSequenceDate);
+                            },
                             itemBuilder: (BuildContext context, int index) {
                               var message = messages[index];
+
                               bool isCurrentUserMessage = message.senderId == context.read<UsrBloc>().state.user!.id;
-              
+
                               return Column(
                                 crossAxisAlignment: (isCurrentUserMessage)
                                   ? CrossAxisAlignment.end : CrossAxisAlignment.start,
