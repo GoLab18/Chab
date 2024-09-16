@@ -1,5 +1,7 @@
+import 'package:chab/blocs/room_bloc/room_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:room_repository/room_repository.dart';
 import 'package:user_repository/user_repository.dart';
 
 import '../blocs/bloc/room_members_bloc.dart';
@@ -44,14 +46,26 @@ class ChatRoomsListPage extends StatelessWidget {
                           itemBuilder: (BuildContext context, int index) {
                             final room = rooms[index];
       
-                            return BlocProvider(
-                            create: (context) => RoomMembersBloc(
-                              userRepository: context.read<FirebaseUserRepository>()
-                            )..add(
-                              room.isPrivate
-                                ? PrivateChatRoomMembersRequested(room.id)
-                                : GroupChatRoomMembersRequested(room.id)
-                            ),
+                            return MultiBlocProvider(
+                              providers: [
+                                BlocProvider(
+                                  create: (context) => RoomMembersBloc(
+                                    userRepository: context.read<FirebaseUserRepository>()
+                                  )..add(
+                                    room.isPrivate
+                                      ? PrivateChatRoomMembersRequested(
+                                        roomId: room.id,
+                                        currentUserId: usrState.user!.id
+                                      )
+                                      : GroupChatRoomMembersRequested(room.id)
+                                  )
+                                ),
+                                BlocProvider(
+                                  create: (context) => RoomBloc(
+                                    roomRepository: context.read<FirebaseRoomRepository>()
+                                  )
+                                )
+                              ],
                             child: ChatRoomTile(rooms[index])
                           );
                           }
@@ -74,8 +88,8 @@ class ChatRoomsListPage extends StatelessWidget {
                 throw Exception("Non-existent rooms_bloc state");
               }
             );
-        },
-      ),
+        }
+      )
     );
   }
 }
