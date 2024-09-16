@@ -48,7 +48,7 @@ class DrawerBar extends StatelessWidget {
                       // Profile picture
                       CircleAvatar(
                         radius: 36,
-                        foregroundImage: (state.status == UsrStatus.success)
+                        foregroundImage: (state.status == UsrStatus.success && state.user!.picture.isNotEmpty)
                           ? NetworkImage(state.user!.picture)
                           : null,
                         backgroundColor: Theme.of(context).colorScheme.tertiary,
