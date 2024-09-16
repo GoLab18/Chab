@@ -9,11 +9,15 @@ sealed class RoomMembersEvent extends Equatable {
 
 final class PrivateChatRoomMembersRequested extends RoomMembersEvent {
   final String roomId;
+  final String currentUserId;
 
-  const PrivateChatRoomMembersRequested(this.roomId);
+  const PrivateChatRoomMembersRequested({
+    required this.roomId,
+    required this.currentUserId
+  });
 
   @override
-  List<Object> get props => [roomId];
+  List<Object> get props => [roomId, currentUserId];
 }
 
 final class GroupChatRoomMembersRequested extends RoomMembersEvent {
