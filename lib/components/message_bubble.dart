@@ -41,7 +41,7 @@ class MessageBubble extends StatelessWidget {
 
           // Last message's timestamp
           Text(
-              DateUtil.getCurrentDate(message.timestamp.toDate()),
+              DateUtil.getFormatedTime(message.timestamp.toDate()),
               style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).colorScheme.tertiary
