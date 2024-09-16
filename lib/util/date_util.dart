@@ -1,5 +1,9 @@
 class DateUtil {
 
+  late DateTime _lastMessageDateTime;
+  
+  set lastMessageDateTime(DateTime lastMessageDate) =>_lastMessageDateTime = lastMessageDate;
+
   static Map<int, String> days = {
     1: "Mon",
     2: "Tues",
@@ -25,11 +29,35 @@ class DateUtil {
     12: "Dec"
   };
 
+  static Map<int, String> fullDays = {
+    1: "Monday",
+    2: "Tuesday",
+    3: "Wednesday",
+    4: "Thursday",
+    5: "Friday",
+    6: "Saturday",
+    7: "Sunday"
+  };
 
-  /// Formats given [itemInitDate] into a readable and good-looking format.
-  static String getFormatedInitTime(DateTime itemInitDate) {
-    int hour = itemInitDate.hour;
-    int minute = itemInitDate.minute;
+  static Map<int, String> fullMonths = {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December"
+  };
+
+  /// Formats given [date] into a readable and good-looking format.
+  static String getFormatedTime(DateTime date) {
+    int hour = date.hour;
+    int minute = date.minute;
 
     String period = hour >= 12 ? "PM" : "AM";
 
@@ -52,28 +80,54 @@ class DateUtil {
     return true;
   }
 
-  /// Different versions based on time difference between current time and init time for the item.
-  static String getCurrentDate(DateTime itemInitDate) {
+  /// Different versions based on time difference between current time and the given one.
+  /// Made for latest message dates formating on the home page.
+  static String getLastMessageDate(DateTime date) {
     DateTime now = DateTime.now();
-    Duration difference = now.difference(itemInitDate);
+    Duration difference = now.difference(date);
 
     // Check if the difference is more than or equal to a year
-    bool moreThanAYear = (now.year > itemInitDate.year) ||
-      (now.year == itemInitDate.year && difference.inDays >= 365) ||
-      (isLeapYear(itemInitDate.year) && difference.inDays >= 366);
+    bool moreThanAYear = (now.year > date.year) ||
+      (now.year == date.year && difference.inDays >= 365) ||
+      (isLeapYear(date.year) && difference.inDays >= 366);
 
     if (moreThanAYear) {
       // String for dates more than a year ago
-      return "${itemInitDate.day} ${months[itemInitDate.month]} ${itemInitDate.year}";
+      return "${date.day}.${date.month}.${date.year}";
     } else if (difference.inDays >= 7) {
       // String for dates more than a week ago
-      return "${itemInitDate.day} ${months[itemInitDate.month]}";
+      return "${months[date.month]} ${date.day}";
     } else if (difference.inDays >= 1) {
       // String for dates more than a day ago
-      return days[itemInitDate.weekday].toString();
+      return days[date.weekday].toString();
     } else {
       // String for dates within a day
-      return getFormatedInitTime(itemInitDate);
+      return getFormatedTime(date);
     }
+  }
+
+  /// Different versions based on time difference between the given dates.
+  /// Made for message dates formating on the chat room page.
+  /// Returns an empty string when the date difference is lower than a day.
+  String getMessageSequenceDate(DateTime nextMessageDateTime) {
+    Duration difference = _lastMessageDateTime.difference(nextMessageDateTime);
+
+    // Check if the difference is more than or equal to a year
+    bool moreThanAYear = (_lastMessageDateTime.year > nextMessageDateTime.year) ||
+      (_lastMessageDateTime.year == nextMessageDateTime.year && difference.inDays >= 365) ||
+      (isLeapYear(nextMessageDateTime.year) && difference.inDays >= 366);
+
+    if (moreThanAYear) {
+      // String for dates more than a year ago
+      return "${fullMonths[nextMessageDateTime.month]} ${nextMessageDateTime.day}, ${nextMessageDateTime.year}";
+    } else if (difference.inDays >= 7) {
+      // String for dates more than a week ago
+      return "${fullMonths[nextMessageDateTime.month]} ${nextMessageDateTime.day}";
+    } else if (difference.inDays >= 1) {
+      // String for dates more than a day ago
+      return fullDays[nextMessageDateTime.weekday].toString();
+    }
+
+    return "";
   }
 }
