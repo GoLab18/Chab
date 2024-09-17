@@ -1,8 +1,8 @@
 class DateUtil {
 
-  late DateTime _lastMessageDateTime;
+  late DateTime _nextMessageDateTime;
   
-  set lastMessageDateTime(DateTime lastMessageDate) =>_lastMessageDateTime = lastMessageDate;
+  set nextMessageDateTime(DateTime nextMessageDate) =>_nextMessageDateTime = nextMessageDate;
 
   static Map<int, String> days = {
     1: "Mon",
@@ -81,8 +81,8 @@ class DateUtil {
   }
 
   /// Different versions based on time difference between current time and the given one.
-  /// Made for latest message dates formating on the home page.
-  static String getLastMessageDate(DateTime date) {
+  /// Returns dates with shortened names.
+  static String getShortDateFormatFromNow(DateTime date) {
     DateTime now = DateTime.now();
     Duration difference = now.difference(date);
 
@@ -106,28 +106,41 @@ class DateUtil {
     }
   }
 
-  /// Different versions based on time difference between the given dates.
-  /// Made for message dates formating on the chat room page.
-  /// Returns an empty string when the date difference is lower than a day.
-  String getMessageSequenceDate(DateTime nextMessageDateTime) {
-    Duration difference = _lastMessageDateTime.difference(nextMessageDateTime);
+  bool isMessageDateDifferenceMoreThanOrEqualDay(DateTime lastMessageDate) => lastMessageDate.difference(_nextMessageDateTime).inDays >= 1;
+
+  static bool isTodayDate(DateTime date) {
+    DateTime dateTimeNow = DateTime.now();
+
+    return (
+      dateTimeNow.day == date.day
+        && dateTimeNow.month == date.month
+        && dateTimeNow.year == date.year
+    );
+  }
+
+  /// Different versions based on time difference between current time and the given one.
+  /// Returns full-named dates.
+  static String getLongDateFormatFromNow(DateTime date) {
+    DateTime now = DateTime.now();
+    Duration difference = now.difference(date);
 
     // Check if the difference is more than or equal to a year
-    bool moreThanAYear = (_lastMessageDateTime.year > nextMessageDateTime.year) ||
-      (_lastMessageDateTime.year == nextMessageDateTime.year && difference.inDays >= 365) ||
-      (isLeapYear(nextMessageDateTime.year) && difference.inDays >= 366);
+    bool moreThanAYear = (now.year > date.year) ||
+      (now.year == date.year && difference.inDays >= 365) ||
+      (isLeapYear(date.year) && difference.inDays >= 366);
 
     if (moreThanAYear) {
       // String for dates more than a year ago
-      return "${fullMonths[nextMessageDateTime.month]} ${nextMessageDateTime.day}, ${nextMessageDateTime.year}";
+      return "${fullMonths[date.month]} ${date.day}, ${date.year}";
     } else if (difference.inDays >= 7) {
       // String for dates more than a week ago
-      return "${fullMonths[nextMessageDateTime.month]} ${nextMessageDateTime.day}";
+      return "${fullMonths[date.month]} ${date.day}";
     } else if (difference.inDays >= 1) {
       // String for dates more than a day ago
-      return fullDays[nextMessageDateTime.weekday].toString();
+      return fullDays[date.weekday].toString();
+    } else {
+      // String for dates within a day
+      return getFormatedTime(date);
     }
-
-    return "";
   }
 }
