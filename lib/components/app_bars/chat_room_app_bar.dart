@@ -77,7 +77,7 @@ class ChatRoomAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 
                                 // Group chat room data
                                 ? StreamBuilder<Map<String, Usr>>(
-                                  stream: context.read<RoomMembersBloc>().state.roomMembersStream,
+                                  stream: roomMembersState.roomMembersStream,
                                   builder: (context, snapshot) {
                                     if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData || snapshot.data!.isEmpty) {
                                       return const Center(
