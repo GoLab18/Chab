@@ -100,37 +100,49 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         
                         final messages = snapshot.data;
 
-                        DateUtil dateUtil = DateUtil()..lastMessageDateTime = messages![0].timestamp.toDate();
+                        DateUtil dateUtil = DateUtil();
               
                         return Padding(
                           padding: const EdgeInsets.all(8),
-                          child: ListView.separated(
+                          child: ListView.builder(
                             reverse: true,
                             controller: scrollController,
-                            itemCount: messages.length,
-                            separatorBuilder: (context, index) {
-                              DateTime messageDateTime = messages[index].timestamp.toDate();
-
-                              String msgSequenceDate = dateUtil.getMessageSequenceDate(messageDateTime);
-
-                              dateUtil.lastMessageDateTime = messageDateTime;
-
-                              return msgSequenceDate.isEmpty
-                                ? const SizedBox(height: 8)
-                                : MessageSequenceDate(msgSequenceDate);
-                            },
+                            itemCount: messages!.length,
                             itemBuilder: (BuildContext context, int index) {
-                              var message = messages[index];
+                              var currentMessage = messages[index];
 
-                              bool isCurrentUserMessage = message.senderId == context.read<UsrBloc>().state.user!.id;
+                              bool nextMessageExists = index + 1 < messages.length;
+
+                              // Is null if next message is non-existent
+                              bool? isDateShown;
+
+                              DateTime currentMessageDateTime = currentMessage.timestamp.toDate();
+
+                              if (nextMessageExists) {
+                                dateUtil.nextMessageDateTime = messages[index + 1].timestamp.toDate();
+                                isDateShown = dateUtil.isMessageDateDifferenceMoreThanOrEqualDay(currentMessageDateTime);
+                              }
+
+                              bool isCurrentUsersMessage = currentMessage.senderId == context.read<UsrBloc>().state.user!.id;
+
 
                               return Column(
-                                crossAxisAlignment: (isCurrentUserMessage)
+                                crossAxisAlignment: (isCurrentUsersMessage)
                                   ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                 children: [
+                                  // Message sequence date view
+                                  (isDateShown == null || isDateShown)
+                                    ? MessageSequenceDate(
+                                      DateUtil.isTodayDate(currentMessageDateTime)
+                                        ? "Today"
+                                        : DateUtil.getLongDateFormatFromNow(currentMessageDateTime)
+                                    )
+                                    : const SizedBox(height: 8),
+
+                                  // Message
                                   MessageBubble(
-                                    message: message,
-                                    isCurrentUserMessage: isCurrentUserMessage
+                                    message: currentMessage,
+                                    isCurrentUserMessage: isCurrentUsersMessage
                                   )
                                 ]
                               );
