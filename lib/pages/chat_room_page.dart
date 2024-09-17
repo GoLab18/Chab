@@ -187,6 +187,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                   suffixIcon: IconButton(
                     onPressed: () {
                       if (isSendButtonEnabled) {
+                        FocusScope.of(context).unfocus();
+                        
                         context.read<MessageBloc>().add(
                           AddMessage(
                             roomId: context.read<RoomBloc>().state.roomTuple!.room.id,
@@ -199,7 +201,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         );
 
                         newMessageController.clear();
-                        FocusScope.of(context).unfocus();
                       }
                     },
                     icon: Icon(
