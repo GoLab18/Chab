@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:room_repository/room_repository.dart';
 import 'package:user_repository/user_repository.dart';
 
-import '../blocs/bloc/room_members_bloc.dart';
+import '../blocs/room_members_bloc/room_members_bloc.dart';
 import '../blocs/message_bloc/message_bloc.dart';
 import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
@@ -209,7 +209,7 @@ class ChatRoomTile extends StatelessWidget {
                                         
                                         // Last message's timestamp
                                         Text(
-                                          DateUtil.getLastMessageDate(room.lastMessageTimestamp.toDate()),
+                                          DateUtil.getShortDateFormatFromNow(room.lastMessageTimestamp.toDate()),
                                           style: TextStyle(
                                             color: Theme.of(context).colorScheme.tertiary
                                           )
@@ -383,7 +383,7 @@ class ChatRoomTile extends StatelessWidget {
                                             
                                             // Last message's timestamp
                                             Text(
-                                              DateUtil.getLastMessageDate(room.lastMessageTimestamp.toDate()),
+                                              DateUtil.getShortDateFormatFromNow(room.lastMessageTimestamp.toDate()),
                                               style: TextStyle(
                                                 color: Theme.of(context).colorScheme.tertiary
                                               )

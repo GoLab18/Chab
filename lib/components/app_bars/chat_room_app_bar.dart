@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:user_repository/user_repository.dart';
 
-import '../../blocs/bloc/room_members_bloc.dart';
+import '../../blocs/room_members_bloc/room_members_bloc.dart';
 import '../../blocs/room_bloc/room_bloc.dart';
 import '../../util/room_name_util.dart';
 
