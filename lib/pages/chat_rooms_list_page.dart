@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:room_repository/room_repository.dart';
 import 'package:user_repository/user_repository.dart';
 
-import '../blocs/bloc/room_members_bloc.dart';
+import '../blocs/room_members_bloc/room_members_bloc.dart';
 import '../blocs/rooms_bloc/rooms_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/chat_room_tile.dart';
