@@ -37,7 +37,10 @@ class ChatRoomTile extends StatelessWidget {
                       BlocProvider.value(
                         value: context.read<RoomMembersBloc>()..add(
                           room.isPrivate
-                            ? PrivateChatRoomMembersRequested(roomId: room.id, currentUserId: context.read<UsrBloc>().state.user!.id)
+                            ? PrivateChatRoomMembersRequested(
+                              roomId: room.id,
+                              currentUserId: context.read<UsrBloc>().state.user!.id
+                            )
                             :GroupChatRoomMembersRequested(room.id)
                         )
                       ),
