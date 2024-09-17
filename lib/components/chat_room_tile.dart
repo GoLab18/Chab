@@ -22,7 +22,7 @@ class ChatRoomTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<RoomMembersBloc, RoomMembersState>(
-      builder: (context, rooomMembersState) {
+      builder: (context, roomMembersState) {
         return BlocListener<RoomBloc, RoomState>(
           listener: (context, state) {
             if (state.status == ChatRoomStatus.success) {
@@ -68,7 +68,7 @@ class ChatRoomTile extends StatelessWidget {
                   
                   // Built differently based on the room type,
                   // private chat room does not need a stream
-                  switch (rooomMembersState.status) {
+                  switch (roomMembersState.status) {
                     ChatRoomMembersStatus.loading => const Center(child: CircularProgressIndicator()),
                     ChatRoomMembersStatus.failure => Text(
                       "Loading error",
@@ -91,8 +91,8 @@ class ChatRoomTile extends StatelessWidget {
                               // Chat room photo
                               CircleAvatar(
                                 radius: 30,
-                                foregroundImage: rooomMembersState.privateChatRoomFriend!.picture.isNotEmpty
-                                  ? NetworkImage(rooomMembersState.privateChatRoomFriend!.picture)
+                                foregroundImage: roomMembersState.privateChatRoomFriend!.picture.isNotEmpty
+                                  ? NetworkImage(roomMembersState.privateChatRoomFriend!.picture)
                                   : null,
                                 backgroundColor: Theme.of(context).colorScheme.tertiary,
                                 child: Icon(
@@ -149,7 +149,7 @@ class ChatRoomTile extends StatelessWidget {
                                   children: [
                                     // Friend's name
                                     Text(
-                                      rooomMembersState.privateChatRoomFriend!.name, // max 33 chars can fit
+                                      roomMembersState.privateChatRoomFriend!.name, // max 33 chars can fit
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
@@ -226,7 +226,7 @@ class ChatRoomTile extends StatelessWidget {
           
                       // Group chat room tile
                       false => StreamBuilder<Map<String, Usr>>(
-                        stream: rooomMembersState.roomMembersStream,
+                        stream: roomMembersState.roomMembersStream,
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData || snapshot.data!.isEmpty) {
                             return const Center(
