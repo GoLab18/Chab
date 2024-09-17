@@ -186,12 +186,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                   ),
                   suffixIcon: IconButton(
                     onPressed: () {
-                      if (isSendButtonEnabled) {
+                      RoomState roomState = context.read<RoomBloc>().state;
+
+                      if (isSendButtonEnabled && roomState.status == ChatRoomStatus.success) {
                         FocusScope.of(context).unfocus();
                         
                         context.read<MessageBloc>().add(
                           AddMessage(
-                            roomId: context.read<RoomBloc>().state.roomTuple!.room.id,
+                            roomId: roomState.roomTuple!.room.id,
                             message: Message(
                               id: "", // Will be auto generated in the backend.
                               content: newMessageController.text,
