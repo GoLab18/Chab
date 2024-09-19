@@ -6,7 +6,7 @@ class IsEmptyMessageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      "No friends? Add some :)",
+      "Empty",
       style: TextStyle(
         fontSize: 30,
         color: Theme.of(context).colorScheme.inversePrimary
