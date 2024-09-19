@@ -9,15 +9,18 @@ import 'util/result.dart';
 
 class FirebaseUserRepository {
   late final FirebaseAuth _firebaseAuth;
-  late final FirebaseFirestore firestoreInstance;
   late final CollectionReference<Map<String, dynamic>> usersCollection;
   late final CollectionReference<Map<String, dynamic>> roomsCollection;
+  late final CollectionReference<Map<String, dynamic>> friendInvitesCollection;
 
   FirebaseUserRepository({
     FirebaseAuth? firebaseAuth
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
-    usersCollection = FirebaseFirestore.instance.collection("users");
-    roomsCollection = FirebaseFirestore.instance.collection("rooms");
+    FirebaseFirestore firestoreInstance = FirebaseFirestore.instance;
+
+    usersCollection = firestoreInstance.collection("users");
+    roomsCollection = firestoreInstance.collection("rooms");
+    friendInvitesCollection = firestoreInstance.collection("friend_invites");
   }
 
   Stream<User?> get user {
