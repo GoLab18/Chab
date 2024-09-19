@@ -118,6 +118,15 @@ class FirebaseUserRepository {
     }
   }
 
+  /// Adds a new user to the database.
+  Future<void> addUser(Usr user) async {
+    try {
+      await usersCollection.doc(user.id).set(user.toDocument());
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
   /// Sets user fields like email, username etc.
   Future<void> setUserData(Usr user) async {
     try {
