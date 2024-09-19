@@ -186,7 +186,7 @@ class FirebaseUserRepository {
 
   /// Fetches group chat room members Stream.
   /// Updates happen incrementally based on changes in group chat room members.
-  Stream<Map<String, Usr>> getGroupChatRoomMembersStream(String roomId) {
+  Future<Stream<Map<String, Usr>>> getGroupChatRoomMembersStream(String roomId) async {
     try {
       return roomsCollection
         .doc(roomId)
@@ -196,12 +196,14 @@ class FirebaseUserRepository {
           snapshot.docs.map((doc) => doc.id).toList()
         )
         .asyncExpand((List<String> roomMembersIds) =>
-          usersCollection
+          roomMembersIds.isEmpty  
+            ? Stream.value(<String, Usr>{})
+            : usersCollection
             .where(FieldPath.documentId, whereIn: roomMembersIds)
             .snapshots()
             .map((QuerySnapshot<Map<String, dynamic>> userSnapshot) {
               Map<String, Usr> usersMap = {};
-
+        
               for (var doc in userSnapshot.docs) {
                 Usr user = Usr.fromDocument(doc.data());
                 usersMap[user.id] = user;
@@ -331,4 +333,4 @@ class FirebaseUserRepository {
       throw Exception(e);
     }
   }
-}}
+}
