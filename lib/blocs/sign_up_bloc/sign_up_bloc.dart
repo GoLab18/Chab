@@ -21,7 +21,7 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
       
       if (signUpResult.isSuccess) {
         // Storing the new user data
-        await userRepository.setUserData(signUpResult.value!);
+        await userRepository.addUser(signUpResult.value!);
 
         emit(SignUpSuccess());
       }
