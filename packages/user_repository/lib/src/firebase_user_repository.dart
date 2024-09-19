@@ -215,4 +215,120 @@ class FirebaseUserRepository {
       throw Exception(e);
     }
   }
-}
+
+  /// Fetches users that sent the current user an invite.
+  /// Returns a [Stream] with a [Map] that holds a [Record] with a [Usr] and an invite [DateTime].
+  /// [Map] fields can be accessed through senders' Ids. // TODO change
+  Future<Stream<List<(Usr, DateTime)>>> getUserFriendInvites(String userId) async {
+    try {
+      return friendInvitesCollection
+        .where("toUser", isEqualTo: userId)
+        .orderBy("timestamp")
+        .snapshots()
+        .map((QuerySnapshot<Map<String, dynamic>> invitesSnapshot) =>
+          invitesSnapshot.docs.map((doc) {
+            Map<String, dynamic> data = doc.data();
+
+            return (
+              data["fromUser"] as String,
+              (data["timestamp"] as Timestamp).toDate()
+            );
+          })
+          .toList()
+        )
+        .asyncExpand((List<(String, DateTime)> records) {
+          List<String> sendersIds = [];
+          List<DateTime> dateTimes = [];
+
+          for ((String, DateTime) record in records) {
+            sendersIds.add(record.$1);
+            dateTimes.add(record.$2);
+          }
+
+          if (sendersIds.isEmpty) {
+            return Stream.value(<(Usr, DateTime)>[]);
+          }
+
+          return usersCollection
+            .where(FieldPath.documentId, whereIn: sendersIds)
+            .snapshots()
+            .map((QuerySnapshot<Map<String, dynamic>> sendersSnapshot) {
+              var docsList = sendersSnapshot.docs;
+              List<(Usr, DateTime)> finalList = [];
+
+              for (int i = 0; i < docsList.length; i++) {
+                finalList.add(
+                  (
+                    Usr.fromDocument(docsList[i].data()),
+                    dateTimes[i]
+                  )
+                );
+              }
+
+              return finalList;
+            });
+        })
+        .asBroadcastStream();
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  /// Fetches users that have been invited by the current user.
+  /// Returns a [Stream] with a [Map] that holds a [Record] with a [Usr] and an invite [DateTime].
+  /// [Map] fields can be accessed through receivers' Ids. // TODO change
+  Future<Stream<List<(Usr, DateTime)>>> getCurrentUsersIssuedInvites(String userId) async {
+    try {
+      return friendInvitesCollection
+        .where("fromUser", isEqualTo: userId)
+        .orderBy("timestamp") 
+        .snapshots()
+        .map((QuerySnapshot<Map<String, dynamic>> invitesSnapshot) =>
+          invitesSnapshot.docs.map((doc) {
+            Map<String, dynamic> data = doc.data();
+
+            return (
+              data["toUser"] as String,
+              (data["timestamp"] as Timestamp).toDate()
+            );
+          })
+          .toList()
+        )
+        .asyncExpand((List<(String, DateTime)> records) {
+          List<String> receiversIds = [];
+          List<DateTime> dateTimes = [];
+
+          for ((String, DateTime) record in records) {
+            receiversIds.add(record.$1);
+            dateTimes.add(record.$2);
+          }
+          
+          if (receiversIds.isEmpty) {
+            return Stream.value(<(Usr, DateTime)>[]);
+          }
+
+          return usersCollection
+            .where(FieldPath.documentId, whereIn: receiversIds)
+            .snapshots()
+            .map((QuerySnapshot<Map<String, dynamic>> receiversSnapshot) {
+              var docsList = receiversSnapshot.docs;
+              List<(Usr, DateTime)> finalList = [];
+
+              for (int i = 0; i < docsList.length; i++) {
+                finalList.add(
+                  (
+                    Usr.fromDocument(docsList[i].data()),
+                    dateTimes[i]
+                  )
+                );
+              }
+
+              return finalList;
+            });
+        })
+        .asBroadcastStream();
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+}}
