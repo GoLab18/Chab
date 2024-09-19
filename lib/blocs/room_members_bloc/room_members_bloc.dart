@@ -23,9 +23,9 @@ class RoomMembersBloc extends Bloc<RoomMembersEvent, RoomMembersState> {
       }
     });
 
-    on<GroupChatRoomMembersRequested>((event, emit) {
+    on<GroupChatRoomMembersRequested>((event, emit) async {
       try {
-        Stream<Map<String, Usr>> roomMembersStream = userRepository.getGroupChatRoomMembersStream(event.roomId);
+        Stream<Map<String, Usr>> roomMembersStream = await userRepository.getGroupChatRoomMembersStream(event.roomId);
         
         emit(RoomMembersState.success(roomMembersStream: roomMembersStream));
       } catch (e) {
