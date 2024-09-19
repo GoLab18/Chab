@@ -55,7 +55,9 @@ class FirebaseRoomRepository {
         )
         .toList();
 
-      return roomsCollection
+      return roomsIds.isEmpty
+        ? Stream.value([])
+        : roomsCollection
         .where(
           FieldPath.documentId,
           whereIn: roomsIds
