@@ -2,9 +2,13 @@ import 'package:chab/blocs/auth_bloc/auth_bloc.dart';
 import 'package:chab/blocs/sign_in_bloc/sign_in_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:user_repository/user_repository.dart';
 
 import '../../blocs/change_usr_info_bloc/change_usr_info_bloc.dart';
+import '../../blocs/received_invites_bloc/received_invites_bloc.dart';
+import '../../blocs/sent_invites_bloc/sent_invites_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
+import '../../pages/find_friends_page.dart';
 import '../../pages/profile_page.dart';
 import 'drawer_bar.dart';
 import 'drawer_tile.dart';
@@ -38,6 +42,34 @@ class _CustomDrawerState extends State<CustomDrawer> {
             )
           ],
           child: const ProfilePage()
+        )
+      )
+    );
+  }
+
+  void openFindFriendsPage() {
+    Navigator.pop(context);
+
+    FirebaseUserRepository fuRepo = context.read<FirebaseUserRepository>();
+    String userId = context.read<UsrBloc>().state.user!.id;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext pageContext) => MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => ReceivedInvitesBloc(
+                userRepository: fuRepo
+              )..add(ReceivedInvitesEvent(userId))
+            ),
+            BlocProvider(
+              create: (context) => SentInvitesBloc(
+                userRepository: fuRepo
+              )..add(SentInvitesEvent(userId))
+            )
+          ],
+          child: const FindFriendsPage()
         )
       )
     );
@@ -80,8 +112,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
             // Add Friends
             DrawerTile(
               tileIcon: Icons.person_add_alt_1_outlined,
-              title: "Add Friends",
-              onTap: () {}
+              title: "Find Friends",
+              onTap: openFindFriendsPage
             ),
 
             Divider(
