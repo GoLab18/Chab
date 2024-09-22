@@ -79,8 +79,18 @@ class FirebaseRoomRepository {
   }
 
   /// Adds a new room to the firebase rooms collection.
-  Future<void> addRoom(Room room) async {
-    await roomsCollection.add(room.toDocument());
+  /// If isPrivate equals true then the newly created room is a private chat room.
+  /// Else it is a group chat room room.
+  Future<String> createRoom(bool isPrivate) async {
+     DocumentReference<Map<String, dynamic>> roomRef;
+
+    if (isPrivate) {
+      roomRef = await roomsCollection.add(Room.emptyPrivateChatRoom.toDocument());
+    } else {
+      roomRef = await roomsCollection.add(Room.emptyGroupChatRoom.toDocument());
+    }
+
+    return roomRef.id;
   }
 
   /// Adds a new message to the firebase messages subcollection.
@@ -95,12 +105,12 @@ class FirebaseRoomRepository {
     await docRef.set(message.copyWith(id: docRef.id).toDocument());
 
     // Make it the latest message in the chat room.
-    await roomsCollection.doc(roomId).update({
+    await roomsCollection.doc(roomId).set({
       'lastMessageContent': message.content,
       'lastMessageHasPicture': message.picture.isEmpty ? false : true,
       "lastMessageSenderId": message.senderId,
       'lastMessageTimestamp': message.timestamp
-    });
+    }, SetOptions(merge: true));
   }
 
   /// Updates a room in the firestore.
@@ -121,5 +131,38 @@ class FirebaseRoomRepository {
   /// Deletes a message from the firebase messages subcollection.
   Future<void> deleteMessage(String roomId, String messageId) async {
     await roomsCollection.doc(roomId).collection("messages").doc(messageId).delete();
+  }
+
+  /// Adds members to the room.
+  /// If [newMembersIds] is equal to one, only one member gets added.
+  /// [isGroupChatRoom] flag is for storing additional data for each member. 
+  /// Throws on an empty [newMembersIds] list.
+  Future<void> addMembersToRoom(bool isGroupChatRoom, String roomId, List<String> newMembersIds) async {
+    if (newMembersIds.isEmpty) throw Exception("newMembersId list cannot be empty");
+
+    CollectionReference<Map<String, dynamic>> membersRef = roomsCollection.doc(roomId).collection("members");
+
+    if (newMembersIds.length == 1) {
+      await membersRef.doc(newMembersIds[0]).set({
+        "roomId": roomId,
+        "memberId": newMembersIds[0],
+        if (isGroupChatRoom) "isMemberStill": true
+      });
+
+      return;
+    }
+
+    WriteBatch batch = FirebaseFirestore.instance.batch();
+
+    for (String memberId in newMembersIds) {
+      DocumentReference<Map<String, dynamic>> newMemberRef = membersRef.doc(memberId);
+      
+      batch.set(newMemberRef, {
+        "roomId": roomId,
+        "memberId": memberId
+      });
+    }
+
+    await batch.commit();
   }
 }
