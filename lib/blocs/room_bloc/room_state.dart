@@ -17,7 +17,7 @@ class RoomState {
 
   const RoomState.loading() : this();
 
-  const RoomState.success(ChatRoomTuple roomTuple) : this(roomTuple: roomTuple, status: ChatRoomStatus.success);
+  const RoomState.success(ChatRoomTuple? roomTuple) : this(roomTuple: roomTuple, status: ChatRoomStatus.success);
 
   const RoomState.failure() : this(status: ChatRoomStatus.failure);
 }
