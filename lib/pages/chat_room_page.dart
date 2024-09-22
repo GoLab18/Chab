@@ -238,10 +238,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                 // For displaying message sender's avatar
                                 bool wasDateDisplayedBefore = false;
 
-                                // Becomes null if next message is non-existent
+                                // Become null if next message is non-existent
                                 bool? isDateShown;
+                                bool? isNextSenderDifferent;
+
+                                bool isUsernameShown = false;
                                 
                                 DateUtil dateUtil = DateUtil();
+
                                 
                                 return Padding(
                                   padding: const EdgeInsets.all(8),
@@ -259,21 +263,32 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                       // Based on the previous version of isDateShown
                                       wasDateDisplayedBefore = (isDateShown != null && isDateShown!) ? true : false;
 
+                                      String currentSenderId = currentMessage.senderId;
+
                                       if (nextMessageExists) {
-                                        dateUtil.nextMessageDateTime = messages[index + 1].timestamp.toDate();
+                                        Message nextMesssage = messages[index + 1];
+
+                                        dateUtil.nextMessageDateTime = nextMesssage.timestamp.toDate();
                                         isDateShown = dateUtil.isMessageDateDifferenceMoreThanOrEqualDay(currentMessageDateTime);
+                                        isNextSenderDifferent = currentSenderId != nextMesssage.senderId;
                                       } else {
                                         isDateShown = null;
+                                        isNextSenderDifferent = null;
                                       }
 
-                                      String senderId = currentMessage.senderId;
-                                      bool isCurrentUsersMessage = senderId == context.read<UsrBloc>().state.user!.id;
+                                      bool isCurrentUsersMessage = currentSenderId == context.read<UsrBloc>().state.user!.id;
 
                                       // Null if last message sender is the same as current message sender
-                                      Usr sender = members[senderId]!; // TODO prob have to store user info in the message directly
+                                      Usr sender = members[currentSenderId]!;
 
-                                      bool isDifferentSender = lastSenderId != senderId;
-                                      if (isDifferentSender) lastSenderId = senderId;
+                                      bool isCurrentSenderDifferent = lastSenderId != currentSenderId;
+                                      if (isCurrentSenderDifferent) lastSenderId = currentSenderId;
+
+                                      // Username is shown when the current is sender is not the current user and
+                                      // the next sender is a different one or the date will be displayed
+                                      isUsernameShown = !isCurrentUsersMessage
+                                        && (isNextSenderDifferent == null || isNextSenderDifferent!
+                                          || isDateShown == null || isDateShown!);
 
                                       return Column(
                                         children: [
@@ -293,7 +308,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                             children: [
                                               if (!isCurrentUsersMessage) Padding(
                                                 padding: const EdgeInsets.only(right: 8),
-                                                child: (isDifferentSender || wasDateDisplayedBefore || index == 0)
+                                                child: (isCurrentSenderDifferent || wasDateDisplayedBefore || index == 0)
+                                                  // Sender profile picture
                                                   ? CircleAvatar(
                                                     radius: 16,
                                                     foregroundImage: sender.picture.isNotEmpty
@@ -311,13 +327,17 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                     height: 32
                                                   )
                                               ),
+                                              
+                                              // Message
                                               MessageBubble(
                                                 message: currentMessage,
-                                                isCurrentUserMessage: isCurrentUsersMessage
+                                                isCurrentUserMessage: isCurrentUsersMessage,
+                                                sendersName: (isUsernameShown)
+                                                  ? sender.name
+                                                  : null
                                               )
                                             ]
                                           )
-                                          // Message
                                         ]
                                       );
                                     }
