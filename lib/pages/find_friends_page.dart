@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:user_repository/user_repository.dart';
 
+import '../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../blocs/received_invites_bloc/received_invites_bloc.dart';
+import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/sent_invites_bloc/sent_invites_bloc.dart';
+import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/app_bars/search_app_bar.dart';
 import '../components/is_empty_message_widget.dart';
 import '../util/date_util.dart';
@@ -24,6 +27,24 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
       _currentIndex = index;
     });
   }
+
+  String assertStatusString(InviteStatus status) {
+    return switch (status) {
+      InviteStatus.pending => "Pending",
+      InviteStatus.declined => "Declined",
+      InviteStatus.accepted => "Accepted"
+    };
+  }
+
+  Color assertStatusColor(InviteStatus status) {
+    return switch (status) {
+      InviteStatus.pending => Theme.of(context).colorScheme.tertiary,
+      InviteStatus.declined => Theme.of(context).colorScheme.error,
+      InviteStatus.accepted => Theme.of(context).colorScheme.primary
+    };
+  }
+
+  // TODO a button for deleting all the accepted/declined invites in the sent invites part
   
   @override
   Widget build(BuildContext context) {
@@ -83,8 +104,8 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                             );
                           }
                                 
-                          List<(Usr, DateTime)> receivedInvites = rcSnapshot.data!;
-                          List<(Usr, DateTime)> sentInvites = stSnapshot.data!;
+                          List<(Usr, Invite)> receivedInvites = rcSnapshot.data!;
+                          List<(Usr, Invite)> sentInvites = stSnapshot.data!;
 
                           bool isCurrentPageReceivedInvites = _currentIndex == 0;
 
@@ -99,7 +120,7 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                             ? ListView.builder(
                               itemCount: receivedInvites.length,
                               itemBuilder: (context, index) {
-                                var (user, inviteSendingDate) = receivedInvites[index];
+                                var (user, invite) = receivedInvites[index];
                                   
                                 return Padding(
                                   padding: const EdgeInsets.all(4),
@@ -108,37 +129,7 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        // User profile picture
-                                        CircleAvatar(
-                                          radius: 24,
-                                          foregroundImage: user.picture.isNotEmpty
-                                            ? NetworkImage(user.picture)
-                                            : null,
-                                          backgroundColor: Theme.of(context).colorScheme.tertiary,
-                                          child: Icon(
-                                            Icons.person_outlined,
-                                            color: Theme.of(context).colorScheme.inversePrimary
-                                          )
-                                        ),
-                                      ]
-                                    )
-                                  )
-                                );
-                              }
-                            )
-                            : ListView.builder(
-                              itemCount: sentInvites.length,
-                              itemBuilder: (context, index) {
-                                var (user, inviteSendingDate) = sentInvites[index];
-                                  
-                                return Padding(
-                                  padding: const EdgeInsets.all(4),
-                                  child: SizedBox(
-                                    height: 48,
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        // User profile picture
+                                        // Sender profile picture
                                         CircleAvatar(
                                           radius: 24,
                                           foregroundImage: user.picture.isNotEmpty
@@ -161,6 +152,113 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                                               mainAxisAlignment: MainAxisAlignment.center,
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
+                                                // Username of the sender
+                                                Text(
+                                                  user.name,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  style: TextStyle(
+                                                    color: Theme.of(context).colorScheme.inversePrimary
+                                                  )
+                                                ),
+
+                                                // Invite sending date
+                                                Text(
+                                                  DateUtil.getLongDateFormatFromNow(invite.timestamp.toDate()),
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Theme.of(context).colorScheme.tertiary
+                                                  )
+                                                )
+                                              ]
+                                            )
+                                          )
+                                        ),
+
+                                        // Accepts invite, setting it to a status "accepted"
+                                        // Creates a new private room
+                                        BlocListener<InvitesOperationsBloc, InvitesOperationsState>(
+                                          listener: (context, state) {
+                                            if (state.status == InviteOperationStatus.success) {
+                                              context.read<RoomBloc>().add(CreatePrivateChatRoom(
+                                                context.read<UsrBloc>().state.user!.id,
+                                                user.id
+                                              ));
+                                            }
+                                          },
+                                          child: IconButton(
+                                            onPressed: () {
+                                              context.read<InvitesOperationsBloc>().add(UpdateInviteStatus(
+                                                inviteId: invite.id,
+                                                newStatus: InviteStatus.accepted
+                                              ));
+                                              
+                                              // TODO
+                                            },
+                                            icon: Icon(
+                                              Icons.cancel_outlined,
+                                              size: 26,
+                                              color: Theme.of(context).colorScheme.secondary
+                                            )
+                                          )
+                                        ),
+
+                                        // Declines invite, setting it to a status "declined"
+                                        IconButton(
+                                          onPressed: () => context.read<InvitesOperationsBloc>().add(UpdateInviteStatus(
+                                            inviteId: invite.id,
+                                            newStatus: InviteStatus.declined
+                                          )),
+                                          icon: Icon(
+                                            Icons.check_circle_outlined,
+                                            size: 26,
+                                            color: Theme.of(context).colorScheme.inversePrimary
+                                          )
+                                        )
+                                      ]
+                                    )
+                                  )
+                                );
+                              }
+                            )
+                            : ListView.builder(
+                              itemCount: sentInvites.length,
+                              itemBuilder: (context, index) {
+                                var (user, invite) = sentInvites[index];
+                                  
+                                return Padding(
+                                  padding: const EdgeInsets.all(4),
+                                  child: SizedBox(
+                                    height: 48,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // Receiver profile picture
+                                        CircleAvatar(
+                                          radius: 24,
+                                          foregroundImage: user.picture.isNotEmpty
+                                            ? NetworkImage(user.picture)
+                                            : null,
+                                          backgroundColor: Theme.of(context).colorScheme.tertiary,
+                                          child: Icon(
+                                            Icons.person_outlined,
+                                            color: Theme.of(context).colorScheme.inversePrimary
+                                          )
+                                        ),
+
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                              left: 12,
+                                              right: 8
+                                            ),
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                // Username of the receiver
                                                 Text(
                                                   user.name,
                                                   overflow: TextOverflow.ellipsis,
@@ -172,8 +270,9 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                                                 Row(
                                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                   children: [
+                                                    // Invite sending date
                                                     Text(
-                                                      DateUtil.getLongDateFormatFromNow(inviteSendingDate),
+                                                      DateUtil.getLongDateFormatFromNow(invite.timestamp.toDate()),
                                                       overflow: TextOverflow.ellipsis,
                                                       maxLines: 1,
                                                       style: TextStyle(
@@ -182,15 +281,15 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                                                       )
                                                     ),
 
-                                                    // TODO Status of the invite
+                                                    // Invite status
                                                     Text(
-                                                      "Status: pending..",
+                                                      assertStatusString(invite.status),
                                                       overflow: TextOverflow.ellipsis,
                                                       maxLines: 1,
                                                       style: TextStyle(
                                                         fontSize: 12,
                                                         fontWeight: FontWeight.bold,
-                                                        color: Theme.of(context).colorScheme.tertiary
+                                                        color: assertStatusColor(invite.status)
                                                       )
                                                     )
                                                   ]
@@ -200,9 +299,9 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                                           )
                                         ),
 
-                                        // Delete icon button
+                                        // Delete invite icon button
                                         IconButton(
-                                          onPressed: () {},
+                                          onPressed: () => context.read<InvitesOperationsBloc>().add(DeleteInvite(invite.id)),
                                           icon: Icon(
                                             Icons.cancel_outlined,
                                             size: 26,
@@ -227,6 +326,19 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
           )
         )
       ),
+      floatingActionButton: (_currentIndex == 1)
+        ? FloatingActionButton(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.inversePrimary,
+          shape: const CircleBorder(),
+          onPressed: () => {
+            // TODO
+          },
+          child: const Icon(
+            Icons.add
+          ),
+        )
+        : null,
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Theme.of(context).colorScheme.secondary,
         selectedItemColor: Theme.of(context).colorScheme.surface,
