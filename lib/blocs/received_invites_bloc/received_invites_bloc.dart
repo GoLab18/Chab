@@ -13,7 +13,7 @@ class ReceivedInvitesBloc extends Bloc<ReceivedInvitesEvent, ReceivedInvitesStat
   }) : super(const ReceivedInvitesState.loading()) {
     on<ReceivedInvitesEvent>((event, emit) async {
       try {
-        Stream<List<(Usr, DateTime)>> userFriendInvitesStream = await userRepository.getUserFriendInvites(event.userId);
+        Stream<List<(Usr, Invite)>> userFriendInvitesStream = await userRepository.getUserFriendInvites(event.userId);
 
         emit(ReceivedInvitesState.success(userFriendInvitesStream));
       } catch (e) {

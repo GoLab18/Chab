@@ -7,7 +7,7 @@ enum ReceivedInvitesStatus {
 }
 
 final class ReceivedInvitesState {
-  final Stream<List<(Usr, DateTime)>>? userInvitesStream;
+  final Stream<List<(Usr, Invite)>>? userInvitesStream;
   final ReceivedInvitesStatus status;
 
   const ReceivedInvitesState({
@@ -17,7 +17,7 @@ final class ReceivedInvitesState {
 
   const ReceivedInvitesState.loading() : this();
 
-  const ReceivedInvitesState.success(Stream<List<(Usr, DateTime)>> userInvitesStream) : this(
+  const ReceivedInvitesState.success(Stream<List<(Usr, Invite)>> userInvitesStream) : this(
     userInvitesStream: userInvitesStream,
     status: ReceivedInvitesStatus.success
   );
