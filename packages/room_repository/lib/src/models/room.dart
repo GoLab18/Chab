@@ -13,16 +13,20 @@ class Room extends Equatable {
   final bool isPrivate;
 
   /// Last message content.
-  final String lastMessageContent;
+  /// On room creation stays null.
+  final String? lastMessageContent;
 
   /// Flag for rooms list UI prompting.
-  final bool lastMessageHasPicture;
+  /// On room creation stays null.
+  final bool? lastMessageHasPicture;
 
   /// Last message picture.
-  late final Timestamp lastMessageTimestamp;
+  /// On room creation stays null.
+  late final Timestamp? lastMessageTimestamp;
 
   // Last message sender ID.
-  final String lastMessageSenderId;
+  /// On room creation stays null.
+  final String? lastMessageSenderId;
 
   /// Chat room's name.
   /// Stays null if it's a private chat.
@@ -39,31 +43,35 @@ class Room extends Equatable {
   Room({
     required this.id,
     this.isPrivate = true,
-    required this.lastMessageContent,
+    this.lastMessageContent,
     this.lastMessageHasPicture = false,
-    required this.lastMessageSenderId,
-    Timestamp? lastMessageTimestamp,
+    this.lastMessageSenderId,
+    this.lastMessageTimestamp,
     required this.name,
     required this.picture,
     Timestamp? timestamp
   }) {
-    this.lastMessageTimestamp = lastMessageTimestamp ?? Timestamp.now();
     this.timestamp = timestamp ?? Timestamp.now();
   }
   
   @override
-  List<Object?> get props => [id, isPrivate, lastMessageContent, lastMessageHasPicture, lastMessageTimestamp, name, picture, timestamp];
+  List<Object?> get props => [id, isPrivate, lastMessageContent, lastMessageSenderId, lastMessageHasPicture,
+    lastMessageTimestamp, name, picture, timestamp];
 
-  static Room empty = Room(
+  static Room emptyPrivateChatRoom = Room(
     id: "",
-    lastMessageContent: "",
-    lastMessageSenderId: "",
     name: null,
     picture: null
   );
 
+  static Room emptyGroupChatRoom = Room(
+    id: "",
+    name: "",
+    picture: ""
+  );
+
   /// Getter for checking if the chat room is empty.
-  bool get isEmpty => this == Room.empty;
+  bool get isEmpty => this == Room.emptyPrivateChatRoom || this == Room.emptyGroupChatRoom;
 
   /// Returns a copy of the chat room with the given values.
   Room copyWith({
@@ -93,9 +101,10 @@ class Room extends Equatable {
     return {
       "id": id,
       "isPrivate": isPrivate,
-      "lastMessageContent": lastMessageContent,
-      "lastMessageHasPicture": lastMessageHasPicture,
-      "lastMessageTimestamp": lastMessageTimestamp,
+      if (lastMessageContent != null) "lastMessageContent": lastMessageContent,
+      if (lastMessageSenderId != null) "lastMessageSenderId": lastMessageSenderId,
+      if (lastMessageHasPicture != null) "lastMessageHasPicture": lastMessageHasPicture,
+      if (lastMessageTimestamp != null) "lastMessageTimestamp": lastMessageTimestamp,
       if (name != null) "name": name,
       if (picture != null) "picture": picture,
       "timestamp": timestamp
@@ -107,10 +116,10 @@ class Room extends Equatable {
     return Room(
       id: doc["id"] as String,
       isPrivate: doc["isPrivate"] as bool,
-      lastMessageContent: doc["lastMessageContent"] as String,
-      lastMessageHasPicture: doc["lastMessageHasPicture"] as bool,
-      lastMessageSenderId: doc["lastMessageSenderId"] as String,
-      lastMessageTimestamp: doc["lastMessageTimestamp"] as Timestamp,
+      lastMessageContent: doc["lastMessageContent"] as String?,
+      lastMessageHasPicture: doc["lastMessageHasPicture"] as bool?,
+      lastMessageSenderId: doc["lastMessageSenderId"] as String?,
+      lastMessageTimestamp: doc["lastMessageTimestamp"] as Timestamp?,
       name: doc["name"] as String?,
       picture: doc["picture"] as String?,
       timestamp: doc["timestamp"] as Timestamp
