@@ -2,10 +2,13 @@ import 'package:chab/blocs/auth_bloc/auth_bloc.dart';
 import 'package:chab/blocs/sign_in_bloc/sign_in_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:room_repository/room_repository.dart';
 import 'package:user_repository/user_repository.dart';
 
 import '../../blocs/change_usr_info_bloc/change_usr_info_bloc.dart';
+import '../../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../../blocs/received_invites_bloc/received_invites_bloc.dart';
+import '../../blocs/room_bloc/room_bloc.dart';
 import '../../blocs/sent_invites_bloc/sent_invites_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../pages/find_friends_page.dart';
@@ -67,6 +70,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
               create: (context) => SentInvitesBloc(
                 userRepository: fuRepo
               )..add(SentInvitesEvent(userId))
+            ),
+            BlocProvider(
+              create: (context) => InvitesOperationsBloc(
+                userRepository: fuRepo
+              )
+            ),
+            BlocProvider(
+              create: (context) => RoomBloc(
+                roomRepository: context.read<FirebaseRoomRepository>()
+              )
             )
           ],
           child: const FindFriendsPage()
