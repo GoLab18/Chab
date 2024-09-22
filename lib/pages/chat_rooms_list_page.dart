@@ -26,7 +26,7 @@ class ChatRoomsListPage extends StatelessWidget {
                     stream: roomsState.roomsList,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) return const CircularProgressIndicator();
-      
+                      
                       if (snapshot.hasError) {
                         return Text(
                           "Loading error",
