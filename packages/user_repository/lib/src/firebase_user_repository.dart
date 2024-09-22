@@ -4,8 +4,9 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:user_repository/src/models/usr.dart';
+import 'models/models.dart';
 import 'util/result.dart';
+import 'util/typedefs.dart';
 
 class FirebaseUserRepository {
   late final FirebaseAuth _firebaseAuth;
@@ -219,50 +220,42 @@ class FirebaseUserRepository {
   }
 
   /// Fetches users that sent the current user an invite.
-  /// Returns a [Stream] with a [Map] that holds a [Record] with a [Usr] and an invite [DateTime].
-  /// [Map] fields can be accessed through senders' Ids. // TODO change
-  Future<Stream<List<(Usr, DateTime)>>> getUserFriendInvites(String userId) async {
+  /// Returns a [Stream] with a [List] that holds an [Invite] with the corresponding [Usr].
+  /// [List] is ordered by [Timestamp] ascending and holds only invites with [InviteStatus.pending].
+  Future<Stream<List<(Usr, Invite)>>> getUserFriendInvites(String userId) async {
     try {
       return friendInvitesCollection
         .where("toUser", isEqualTo: userId)
-        .orderBy("timestamp")
+        .where("status", isEqualTo: InviteStatus.pending.index)
+        .orderBy("timestamp", descending: true)
         .snapshots()
         .map((QuerySnapshot<Map<String, dynamic>> invitesSnapshot) =>
-          invitesSnapshot.docs.map((doc) {
-            Map<String, dynamic> data = doc.data();
-
-            return (
-              data["fromUser"] as String,
-              (data["timestamp"] as Timestamp).toDate()
-            );
-          })
-          .toList()
+          invitesSnapshot.docs.map((doc) => Invite.fromDocument(doc.data())).toList()
         )
-        .asyncExpand((List<(String, DateTime)> records) {
+        .asyncExpand((List<Invite> invites) {
           List<String> sendersIds = [];
-          List<DateTime> dateTimes = [];
 
-          for ((String, DateTime) record in records) {
-            sendersIds.add(record.$1);
-            dateTimes.add(record.$2);
+          for (Invite invite in invites) {
+            sendersIds.add(invite.fromUser);
           }
 
           if (sendersIds.isEmpty) {
-            return Stream.value(<(Usr, DateTime)>[]);
+            return Stream.value(<(Usr, Invite)>[]);
           }
 
           return usersCollection
             .where(FieldPath.documentId, whereIn: sendersIds)
             .snapshots()
             .map((QuerySnapshot<Map<String, dynamic>> sendersSnapshot) {
-              var docsList = sendersSnapshot.docs;
-              List<(Usr, DateTime)> finalList = [];
+              Map<String, dynamic> docsMap = {for (var doc in sendersSnapshot.docs) doc.id: doc};
 
-              for (int i = 0; i < docsList.length; i++) {
+              List<(Usr, Invite)> finalList = [];
+
+              for (Invite invite in invites) {
                 finalList.add(
                   (
-                    Usr.fromDocument(docsList[i].data()),
-                    dateTimes[i]
+                    Usr.fromDocument(docsMap[invite.fromUser].data()),
+                    invite
                   )
                 );
               }
@@ -277,50 +270,41 @@ class FirebaseUserRepository {
   }
 
   /// Fetches users that have been invited by the current user.
-  /// Returns a [Stream] with a [Map] that holds a [Record] with a [Usr] and an invite [DateTime].
-  /// [Map] fields can be accessed through receivers' Ids. // TODO change
-  Future<Stream<List<(Usr, DateTime)>>> getCurrentUsersIssuedInvites(String userId) async {
+  /// Returns a [Stream] with a [List] that holds an [Invite] with the corresponding [Usr].
+  /// [List] is ordered by [Timestamp] ascending.
+  Future<Stream<List<(Usr, Invite)>>> getCurrentUsersIssuedInvites(String userId) async {
     try {
       return friendInvitesCollection
         .where("fromUser", isEqualTo: userId)
-        .orderBy("timestamp") 
+        .orderBy("timestamp", descending: true)
         .snapshots()
         .map((QuerySnapshot<Map<String, dynamic>> invitesSnapshot) =>
-          invitesSnapshot.docs.map((doc) {
-            Map<String, dynamic> data = doc.data();
-
-            return (
-              data["toUser"] as String,
-              (data["timestamp"] as Timestamp).toDate()
-            );
-          })
-          .toList()
+          invitesSnapshot.docs.map((doc) => Invite.fromDocument(doc.data())).toList()
         )
-        .asyncExpand((List<(String, DateTime)> records) {
+        .asyncExpand((List<Invite> invites) {
           List<String> receiversIds = [];
-          List<DateTime> dateTimes = [];
 
-          for ((String, DateTime) record in records) {
-            receiversIds.add(record.$1);
-            dateTimes.add(record.$2);
+          for (Invite invite in invites) {
+            receiversIds.add(invite.toUser);
           }
           
           if (receiversIds.isEmpty) {
-            return Stream.value(<(Usr, DateTime)>[]);
+            return Stream.value(<(Usr, Invite)>[]);
           }
 
           return usersCollection
             .where(FieldPath.documentId, whereIn: receiversIds)
             .snapshots()
             .map((QuerySnapshot<Map<String, dynamic>> receiversSnapshot) {
-              var docsList = receiversSnapshot.docs;
-              List<(Usr, DateTime)> finalList = [];
+              Map<String, dynamic> docsMap = {for (var doc in receiversSnapshot.docs) doc.id: doc};
 
-              for (int i = 0; i < docsList.length; i++) {
+              List<(Usr, Invite)> finalList = [];
+
+              for (Invite invite in invites) {
                 finalList.add(
                   (
-                    Usr.fromDocument(docsList[i].data()),
-                    dateTimes[i]
+                    Usr.fromDocument(docsMap[invite.toUser].data()),
+                    invite
                   )
                 );
               }
@@ -329,6 +313,30 @@ class FirebaseUserRepository {
             });
         })
         .asBroadcastStream();
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  /// Updates the status [int] of a specified invite with an id [String].
+  Future<void> updateInviteStatus(String inviteId, InviteStatus status) async {
+    try {
+      return await friendInvitesCollection
+        .doc(inviteId)
+        .update({
+          "status": status.index
+        });
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  /// Delete an invite with a specified [String] id.
+  Future<void> deleteInvite(String inviteId) async {
+    try {
+      return await friendInvitesCollection
+        .doc(inviteId)
+        .delete();
     } catch (e) {
       throw Exception(e);
     }
