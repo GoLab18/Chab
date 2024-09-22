@@ -20,5 +20,29 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
         emit(const RoomState.failure());
       }
     });
+
+    on<CreatePrivateChatRoom>((event, emit) async {
+      try {
+        String roomId = await roomRepository.createRoom(true);
+
+        await roomRepository.addMembersToRoom(false ,roomId, [event.personOneId, event.personTwoId]);
+        
+        emit(const RoomState.success(null));
+      } catch (e) {
+        emit(const RoomState.failure());
+      }
+    });
+
+    on<CreateGroupChatRoom>((event, emit) async {
+      try {
+        String roomId = await roomRepository.createRoom(false);
+
+        await roomRepository.addMembersToRoom(true, roomId, event.newMembersIds);
+        
+        emit(const RoomState.success(null));
+      } catch (e) {
+        emit(const RoomState.failure());
+      }
+    });
   }
 }
