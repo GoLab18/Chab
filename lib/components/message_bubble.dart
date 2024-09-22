@@ -6,11 +6,13 @@ import '../util/date_util.dart';
 class MessageBubble extends StatelessWidget {
   final Message message;
   final bool isCurrentUserMessage;
+  final String? sendersName;
 
   const MessageBubble({
     super.key,
     required this.message,
-    required this.isCurrentUserMessage
+    required this.isCurrentUserMessage,
+    this.sendersName
   });
 
   @override
@@ -24,29 +26,41 @@ class MessageBubble extends StatelessWidget {
           : Theme.of(context).colorScheme.secondary,
         borderRadius: BorderRadius.circular(8)
       ),
-      child: Wrap(
-        spacing: 8,
-        alignment: WrapAlignment.end,
-        crossAxisAlignment: WrapCrossAlignment.end,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Message text
-          Text(
-            message.content,
-            maxLines: null,
-            softWrap: true,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.inversePrimary
+          if (sendersName != null) Text(
+            sendersName!,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color.fromARGB(255, 193, 149, 15)
             )
           ),
-
-          // Last message's timestamp
-          Text(
-              DateUtil.getFormatedTime(message.timestamp.toDate()),
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.tertiary
-              )
-            )
+          Wrap(
+            spacing: 8,
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.end,
+            children: [
+              // Message text
+              Text(
+                message.content,
+                maxLines: null,
+                softWrap: true,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.inversePrimary
+                )
+              ),
+          
+              // Last message's timestamp
+              Text(
+                  DateUtil.getFormatedTime(message.timestamp.toDate()),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.tertiary
+                  )
+                )
+            ]
+          )
         ]
       )
     );
