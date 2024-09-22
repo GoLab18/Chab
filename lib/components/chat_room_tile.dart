@@ -182,7 +182,7 @@ class ChatRoomTile extends StatelessWidget {
                                               ),
                 
                                               // Picture icon if it was apart of the last message
-                                              if (room.lastMessageHasPicture) Padding(
+                                              if (room.lastMessageHasPicture != null && room.lastMessageHasPicture!) Padding(
                                                 padding: const EdgeInsets.only(right: 8),
                                                 child: Icon(
                                                   Icons.photo_outlined,
@@ -190,29 +190,44 @@ class ChatRoomTile extends StatelessWidget {
                                                   color: Theme.of(context).colorScheme.tertiary
                                                 )
                                               ),
-                                              
-                                              // Message content if not empty
-                                              if (room.lastMessageContent.isNotEmpty) Expanded(
-                                                child: Padding(
-                                                  padding: const EdgeInsets.only(right: 12),
-                                                  child: Text(
-                                                    room.lastMessageContent,
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: Theme.of(context).colorScheme.tertiary
+
+                                              (room.lastMessageContent != null)
+                                                // Message content if not empty
+                                                ? Expanded(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(right: 12),
+                                                      child: (room.lastMessageContent!.isNotEmpty)
+                                                        ? Text(
+                                                          room.lastMessageContent!,
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            color: Theme.of(context).colorScheme.tertiary
+                                                          )
+                                                        )
+                                                        : null
                                                     )
                                                   )
+                                                : Text(
+                                                  "Say hi!",
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Theme.of(context).colorScheme.tertiary
+                                                  )
                                                 )
-                                              )
                                             ]
                                           )
                                         ),
                                         
                                         // Last message's timestamp
                                         Text(
-                                          DateUtil.getShortDateFormatFromNow(room.lastMessageTimestamp.toDate()),
+                                          room.lastMessageTimestamp != null
+                                            ? DateUtil.getShortDateFormatFromNow(room.lastMessageTimestamp!.toDate())
+                                            : "",
                                           style: TextStyle(
                                             color: Theme.of(context).colorScheme.tertiary
                                           )
@@ -356,7 +371,7 @@ class ChatRoomTile extends StatelessWidget {
                                                   ),
                     
                                                   // Picture icon if it was apart of the last message
-                                                  if (room.lastMessageHasPicture) Padding(
+                                                  if (room.lastMessageHasPicture != null && room.lastMessageHasPicture!) Padding(
                                                     padding: const EdgeInsets.only(right: 8),
                                                     child: Icon(
                                                       Icons.photo_outlined,
@@ -364,29 +379,47 @@ class ChatRoomTile extends StatelessWidget {
                                                       color: Theme.of(context).colorScheme.tertiary
                                                     )
                                                   ),
+
+                                                  // TODO getting kicked out message instead of the normal one
                                                   
-                                                  // Message content if not empty
-                                                  if (room.lastMessageContent.isNotEmpty) Expanded(
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(right: 12),
-                                                      child: Text(
-                                                        room.lastMessageContent,
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow.ellipsis,
-                                                        style: TextStyle(
-                                                          fontSize: 12,
-                                                          color: Theme.of(context).colorScheme.tertiary
+                                                  (room.lastMessageContent != null)
+                                                    // Message content if not empty
+                                                    ? Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(right: 12),
+                                                          child: (room.lastMessageContent!.isNotEmpty)
+                                                            ? Text(
+                                                              room.lastMessageContent!,
+                                                              maxLines: 1,
+                                                              overflow: TextOverflow.ellipsis,
+                                                              style: TextStyle(
+                                                                fontSize: 12,
+                                                                color: Theme.of(context).colorScheme.tertiary
+                                                              )
+                                                            )
+                                                            : null
                                                         )
                                                       )
+                                                    : Text(
+                                                      "Say hi!",
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Theme.of(context).colorScheme.tertiary
+                                                      )
                                                     )
-                                                  )
                                                 ]
                                               )
                                             ),
-                                            
-                                            // Last message's timestamp
+                                            // Last message's timestamp / room creation timestamp
                                             Text(
-                                              DateUtil.getShortDateFormatFromNow(room.lastMessageTimestamp.toDate()),
+                                              DateUtil.getShortDateFormatFromNow(
+                                                room.lastMessageTimestamp != null
+                                                  ? room.lastMessageTimestamp!.toDate()
+                                                  : room.timestamp.toDate()
+                                              ),
                                               style: TextStyle(
                                                 color: Theme.of(context).colorScheme.tertiary
                                               )
