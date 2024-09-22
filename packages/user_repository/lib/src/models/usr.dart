@@ -1,8 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
-/// The type definition for a JSON-serializable [Map].
-typedef JsonMap = Map<String, dynamic>;
+import '../util/typedefs.dart';
 
 class Usr extends Equatable {
   final String id;
