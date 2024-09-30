@@ -167,19 +167,26 @@ class FirebaseUserRepository {
     }
   }
 
-  /// Fetches private chat friend id.
-  Future<String> getPrivateChatRoomFriendId(String roomId, String currentUserId) async {
+  /// Fetches private chat room friend's User instance.
+  Future<Stream<Usr>> getPrivateChatRoomFriend(String roomId, String currentUserId) async {
     try {
       QuerySnapshot<Map<String, dynamic>> membersSnapshot = await roomsCollection
         .doc(roomId)
         .collection("members")
         .get();
 
-      return membersSnapshot
+      String friendId = membersSnapshot
         .docs
         .map((doc) => doc.id)
         .toList()
         .firstWhere((memberId) => memberId != currentUserId);
+
+      return usersCollection
+        .doc(friendId)
+        .snapshots()
+        .map((DocumentSnapshot<Map<String, dynamic>> snapshot) =>
+          Usr.fromDocument(snapshot.data()!)
+        );
     } catch (e) {
       throw Exception(e);
     }
