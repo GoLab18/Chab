@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../components/account_tile.dart';
+import '../components/tiles/account_tile.dart';
 import '../components/button_template.dart';
 import 'home_page.dart';
 

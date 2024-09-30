@@ -7,7 +7,7 @@ import 'package:user_repository/user_repository.dart';
 import '../blocs/room_members_bloc/room_members_bloc.dart';
 import '../blocs/rooms_bloc/rooms_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
-import '../components/chat_room_tile.dart';
+import '../components/tiles/chat_room_tile.dart';
 
 class ChatRoomsListPage extends StatelessWidget {
   const ChatRoomsListPage({super.key});
