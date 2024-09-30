@@ -1,0 +1,240 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:user_repository/user_repository.dart';
+
+import '../blocs/room_bloc/room_bloc.dart';
+import '../blocs/room_members_bloc/room_members_bloc.dart';
+import '../components/tiles/user_tile.dart';
+import '../components/tiles/utility_tile.dart';
+
+class GroupChatPage extends StatelessWidget {
+  final Map<String, Usr> initialData;
+
+  const GroupChatPage(this.initialData, {super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    final RoomState roomState = context.read<RoomBloc>().state;
+    final RoomMembersState roomMembersState = context.read<RoomMembersBloc>().state;
+
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: AppBar(),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Group chat photo
+                  Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    fit: StackFit.loose,
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        foregroundImage: (roomState.status == ChatRoomStatus.success && roomState.roomTuple!.room.picture!.isNotEmpty)
+                          ? NetworkImage(roomState.roomTuple!.room.picture!)
+                          : null,
+                        child: Icon(
+                          Icons.person_outlined,
+                          color: Theme.of(context).colorScheme.inversePrimary
+                        )
+                      ),
+                  
+                      // Upload a picture
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(       // TODO make a seperate widget of this stack (it is used here and inside profile_page)
+                          width: 30,            // TODO also maybe make the IconButton navigate to chat page for private_chat_page
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondary,
+                            shape: BoxShape.circle
+                          ),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            onPressed: () {},
+                            icon: Icon(
+                              Icons.add,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.inversePrimary
+                            )
+                          )
+                        )
+                      )
+                    ]
+                  ),
+                  
+                  // Group name
+                  Padding(
+                    padding: const EdgeInsets.only(top: 18),
+                    child: Text(
+                      "Brody Williams",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.inversePrimary
+                      )
+                    )
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6
+                    ),
+                    child: Divider(
+                      color: Theme.of(context).colorScheme.tertiary
+                    ),
+                  ),
+                  
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 4,
+                    children: [
+                      // TODO audio, video, search messages, notifications toggle, search files, nickname(s), leave group/delete friend, mute
+                      UtilityTile(
+                        title: "Audio",
+                        iconData: Icons.phone_outlined,
+                        onTap: () {}
+                      ),
+                      UtilityTile(
+                        title: "Video",
+                        iconData: Icons.video_camera_front_outlined,
+                        onTap: () {}
+                      ),
+                      UtilityTile(
+                        title: "Mute",
+                        iconData: Icons.notifications_outlined,
+                        onTap: () {}
+                      ),
+                      UtilityTile(
+                        title: "Add",
+                        iconData: Icons.person_add_outlined,
+                        onTap: () {}
+                      ),
+                      UtilityTile(
+                        title: "Files",
+                        iconData: Icons.folder_outlined,
+                        onTap: () {}
+                      ),
+                      UtilityTile(
+                        title: "Nicknames",
+                        iconData: Icons.badge_outlined,
+                        onTap: () {}
+                      ),
+                      UtilityTile(
+                        title: "Messages",
+                        iconData: Icons.search_outlined,
+                        onTap: () {}
+                      ),
+                      UtilityTile(
+                        title: "Leave",
+                        iconData: Icons.exit_to_app_outlined,
+                        onTap: () {}
+                      )
+                    ]
+                  ),
+            
+                  // Members
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: roomMembersState.status == ChatRoomMembersStatus.loading
+                        ? const SizedBox(
+                          height: 100,
+                          child: CircularProgressIndicator()
+                        )
+                        : StreamBuilder(
+                          initialData: initialData,
+                          stream: roomMembersState.roomMembersStream,
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const Center(
+                                child: CircularProgressIndicator()
+                              );
+                            }
+                            
+                            if (snapshot.hasError || snapshot.data!.isEmpty) {
+                              return Text(
+                                "Loading error",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Theme.of(context).colorScheme.inversePrimary
+                                )
+                              );
+                            }
+                    
+                            var usersList = snapshot.data!.values.toList();
+                            
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                top: 6,
+                                bottom: 8,
+                                left: 8,
+                                right: 8
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // Members info
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.transparent,
+                                      border: Border.symmetric(
+                                        horizontal: BorderSide(
+                                          color: Theme.of(context).colorScheme.tertiary
+                                        )
+                                      )
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "Group Members",
+                                            style: TextStyle(
+                                              color: Theme.of(context).colorScheme.inversePrimary
+                                            )
+                                          ),
+                                      
+                                          // Members amount
+                                          Text(
+                                            usersList.length.toString(),
+                                            style: TextStyle(
+                                              color: Theme.of(context).colorScheme.secondary
+                                            )
+                                          )
+                                        ]
+                                      )
+                                    )
+                                  ),
+
+                                  // Members
+                                  ...List.generate(
+                                    usersList.length,
+                                    (index) => UserTile(usersList[index])
+                                  )
+                                ] 
+                              )
+                            );
+                          }
+                        )
+                    )
+                  )
+                ]
+              )
+            )
+          )
+        )
+      )
+    );
+  }
+}
