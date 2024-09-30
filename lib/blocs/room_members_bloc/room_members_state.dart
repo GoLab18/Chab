@@ -8,7 +8,7 @@ enum ChatRoomMembersStatus {
 
 final class RoomMembersState {
   final Stream<Map<String, Usr>>? roomMembersStream;
-  final Usr? privateChatRoomFriend;
+  final Stream<Usr>? privateChatRoomFriend;
   final ChatRoomMembersStatus status;
 
   const RoomMembersState({
@@ -21,7 +21,7 @@ final class RoomMembersState {
 
   const RoomMembersState.success({
     Stream<Map<String, Usr>>? roomMembersStream,
-    Usr? privateChatRoomFriend
+    Stream<Usr>? privateChatRoomFriend
   }) : this(
     roomMembersStream: roomMembersStream,
     privateChatRoomFriend: privateChatRoomFriend,

@@ -13,10 +13,8 @@ class RoomMembersBloc extends Bloc<RoomMembersEvent, RoomMembersState> {
   }) : super(const RoomMembersState.loading()) {
     on<PrivateChatRoomMembersRequested>((event, emit) async {
       try {
-        String privateChatRoomFriendId = await userRepository.getPrivateChatRoomFriendId(event.roomId, event.currentUserId);
+        Stream<Usr> privateChatRoomFriend = await userRepository.getPrivateChatRoomFriend(event.roomId, event.currentUserId);
 
-        Usr privateChatRoomFriend = await userRepository.getUsr(privateChatRoomFriendId);
-        
         emit(RoomMembersState.success(privateChatRoomFriend: privateChatRoomFriend));
       } catch (e) {
         emit(const RoomMembersState.failure());
