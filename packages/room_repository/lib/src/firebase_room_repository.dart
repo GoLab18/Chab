@@ -28,7 +28,7 @@ class FirebaseRoomRepository {
         descending: true
       )
       .snapshots()
-      .map((QuerySnapshot<Map<String, dynamic>> snapshot) => 
+      .map((QuerySnapshot<Map<String, dynamic>> snapshot) =>
         snapshot.docs.map(
           (doc) => Message.fromDocument(doc.data())
         ).toList()
