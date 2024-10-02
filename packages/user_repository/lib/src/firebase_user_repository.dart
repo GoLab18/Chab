@@ -144,14 +144,15 @@ class FirebaseUserRepository {
     }
   }
 
-  /// Function for strictly adding and updating user profile pictures
-  Future<String> uploadPicture(String userId, String pictureStorageUrl) async {
+  /// Function for strictly adding and updating user profile pictures.
+  /// The picture is stored inside firebase storage and it's download URL is stored inside firebase firestore.
+  Future<String> uploadPicture(String userId, String imagePath) async {
     try {
       Reference firebaseStorageRef = FirebaseStorage.instance.ref().child(
         "$userId/ProfilePictures/${userId}_pic"
       );
 
-      File imageFile = File(pictureStorageUrl);
+      File imageFile = File(imagePath);
 
       await firebaseStorageRef.putFile(imageFile);
 
