@@ -26,15 +26,6 @@ final class CreateGroupChatRoom extends RoomOperationsEvent {
   List<Object> get props => [newMembersIds];
 }
 
-final class DeleteChatRoom extends RoomOperationsEvent {
-  final String roomId;
-
-  const DeleteChatRoom(this.roomId);
-
-  @override
-  List<Object> get props => [roomId];
-}
-
 final class UpdateChatRoom extends RoomOperationsEvent {
   final Room updatedRoom;
 
@@ -42,4 +33,23 @@ final class UpdateChatRoom extends RoomOperationsEvent {
 
   @override
   List<Object> get props => [updatedRoom];
+}
+
+final class UploadRoomPicture extends RoomOperationsEvent {
+  final String roomId;
+  final String imagePath;
+
+  const UploadRoomPicture(this.roomId, this.imagePath);
+
+  @override
+  List<Object> get props => [roomId, imagePath];
+}
+
+final class DeleteChatRoom extends RoomOperationsEvent {
+  final String roomId;
+
+  const DeleteChatRoom(this.roomId);
+
+  @override
+  List<Object> get props => [roomId];
 }

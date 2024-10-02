@@ -45,6 +45,16 @@ class RoomOperationsBloc extends Bloc<RoomOperationsEvent, RoomOperationsState> 
       }
     });
 
+    on<UploadRoomPicture>((event, emit) async {
+      try {
+        await roomRepository.uploadRoomPicture(event.roomId, event.imagePath);
+        
+        emit(const RoomOperationsState.success());
+      } catch (e) {
+        emit(const RoomOperationsState.failure());
+      }
+    });
+
     on<DeleteChatRoom>((event, emit) async {
       try {
         await roomRepository.deleteRoom(event.roomId);
