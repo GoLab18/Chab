@@ -37,11 +37,12 @@ class MyApp extends StatelessWidget {
         child: BlocBuilder<ThemeBloc, ThemeState>(
           builder: (context, state) {
             return MaterialApp(
-                debugShowCheckedModeBanner: false,
-                title: "Chab",
-                theme: state.themeData,
-                home: const AuthGate());
-          },
+              debugShowCheckedModeBanner: false,
+              title: "Chab",
+              theme: state.themeData,
+              home: const AuthGate()
+            );
+          }
         ));
   }
 }
