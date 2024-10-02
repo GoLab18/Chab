@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 class TransparentEditableTextField extends StatefulWidget {
   final String initialText;
   final bool isUpdatedTextLoaded;
-  final void Function() onSubmission;
+  final void Function(String) onSubmission;
   final int? maxLines;
 
   const TransparentEditableTextField({
@@ -65,7 +65,7 @@ class _TransparentEditableTextFieldState extends State<TransparentEditableTextFi
     focusNode.unfocus();
 
     if (controller.text != widget.initialText) {
-      widget.onSubmission();
+      widget.onSubmission(controller.text);
     }
 
     setState(() {
