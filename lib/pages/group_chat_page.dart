@@ -4,6 +4,7 @@ import 'package:user_repository/user_repository.dart';
 
 import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/room_members_bloc/room_members_bloc.dart';
+import '../blocs/room_operations_bloc/room_operations_bloc.dart';
 import '../components/fields/transparent_editable_text_field.dart';
 import '../components/tiles/user_tile.dart';
 import '../components/tiles/utility_tile.dart';
@@ -102,9 +103,14 @@ class GroupChatPage extends StatelessWidget {
                                 ? roomName
                                 : RoomNameUtil.getUserNames(usrList),
                               isUpdatedTextLoaded: snapshot.hasData,
-                              onSubmission: () {
-                                // TODO RoomOperationsBloc
-                                print("changed!");
+                              onSubmission: (text) {
+                                if (roomState.status == ChatRoomStatus.success) {
+                                  context.read<RoomOperationsBloc>().add(
+                                    UpdateChatRoom(
+                                      roomState.roomTuple!.room.copyWith(name: text)
+                                    )
+                                  );
+                                }
                               }
                             );
                           }
