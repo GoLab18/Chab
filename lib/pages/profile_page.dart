@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../blocs/change_usr_info_bloc/change_usr_info_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/fields/dynamic_editable_field.dart';
 import '../components/fields/editable_field.dart';
 import '../components/app_bars/options_app_bar.dart';
+import '../util/picture_util.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -55,58 +54,6 @@ class _ProfilePageState extends State<ProfilePage> {
     _usernameFocusNode = FocusNode()..addListener(handleFocusChange);
     _emailFocusNode = FocusNode()..addListener(handleFocusChange);
     _bioFocusNode = FocusNode()..addListener(handleFocusChange);
-  }
-
-  Future<void> uploadUserPicture() async {
-    Color primaryColor = Theme.of(context).colorScheme.primary;
-    Color toolbarWidgetColor = Theme.of(context).colorScheme.inversePrimary;
-    
-    ImagePicker imagePicker = ImagePicker();
-
-    XFile? image = await imagePicker.pickImage(
-      source: ImageSource.gallery,
-      maxHeight: 320,
-      maxWidth: 320,
-      imageQuality: 60
-    );
-
-    CroppedFile? croppedImage;
-    
-    if (image != null) {
-      croppedImage = await ImageCropper().cropImage(
-        sourcePath: image.path,
-        aspectRatio: const CropAspectRatio(
-          ratioX: 1,
-          ratioY: 1
-        ),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: "Crop Image",
-            toolbarColor: primaryColor,
-            activeControlsWidgetColor: primaryColor,
-            toolbarWidgetColor: toolbarWidgetColor,
-            aspectRatioPresets: [
-              CropAspectRatioPreset.square
-            ]
-          ),
-          IOSUiSettings(
-            title: "Crop Image",
-            aspectRatioPresets: [
-              CropAspectRatioPreset.square
-            ]
-          )
-        ]
-      );
-    }
-
-    if (croppedImage != null) {
-      mounted ? context.read<ChangeUsrInfoBloc>().add(
-        UploadPicture(
-          picture: croppedImage.path,
-          userId: context.read<UsrBloc>().state.user!.id
-        )
-      ) : null;
-    }
   }
 
   void handleFocusChange() {
@@ -234,7 +181,16 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 child: IconButton(
                                   padding: EdgeInsets.zero,
-                                  onPressed: uploadUserPicture,
+                                  onPressed: () => PictureUtil.uploadAndCropPicture(
+                                    context,
+                                    mounted,
+                                    (imagePath) => context.read<ChangeUsrInfoBloc>().add(
+                                      UploadPicture(
+                                        picture: imagePath,
+                                        userId: context.read<UsrBloc>().state.user!.id
+                                      )
+                                    )
+                                  ),
                                   icon: Icon(
                                     Icons.add,
                                     size: 20,
