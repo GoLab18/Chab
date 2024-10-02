@@ -37,7 +37,7 @@ class RoomOperationsBloc extends Bloc<RoomOperationsEvent, RoomOperationsState> 
 
     on<UpdateChatRoom>((event, emit) async {
       try {
-        await roomRepository.updateRoom(event.roomId, event.updatedRoom);
+        await roomRepository.updateRoom(event.updatedRoom);
         
         emit(const RoomOperationsState.success());
       } catch (e) {

@@ -36,11 +36,10 @@ final class DeleteChatRoom extends RoomOperationsEvent {
 }
 
 final class UpdateChatRoom extends RoomOperationsEvent {
-  final String roomId;
   final Room updatedRoom;
 
-  const UpdateChatRoom(this.roomId, this.updatedRoom);
+  const UpdateChatRoom(this.updatedRoom);
 
   @override
-  List<Object> get props => [roomId, updatedRoom];
+  List<Object> get props => [updatedRoom];
 }
