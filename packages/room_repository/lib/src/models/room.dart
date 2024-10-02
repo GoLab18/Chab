@@ -82,7 +82,8 @@ class Room extends Equatable {
     String? lastMessageSenderId,
     Timestamp? lastMessageTimestamp,
     String? name,
-    String? picture
+    String? picture,
+    Timestamp? timestamp
   }) {
     return Room(
       id: id ?? this.id,
@@ -92,7 +93,8 @@ class Room extends Equatable {
       lastMessageSenderId: lastMessageSenderId ?? this.lastMessageSenderId,
       lastMessageTimestamp: lastMessageTimestamp ?? this.lastMessageTimestamp,
       name: name ?? this.name,
-      picture: picture ?? this.picture
+      picture: picture ?? this.picture,
+      timestamp: timestamp ?? this.timestamp
     );
   }
   
