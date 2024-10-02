@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:room_repository/room_repository.dart';
 import 'package:user_repository/user_repository.dart';
 
 import '../../blocs/room_members_bloc/room_members_bloc.dart';
 import '../../blocs/room_bloc/room_bloc.dart';
+import '../../blocs/room_operations_bloc/room_operations_bloc.dart';
 import '../../pages/group_chat_page.dart';
 import '../../pages/private_chat_page.dart';
 import '../../util/room_name_util.dart';
@@ -26,6 +28,11 @@ class ChatRoomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             BlocProvider.value(
               value: context.read<RoomBloc>()
+            ),
+            BlocProvider(
+              create: (BuildContext roomOpBlocContext) => RoomOperationsBloc(
+                roomRepository: context.read<FirebaseRoomRepository>()
+              )
             )
           ],
           child: isPrivateChat ? PrivateChatPage(initialData as Usr) : GroupChatPage(initialData as Map<String, Usr>)
