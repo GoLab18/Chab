@@ -4,7 +4,7 @@ import 'package:user_repository/user_repository.dart';
 
 import '../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../blocs/received_invites_bloc/received_invites_bloc.dart';
-import '../blocs/room_bloc/room_bloc.dart';
+import '../blocs/room_operations_bloc/room_operations_bloc.dart';
 import '../blocs/sent_invites_bloc/sent_invites_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/app_bars/search_app_bar.dart';
@@ -182,7 +182,7 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                                         BlocListener<InvitesOperationsBloc, InvitesOperationsState>(
                                           listener: (context, state) {
                                             if (state.status == InviteOperationStatus.success) {
-                                              context.read<RoomBloc>().add(CreatePrivateChatRoom(
+                                              context.read<RoomOperationsBloc>().add(CreatePrivateChatRoom(
                                                 context.read<UsrBloc>().state.user!.id,
                                                 user.id
                                               ));
