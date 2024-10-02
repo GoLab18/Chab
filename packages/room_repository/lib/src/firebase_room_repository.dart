@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'models/models.dart';
 import 'util/chat_room_tuple.dart';
@@ -116,6 +118,28 @@ class FirebaseRoomRepository {
   /// Updates a room in the firestore.
   Future<void> updateRoom(Room updatedRoom) async {
     await roomsCollection.doc(updatedRoom.id).update(updatedRoom.toDocument());
+  }
+
+  /// Function for strictly adding and updating room pictures.
+  /// The picture is stored inside firebase storage and it's download URL is stored inside firebase firestore.
+  Future<void> uploadRoomPicture(String roomId, String imagePath) async {
+    try {
+      Reference firebaseStorageRef = FirebaseStorage.instance.ref().child(
+        "$roomId/ChatPictures/${roomId}_pic"
+      );
+
+      File imageFile = File(imagePath);
+
+      await firebaseStorageRef.putFile(imageFile);
+
+      String picUrl = await firebaseStorageRef.getDownloadURL();
+
+      await roomsCollection.doc(roomId).update({
+        "picture": picUrl
+      });
+    } catch (e) {
+      throw Exception(e);
+    }
   }
 
   /// Updates a message in the firestore
