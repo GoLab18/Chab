@@ -114,7 +114,7 @@ class FirebaseRoomRepository {
   }
 
   /// Updates a room in the firestore.
-  Future<void> updateRoomData(String roomId, Room updatedRoom) async {
+  Future<void> updateRoom(String roomId, Room updatedRoom) async {
     await roomsCollection.doc(roomId).update(updatedRoom.toDocument());
   }
 
