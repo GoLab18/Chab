@@ -8,6 +8,7 @@ import '../blocs/room_operations_bloc/room_operations_bloc.dart';
 import '../components/fields/transparent_editable_text_field.dart';
 import '../components/tiles/user_tile.dart';
 import '../components/tiles/utility_tile.dart';
+import '../util/picture_util.dart';
 import '../util/room_name_util.dart';
 
 class GroupChatPage extends StatelessWidget {
@@ -68,7 +69,13 @@ class GroupChatPage extends StatelessWidget {
                                 ),
                                 child: IconButton(
                                   padding: EdgeInsets.zero,
-                                  onPressed: () {},
+                                  onPressed: () => PictureUtil.uploadAndCropPicture(
+                                    context,
+                                    null,
+                                    (imagePath) => context.read<RoomOperationsBloc>().add(
+                                      UploadRoomPicture(roomState.roomTuple!.room.id, imagePath)
+                                    )
+                                  ),
                                   icon: Icon(
                                     Icons.add,
                                     size: 18,
