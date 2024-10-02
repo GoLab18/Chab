@@ -4,6 +4,7 @@ import 'package:chab/util/shared_preferences_util.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:room_repository/room_repository.dart';
 import 'package:user_repository/user_repository.dart';
 
 void main() async {
@@ -17,8 +18,15 @@ void main() async {
   await SharedPreferencesUtil.init();
 
   runApp(
-    RepositoryProvider(
-      create: (context) => FirebaseUserRepository(),
+    MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider(
+          create: (context) => FirebaseUserRepository()
+        ),
+        RepositoryProvider(
+          create: (context) => FirebaseRoomRepository()
+        )
+      ],
       child: const MyApp()
     )
   );
