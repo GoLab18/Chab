@@ -125,7 +125,7 @@ class FirebaseRoomRepository {
   Future<void> uploadRoomPicture(String roomId, String imagePath) async {
     try {
       Reference firebaseStorageRef = FirebaseStorage.instance.ref().child(
-        "$roomId/ChatPictures/${roomId}_pic"
+        "Rooms/$roomId/ChatPictures/${roomId}_pic"
       );
 
       File imageFile = File(imagePath);

@@ -149,7 +149,7 @@ class FirebaseUserRepository {
   Future<String> uploadPicture(String userId, String imagePath) async {
     try {
       Reference firebaseStorageRef = FirebaseStorage.instance.ref().child(
-        "$userId/ProfilePictures/${userId}_pic"
+        "Users/$userId/ProfilePictures/${userId}_pic"
       );
 
       File imageFile = File(imagePath);
