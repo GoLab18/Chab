@@ -14,7 +14,20 @@ class InvitesOperationsBloc extends Bloc<InvitesOperationsEvent, InvitesOperatio
       try {
         userRepository.updateInviteStatus(event.inviteId, event.newStatus);
 
-        emit(const InvitesOperationsState.success());
+        emit(InvitesOperationsState.success(
+          event.newStatus,
+          event.newStatus == InviteStatus.accepted ? event.fromUserId : null
+        ));
+      } catch (e) {
+        emit(const InvitesOperationsState.failure());
+      }
+    });
+
+    on<DeleteInvite>((event, emit) {
+      try {
+        userRepository.deleteInvite(event.inviteId);
+
+        emit(const InvitesOperationsState.success(null, null));
       } catch (e) {
         emit(const InvitesOperationsState.failure());
       }

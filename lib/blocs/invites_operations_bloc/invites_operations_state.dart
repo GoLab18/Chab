@@ -7,13 +7,23 @@ enum InviteOperationStatus {
 }
 
 final class InvitesOperationsState {
-  final InviteOperationStatus status;
+  final InviteOperationStatus opStatus;
+  final InviteStatus? invStatus; // Is null when the status is not the focal point of the operation
+  final String? fromUserId; // Non-null on accepted invites
 
-  const InvitesOperationsState({this.status = InviteOperationStatus.loading});
+  const InvitesOperationsState({
+    this.opStatus = InviteOperationStatus.loading,
+    this.invStatus = InviteStatus.pending,
+    this.fromUserId
+  });
 
   const InvitesOperationsState.loading() : this();
 
-const InvitesOperationsState.success() : this(status: InviteOperationStatus.success);
+  const InvitesOperationsState.success(InviteStatus? invStatus, String? fromUserId) : this(
+    opStatus: InviteOperationStatus.success,
+    invStatus: invStatus,
+    fromUserId: fromUserId
+  );
 
-  const InvitesOperationsState.failure() : this(status: InviteOperationStatus.failure);
+  const InvitesOperationsState.failure() : this(opStatus: InviteOperationStatus.failure);
 }

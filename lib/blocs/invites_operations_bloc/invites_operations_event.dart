@@ -12,10 +12,12 @@ final class AddInvite extends InvitesOperationsEvent {
 final class UpdateInviteStatus extends InvitesOperationsEvent {
   final String inviteId;
   final InviteStatus newStatus;
+  final String? fromUserId; // Used only for accepted invites
 
   const UpdateInviteStatus({
     required this.inviteId,
-    required this.newStatus
+    required this.newStatus,
+    this.fromUserId
   });
 }
 
