@@ -21,8 +21,8 @@ class Room extends Equatable {
   final bool? lastMessageHasPicture;
 
   /// Last message picture.
-  /// On room creation stays null.
-  late final Timestamp? lastMessageTimestamp;
+  /// On room creation it is set to the creation timestamp
+  late final Timestamp lastMessageTimestamp;
 
   // Last message sender ID.
   /// On room creation stays null.
@@ -44,14 +44,16 @@ class Room extends Equatable {
     required this.id,
     this.isPrivate = true,
     this.lastMessageContent,
-    this.lastMessageHasPicture = false,
+    this.lastMessageHasPicture,
     this.lastMessageSenderId,
-    this.lastMessageTimestamp,
+    Timestamp? lastMessageTimestamp,
     required this.name,
     required this.picture,
     Timestamp? timestamp
   }) {
-    this.timestamp = timestamp ?? Timestamp.now();
+    Timestamp now = Timestamp.now();
+    this.lastMessageTimestamp = lastMessageTimestamp ?? now;
+    this.timestamp = timestamp ?? now;
   }
   
   @override
@@ -106,7 +108,7 @@ class Room extends Equatable {
       if (lastMessageContent != null) "lastMessageContent": lastMessageContent,
       if (lastMessageSenderId != null) "lastMessageSenderId": lastMessageSenderId,
       if (lastMessageHasPicture != null) "lastMessageHasPicture": lastMessageHasPicture,
-      if (lastMessageTimestamp != null) "lastMessageTimestamp": lastMessageTimestamp,
+      "lastMessageTimestamp": lastMessageTimestamp,
       if (name != null) "name": name,
       if (picture != null) "picture": picture,
       "timestamp": timestamp
@@ -121,7 +123,7 @@ class Room extends Equatable {
       lastMessageContent: doc["lastMessageContent"] as String?,
       lastMessageHasPicture: doc["lastMessageHasPicture"] as bool?,
       lastMessageSenderId: doc["lastMessageSenderId"] as String?,
-      lastMessageTimestamp: doc["lastMessageTimestamp"] as Timestamp?,
+      lastMessageTimestamp: doc["lastMessageTimestamp"] as Timestamp,
       name: doc["name"] as String?,
       picture: doc["picture"] as String?,
       timestamp: doc["timestamp"] as Timestamp
