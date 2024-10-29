@@ -1,3 +1,4 @@
+import 'package:chab/components/tiles/invite_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:user_repository/user_repository.dart';
@@ -6,42 +7,37 @@ import '../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../blocs/received_invites_bloc/received_invites_bloc.dart';
 import '../blocs/room_operations_bloc/room_operations_bloc.dart';
 import '../blocs/sent_invites_bloc/sent_invites_bloc.dart';
-import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/app_bars/search_app_bar.dart';
 import '../components/is_empty_message_widget.dart';
-import '../util/date_util.dart';
 
 class FindFriendsPage extends StatefulWidget {
-  const FindFriendsPage({super.key});
+  final String currentUserId;
+
+  const FindFriendsPage(this.currentUserId, {super.key});
 
   @override
   State<FindFriendsPage> createState() => _FindFriendsPageState();
 }
 
 class _FindFriendsPageState extends State<FindFriendsPage> {
+
+  // Current tab index
   int _currentIndex = 0;
 
+  // Accounts for stream not yielding data on InviteStatus change and holds only
+  // the values of non-pending invite statuses behind their indexes as keys
+  Map<int, InviteStatus> cachedStatuses = {};
+
+  void cacheStatusCallback(int index, InviteStatus status) {
+    setState(() {
+      cachedStatuses[index] = status;
+    });
+  }
   
   void bottomBarNavigation(int index) {
     setState(() {
       _currentIndex = index;
     });
-  }
-
-  String assertStatusString(InviteStatus status) {
-    return switch (status) {
-      InviteStatus.pending => "Pending",
-      InviteStatus.declined => "Declined",
-      InviteStatus.accepted => "Accepted"
-    };
-  }
-
-  Color assertStatusColor(InviteStatus status) {
-    return switch (status) {
-      InviteStatus.pending => Theme.of(context).colorScheme.tertiary,
-      InviteStatus.declined => Theme.of(context).colorScheme.error,
-      InviteStatus.accepted => Theme.of(context).colorScheme.primary
-    };
   }
 
   // TODO a button for deleting all the accepted/declined invites in the sent invites part
@@ -117,200 +113,45 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                           }
                                 
                           return _currentIndex == 0
-                            ? ListView.builder(
-                              itemCount: receivedInvites.length,
-                              itemBuilder: (context, index) {
-                                var (user, invite) = receivedInvites[index];
-                                  
-                                return Padding(
-                                  padding: const EdgeInsets.all(4),
-                                  child: SizedBox(
-                                    height: 48,
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        // Sender profile picture
-                                        CircleAvatar(
-                                          radius: 24,
-                                          foregroundImage: user.picture.isNotEmpty
-                                            ? NetworkImage(user.picture)
-                                            : null,
-                                          backgroundColor: Theme.of(context).colorScheme.tertiary,
-                                          child: Icon(
-                                            Icons.person_outlined,
-                                            color: Theme.of(context).colorScheme.inversePrimary
-                                          )
-                                        ),
 
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(
-                                              left: 12,
-                                              right: 8
-                                            ),
-                                            child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                // Username of the sender
-                                                Text(
-                                                  user.name,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                  style: TextStyle(
-                                                    color: Theme.of(context).colorScheme.inversePrimary
-                                                  )
-                                                ),
+                            // Accepts invite, setting it to a status "accepted"
+                            // Creates a new private room
+                            ? BlocListener<InvitesOperationsBloc, InvitesOperationsState>(
+                              listener: (context, state) {
+                                if (
+                                  state.opStatus == InviteOperationStatus.success
+                                  && state.invStatus == InviteStatus.accepted
+                                ) {
+                                  context.read<RoomOperationsBloc>().add(CreatePrivateChatRoom(
+                                    widget.currentUserId,
+                                    state.fromUserId!
+                                  ));
+                                }
+                              },
+                              child: ListView.builder(
+                                itemCount: receivedInvites.length,
+                                itemBuilder: (context, index) {
+                                  var (user, invite) = receivedInvites[index];
 
-                                                // Invite sending date
-                                                Text(
-                                                  DateUtil.getLongDateFormatFromNow(invite.timestamp.toDate()),
-                                                  overflow: TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Theme.of(context).colorScheme.tertiary
-                                                  )
-                                                )
-                                              ]
-                                            )
-                                          )
-                                        ),
-
-                                        // Accepts invite, setting it to a status "accepted"
-                                        // Creates a new private room
-                                        BlocListener<InvitesOperationsBloc, InvitesOperationsState>(
-                                          listener: (context, state) {
-                                            if (state.status == InviteOperationStatus.success) {
-                                              context.read<RoomOperationsBloc>().add(CreatePrivateChatRoom(
-                                                context.read<UsrBloc>().state.user!.id,
-                                                user.id
-                                              ));
-                                            }
-                                          },
-                                          child: IconButton(
-                                            onPressed: () {
-                                              context.read<InvitesOperationsBloc>().add(UpdateInviteStatus(
-                                                inviteId: invite.id,
-                                                newStatus: InviteStatus.accepted
-                                              ));
-                                              
-                                              // TODO
-                                            },
-                                            icon: Icon(
-                                              Icons.cancel_outlined,
-                                              size: 26,
-                                              color: Theme.of(context).colorScheme.secondary
-                                            )
-                                          )
-                                        ),
-
-                                        // Declines invite, setting it to a status "declined"
-                                        IconButton(
-                                          onPressed: () => context.read<InvitesOperationsBloc>().add(UpdateInviteStatus(
-                                            inviteId: invite.id,
-                                            newStatus: InviteStatus.declined
-                                          )),
-                                          icon: Icon(
-                                            Icons.check_circle_outlined,
-                                            size: 26,
-                                            color: Theme.of(context).colorScheme.inversePrimary
-                                          )
-                                        )
-                                      ]
-                                    )
-                                  )
-                                );
-                              }
+                                  return InviteTile(
+                                    user: user,
+                                    invite: cachedStatuses.containsKey(index) ? invite.copyWith(status: cachedStatuses[index]) : invite,
+                                    tabIndex: _currentIndex,
+                                    onStatusChanged: (status) => cacheStatusCallback(index, status)
+                                  );
+                                }
+                              ),
                             )
+                            
                             : ListView.builder(
                               itemCount: sentInvites.length,
                               itemBuilder: (context, index) {
                                 var (user, invite) = sentInvites[index];
                                   
-                                return Padding(
-                                  padding: const EdgeInsets.all(4),
-                                  child: SizedBox(
-                                    height: 48,
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        // Receiver profile picture
-                                        CircleAvatar(
-                                          radius: 24,
-                                          foregroundImage: user.picture.isNotEmpty
-                                            ? NetworkImage(user.picture)
-                                            : null,
-                                          backgroundColor: Theme.of(context).colorScheme.tertiary,
-                                          child: Icon(
-                                            Icons.person_outlined,
-                                            color: Theme.of(context).colorScheme.inversePrimary
-                                          )
-                                        ),
-
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(
-                                              left: 12,
-                                              right: 8
-                                            ),
-                                            child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                // Username of the receiver
-                                                Text(
-                                                  user.name,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                  style: TextStyle(
-                                                    color: Theme.of(context).colorScheme.inversePrimary
-                                                  )
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: [
-                                                    // Invite sending date
-                                                    Text(
-                                                      DateUtil.getLongDateFormatFromNow(invite.timestamp.toDate()),
-                                                      overflow: TextOverflow.ellipsis,
-                                                      maxLines: 1,
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Theme.of(context).colorScheme.tertiary
-                                                      )
-                                                    ),
-
-                                                    // Invite status
-                                                    Text(
-                                                      assertStatusString(invite.status),
-                                                      overflow: TextOverflow.ellipsis,
-                                                      maxLines: 1,
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: assertStatusColor(invite.status)
-                                                      )
-                                                    )
-                                                  ]
-                                                )
-                                              ]
-                                            )
-                                          )
-                                        ),
-
-                                        // Delete invite icon button
-                                        IconButton(
-                                          onPressed: () => context.read<InvitesOperationsBloc>().add(DeleteInvite(invite.id)),
-                                          icon: Icon(
-                                            Icons.cancel_outlined,
-                                            size: 26,
-                                            color: Theme.of(context).colorScheme.secondary
-                                          )
-                                        )
-                                      ]
-                                    )
-                                  )
+                                return InviteTile(
+                                  user: user,
+                                  invite: invite,
+                                  tabIndex: _currentIndex
                                 );
                               }
                             );
