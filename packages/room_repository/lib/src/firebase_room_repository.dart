@@ -169,7 +169,7 @@ class FirebaseRoomRepository {
     if (newMembersIds.length == 1) {
       await membersRef.doc(newMembersIds[0]).set({
         "roomId": roomId,
-        "memberId": newMembersIds[0],
+        "userId": newMembersIds[0],
         if (isGroupChatRoom) "isMemberStill": true
       });
 
@@ -183,7 +183,7 @@ class FirebaseRoomRepository {
       
       batch.set(newMemberRef, {
         "roomId": roomId,
-        "memberId": memberId
+        "userId": memberId
       });
     }
 
