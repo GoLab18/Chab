@@ -84,13 +84,13 @@ class FirebaseRoomRepository {
   /// If isPrivate equals true then the newly created room is a private chat room.
   /// Else it is a group chat room room.
   Future<String> createRoom(bool isPrivate) async {
-     DocumentReference<Map<String, dynamic>> roomRef;
+     DocumentReference roomRef = roomsCollection.doc();
 
-    if (isPrivate) {
-      roomRef = await roomsCollection.add(Room.emptyPrivateChatRoom.toDocument());
-    } else {
-      roomRef = await roomsCollection.add(Room.emptyGroupChatRoom.toDocument());
-    }
+    await roomRef.set(
+      isPrivate
+        ? Room.emptyPrivateChatRoom.copyWith(id: roomRef.id).toDocument()
+        : Room.emptyGroupChatRoom.copyWith(id: roomRef.id).toDocument()
+    );
 
     return roomRef.id;
   }
