@@ -82,7 +82,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
               )
             )
           ],
-          child: const FindFriendsPage()
+          child: FindFriendsPage(userId)
         )
       )
     );
