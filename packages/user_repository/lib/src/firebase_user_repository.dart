@@ -342,7 +342,7 @@ class FirebaseUserRepository {
   /// Delete an invite with a specified [String] id.
   Future<void> deleteInvite(String inviteId) async {
     try {
-      return await friendInvitesCollection
+      await friendInvitesCollection
         .doc(inviteId)
         .delete();
     } catch (e) {
