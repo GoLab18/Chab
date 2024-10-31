@@ -4,11 +4,14 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:logger/logger.dart';
 import 'models/models.dart';
 import 'util/result.dart';
 import 'util/typedefs.dart';
 
 class FirebaseUserRepository {
+  final Logger _logger = Logger(printer: SimplePrinter());
+
   late final FirebaseAuth _firebaseAuth;
   late final CollectionReference<Map<String, dynamic>> usersCollection;
   late final CollectionReference<Map<String, dynamic>> roomsCollection;
@@ -231,48 +234,39 @@ class FirebaseUserRepository {
   /// Returns a [Stream] with a [List] that holds an [Invite] with the corresponding [Usr].
   /// [List] is ordered by [Timestamp] ascending and holds only invites with [InviteStatus.pending].
   Future<Stream<List<(Usr, Invite)>>> getUserFriendInvites(String userId) async {
+    _logger.i("getUserFriendInvites() invoked...");
+
     try {
-      return friendInvitesCollection
+      _logger.i("Fetching received invites data...");
+
+      QuerySnapshot<Map<String, dynamic>> invitesSnapshot = await friendInvitesCollection
         .where("toUser", isEqualTo: userId)
         .where("status", isEqualTo: InviteStatus.pending.index)
         .orderBy("timestamp", descending: true)
+        .get();
+
+      List<Invite> invites = invitesSnapshot.docs.map((doc) => Invite.fromDocument(doc.data())).toList();
+      List<String> sendersIds = invites.map((invite) => invite.fromUser).toList();
+
+      return usersCollection
+        .where(FieldPath.documentId, whereIn: sendersIds)
         .snapshots()
-        .map((QuerySnapshot<Map<String, dynamic>> invitesSnapshot) =>
-          invitesSnapshot.docs.map((doc) => Invite.fromDocument(doc.data())).toList()
-        )
-        .asyncExpand((List<Invite> invites) {
-          List<String> sendersIds = [];
+        .map((QuerySnapshot<Map<String, dynamic>> sendersSnapshot) {
+          _logger.i("Mapping received invites' users data...");
 
-          for (Invite invite in invites) {
-            sendersIds.add(invite.fromUser);
-          }
+          Map<String, dynamic> docsMap = {for (var doc in sendersSnapshot.docs) doc.id: doc};
 
-          if (sendersIds.isEmpty) {
-            return Stream.value(<(Usr, Invite)>[]);
-          }
-
-          return usersCollection
-            .where(FieldPath.documentId, whereIn: sendersIds)
-            .snapshots()
-            .map((QuerySnapshot<Map<String, dynamic>> sendersSnapshot) {
-              Map<String, dynamic> docsMap = {for (var doc in sendersSnapshot.docs) doc.id: doc};
-
-              List<(Usr, Invite)> finalList = [];
-
-              for (Invite invite in invites) {
-                finalList.add(
-                  (
-                    Usr.fromDocument(docsMap[invite.fromUser].data()),
-                    invite
-                  )
-                );
-              }
-
-              return finalList;
-            });
-        })
-        .asBroadcastStream();
+          return invites
+            .map((invite) {
+              return (
+                Usr.fromDocument(docsMap[invite.fromUser].data()),
+                invite
+            );
+            })
+            .toList();
+        });
     } catch (e) {
+      _logger.e("Fetching received invites error: $e");
       throw Exception(e);
     }
   }
@@ -280,48 +274,75 @@ class FirebaseUserRepository {
   /// Fetches users that have been invited by the current user.
   /// Returns a [Stream] with a [List] that holds an [Invite] with the corresponding [Usr].
   /// [List] is ordered by [Timestamp] ascending.
-  Future<Stream<List<(Usr, Invite)>>> getCurrentUsersIssuedInvites(String userId) async {
+  Stream<List<(Usr, Invite)>> getCurrentUsersIssuedInvites(String userId) {
+    _logger.i("getCurrentUsersIssuedInvites() invoked...");
+
     try {
-      return friendInvitesCollection
+      // Manages the combined output
+      StreamController<List<(Usr, Invite)>> controller = StreamController.broadcast();
+
+      // Combined streams
+      StreamSubscription? invitesSub;
+      StreamSubscription? receiversSub;
+
+      // Listening to the outer invites stream
+      invitesSub = friendInvitesCollection
         .where("fromUser", isEqualTo: userId)
         .orderBy("timestamp", descending: true)
         .snapshots()
-        .map((QuerySnapshot<Map<String, dynamic>> invitesSnapshot) =>
-          invitesSnapshot.docs.map((doc) => Invite.fromDocument(doc.data())).toList()
-        )
-        .asyncExpand((List<Invite> invites) {
-          List<String> receiversIds = [];
+        .listen((QuerySnapshot<Map<String, dynamic>> invitesSnapshot) {
+          _logger.i("Handling issued invites data...");
 
-          for (Invite invite in invites) {
-            receiversIds.add(invite.toUser);
-          }
-          
+          List<Invite> invites = invitesSnapshot.docs
+            .map((doc) => Invite.fromDocument(doc.data()))
+            .toList();
+
+          List<String> receiversIds = invites.map((invite) => invite.toUser).toList();
+
+          // If no receivers, emitting an empty list
           if (receiversIds.isEmpty) {
-            return Stream.value(<(Usr, Invite)>[]);
+            controller.add(<(Usr, Invite)>[]);
+            return;
           }
 
-          return usersCollection
+          // Fetching users based on receiversIds
+          receiversSub = usersCollection
             .where(FieldPath.documentId, whereIn: receiversIds)
             .snapshots()
-            .map((QuerySnapshot<Map<String, dynamic>> receiversSnapshot) {
-              Map<String, dynamic> docsMap = {for (var doc in receiversSnapshot.docs) doc.id: doc};
+            .listen((QuerySnapshot<Map<String, dynamic>> receiversSnapshot) {
+              _logger.i("Handling issued invite users data...");
+              
+              Map<String, Usr> usersMap = {
+                for (var doc in receiversSnapshot.docs)
+                  doc.id: Usr.fromDocument(doc.data())
+              };
+              
+              // Combining user and invite data
+              List<(Usr, Invite)> finalList = invites.map((invite) {
+                Usr? user = usersMap[invite.toUser];
+                
+                return user != null ? (user, invite) : null;
+              }).where((element) => element != null).cast<(Usr, Invite)>().toList();
 
-              List<(Usr, Invite)> finalList = [];
+              _logger.i("Emitting issued invites data");
 
-              for (Invite invite in invites) {
-                finalList.add(
-                  (
-                    Usr.fromDocument(docsMap[invite.toUser].data()),
-                    invite
-                  )
-                );
-              }
-
-              return finalList;
+              // Emitting the results
+              controller.add(finalList);
             });
-        })
-        .asBroadcastStream();
+        });
+
+      // Cleaning up after cancel
+      controller.onCancel = () {
+        receiversSub?.cancel();
+        invitesSub?.cancel();
+        controller.close();
+
+        _logger.w("Received invites controller cleaned up");
+      };
+
+      return controller.stream;
     } catch (e) {
+      _logger.e("Fetching issued invites error: $e");
       throw Exception(e);
     }
   }
