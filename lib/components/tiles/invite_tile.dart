@@ -181,7 +181,7 @@ class _InviteTileState extends State<InviteTile> {
                     )
                   )
                 ),
-        
+                
                 // Delete invite icon button
                 if (widget.tabIndex == 1) IconButton(
                   onPressed: () => context.read<InvitesOperationsBloc>().add(DeleteInvite(widget.invite.id)),
