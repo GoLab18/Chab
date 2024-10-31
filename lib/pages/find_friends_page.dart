@@ -4,9 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:user_repository/user_repository.dart';
 
 import '../blocs/invites_operations_bloc/invites_operations_bloc.dart';
-import '../blocs/received_invites_bloc/received_invites_bloc.dart';
+import '../blocs/invites_bloc/invites_bloc.dart';
 import '../blocs/room_operations_bloc/room_operations_bloc.dart';
-import '../blocs/sent_invites_bloc/sent_invites_bloc.dart';
 import '../components/app_bars/search_app_bar.dart';
 import '../components/is_empty_message_widget.dart';
 
@@ -50,120 +49,113 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
       body: Padding(
         padding: const EdgeInsets.all(4),
         child: Center(
-          child: BlocBuilder<ReceivedInvitesBloc, ReceivedInvitesState>(
-            builder: (context, rcState) => BlocBuilder<SentInvitesBloc, SentInvitesState>(
-              builder: (context, stState) {
-                if (
-                  rcState.status == ReceivedInvitesStatus.failure
-                  || stState.status == SentInvitesStatus.failure
-                ) {
-                  return Text(
-                    "Loading error",
-                    style: TextStyle(
-                      fontSize: 30,
-                      color: Theme.of(context).colorScheme.inversePrimary
-                    )
-                  );
-                } else if (
-                  rcState.status == ReceivedInvitesStatus.loading
-                  || stState.status == SentInvitesStatus.loading
-                ) {
-                  return const Center(
-                    child: CircularProgressIndicator()
-                  );
-                } else if (
-                  rcState.status == ReceivedInvitesStatus.success
-                  && stState.status == SentInvitesStatus.success
-                ) {
-                  return StreamBuilder(
-                    stream: rcState.userInvitesStream,
-                    builder: (context, rcSnapshot) {
-                      return StreamBuilder(
-                        stream: stState.userInvitesStream,
-                        builder: (context, stSnapshot) {
-                          if (
-                            rcSnapshot.connectionState == ConnectionState.waiting || !rcSnapshot.hasData
-                            || stSnapshot.connectionState == ConnectionState.waiting || !stSnapshot.hasData
-                          ) {
-                            return const Center(
-                              child: CircularProgressIndicator()
-                            );
-                          }
-                          
-                          if (rcSnapshot.hasError || stSnapshot.hasError) {
-                            return Text(
-                              "Loading error",
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Theme.of(context).colorScheme.inversePrimary
-                              )
-                            );
-                          }
-                                
-                          List<(Usr, Invite)> receivedInvites = rcSnapshot.data!;
-                          List<(Usr, Invite)> sentInvites = stSnapshot.data!;
+          child: BlocBuilder<InvitesBloc, InvitesState>(
+            builder: (context, invState) {
+              if (invState.status == InvitesStatus.failure) {
+                return Text(
+                  "Loading error",
+                  style: TextStyle(
+                    fontSize: 30,
+                    color: Theme.of(context).colorScheme.inversePrimary
+                  )
+                );
+              }
+              
+              if (invState.status == InvitesStatus.loading) {
+                return const Center(
+                  child: CircularProgressIndicator()
+                );
+              }
 
-                          bool isCurrentPageReceivedInvites = _currentIndex == 0;
-
-                          if (
-                            (isCurrentPageReceivedInvites && receivedInvites.isEmpty)
-                            || (!isCurrentPageReceivedInvites && sentInvites.isEmpty)
-                          ) {
-                            return const IsEmptyMessageWidget();
-                          }
-                                
-                          return _currentIndex == 0
-
-                            // Accepts invite, setting it to a status "accepted"
-                            // Creates a new private room
-                            ? BlocListener<InvitesOperationsBloc, InvitesOperationsState>(
-                              listener: (context, state) {
-                                if (
-                                  state.opStatus == InviteOperationStatus.success
-                                  && state.invStatus == InviteStatus.accepted
-                                ) {
-                                  context.read<RoomOperationsBloc>().add(CreatePrivateChatRoom(
-                                    widget.currentUserId,
-                                    state.fromUserId!
-                                  ));
-                                }
-                              },
-                              child: ListView.builder(
-                                itemCount: receivedInvites.length,
-                                itemBuilder: (context, index) {
-                                  var (user, invite) = receivedInvites[index];
-
-                                  return InviteTile(
-                                    user: user,
-                                    invite: cachedStatuses.containsKey(index) ? invite.copyWith(status: cachedStatuses[index]) : invite,
-                                    tabIndex: _currentIndex,
-                                    onStatusChanged: (status) => cacheStatusCallback(index, status)
-                                  );
-                                }
-                              ),
+              if (invState.status == InvitesStatus.success) {
+                return StreamBuilder(
+                  stream: invState.userFriendInvitesStream,
+                  builder: (context, rcSnapshot) {
+                    return StreamBuilder(
+                      stream: invState.userIssuedInvitesStream,
+                      builder: (context, stSnapshot) {
+                        if (
+                          rcSnapshot.connectionState == ConnectionState.waiting || !rcSnapshot.hasData
+                          || stSnapshot.connectionState == ConnectionState.waiting || !stSnapshot.hasData
+                        ) {
+                          return const Center(
+                            child: CircularProgressIndicator()
+                          );
+                        }
+                        
+                        if (rcSnapshot.hasError || stSnapshot.hasError) {
+                          return Text(
+                            "Loading error",
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Theme.of(context).colorScheme.inversePrimary
                             )
-                            
-                            : ListView.builder(
-                              itemCount: sentInvites.length,
+                          );
+                        }
+                              
+                        List<(Usr, Invite)> receivedInvites = rcSnapshot.data!;
+                        List<(Usr, Invite)> sentInvites = stSnapshot.data!;
+          
+                        bool isCurrentPageReceivedInvites = _currentIndex == 0;
+          
+                        if (
+                          (isCurrentPageReceivedInvites && receivedInvites.isEmpty)
+                          || (!isCurrentPageReceivedInvites && sentInvites.isEmpty)
+                        ) {
+                          return const IsEmptyMessageWidget();
+                        }
+                              
+                        return _currentIndex == 0
+
+                          // Accepts invite, setting it to a status "accepted"
+                          // creates a new private room
+                          ? BlocListener<InvitesOperationsBloc, InvitesOperationsState>(
+                            listener: (context, state) {
+                              if (
+                                state.opStatus == InviteOperationStatus.success
+                                && state.invStatus == InviteStatus.accepted
+                              ) {
+                                context.read<RoomOperationsBloc>().add(CreatePrivateChatRoom(
+                                  widget.currentUserId,
+                                  state.fromUserId!
+                                ));
+                              }
+                            },
+                            child: ListView.builder(
+                              itemCount: receivedInvites.length,
                               itemBuilder: (context, index) {
-                                var (user, invite) = sentInvites[index];
-                                  
+                                var (user, invite) = receivedInvites[index];
+          
                                 return InviteTile(
                                   user: user,
-                                  invite: invite,
-                                  tabIndex: _currentIndex
+                                  invite: cachedStatuses.containsKey(index) ? invite.copyWith(status: cachedStatuses[index]) : invite,
+                                  tabIndex: _currentIndex,
+                                  onStatusChanged: (status) => cacheStatusCallback(index, status)
                                 );
                               }
-                            );
-                        }
-                      );
-                    }
-                  );
-                }
-  
-                throw Exception("Non-existent received_invites_bloc or sent_invites_bloc state");
+                            ),
+                          )
+                          
+                          : ListView.builder(
+                            itemCount: sentInvites.length,
+                            itemBuilder: (context, index) {
+                              var (user, invite) = sentInvites[index];
+                                
+                              return InviteTile(
+                                user: user,
+                                invite: invite,
+                                tabIndex: _currentIndex
+                              );
+                            }
+                          );
+                      }
+                    );
+                  }
+                );
               }
-            )
+
+              throw Exception("Non-existent invites_bloc");
+            }
           )
         )
       ),
