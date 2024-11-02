@@ -11,9 +11,9 @@ class RoomsBloc extends Bloc<RoomsEvent, RoomsState> {
   RoomsBloc({
     required this.roomRepository
   }) : super(const RoomsState.loading()) {
-    on<UserRoomsRequested>((event, emit) async {
+    on<UserRoomsRequested>((event, emit) {
       try {
-        Stream<List<Room>> roomsList = await roomRepository.getUserRooms(event.userId);
+        Stream<List<Room>> roomsList = roomRepository.getUserRooms(event.userId);
         
         emit(RoomsState.success(roomsList));
       } catch (e) {
