@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:room_repository/room_repository.dart';
@@ -11,12 +13,16 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
   RoomBloc({
     required this.roomRepository
   }) : super(const RoomState.loading()) {
-    on<RoomWithMessagesRequested>((event, emit) async {
+    on<RoomRequested>((event, emit) async {
       try {
-        ChatRoomTuple roomTuple = await roomRepository.getRoomWithMessages(event.roomId);
-        
-        emit(RoomState.success(roomTuple));
-      } catch (e) {
+        Stream<Room> roomStream = roomRepository.getRoomStream(event.roomId);
+
+        await emit.forEach(
+          roomStream,
+          onData: (Room room) => RoomState.success(room),
+          onError: (_, __) => const RoomState.failure()
+        );
+      } catch (_) {
         emit(const RoomState.failure());
       }
     });

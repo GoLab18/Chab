@@ -1,23 +1,23 @@
 part of 'room_bloc.dart';
 
-enum ChatRoomStatus {
+enum RoomStatus {
   success,
   loading,
   failure
 }
 
 class RoomState {
-  final ChatRoomTuple? roomTuple;
-  final ChatRoomStatus status;
+  final RoomStatus status;
+  final Room? room;
 
   const RoomState({
-    this.roomTuple,
-    this.status = ChatRoomStatus.loading
+    this.room,
+    this.status = RoomStatus.loading
   });
 
   const RoomState.loading() : this();
 
-  const RoomState.success(ChatRoomTuple roomTuple) : this(roomTuple: roomTuple, status: ChatRoomStatus.success);
+  const RoomState.success(Room room) : this(room: room, status: RoomStatus.success);
 
-  const RoomState.failure() : this(status: ChatRoomStatus.failure);
+  const RoomState.failure() : this(status: RoomStatus.failure);
 }

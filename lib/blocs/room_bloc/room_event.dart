@@ -7,12 +7,10 @@ sealed class RoomEvent extends Equatable {
   List<Object> get props => [];
 }
 
-final class RoomWithMessagesRequested extends RoomEvent {
+final class RoomRequested extends RoomEvent {
   final String roomId;
 
-  const RoomWithMessagesRequested({
-    required this.roomId
-  });
+  const RoomRequested(this.roomId);
   
   @override
   List<Object> get props => [roomId];
