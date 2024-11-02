@@ -10,7 +10,7 @@ import 'util/result.dart';
 import 'util/typedefs.dart';
 
 class FirebaseUserRepository {
-  final Logger _logger = Logger(printer: SimplePrinter());
+  final Logger log = Logger(printer: SimplePrinter());
 
   late final FirebaseAuth _firebaseAuth;
   late final CollectionReference<Map<String, dynamic>> usersCollection;
@@ -234,10 +234,10 @@ class FirebaseUserRepository {
   /// Returns a [Stream] with a [List] that holds an [Invite] with the corresponding [Usr].
   /// [List] is ordered by [Timestamp] ascending and holds only invites with [InviteStatus.pending].
   Future<Stream<List<(Usr, Invite)>>> getUserFriendInvites(String userId) async {
-    _logger.i("getUserFriendInvites() invoked...");
+    log.i("getUserFriendInvites() invoked...");
 
     try {
-      _logger.i("Fetching received invites data...");
+      log.i("Fetching received invites data...");
 
       QuerySnapshot<Map<String, dynamic>> invitesSnapshot = await friendInvitesCollection
         .where("toUser", isEqualTo: userId)
@@ -248,11 +248,16 @@ class FirebaseUserRepository {
       List<Invite> invites = invitesSnapshot.docs.map((doc) => Invite.fromDocument(doc.data())).toList();
       List<String> sendersIds = invites.map((invite) => invite.fromUser).toList();
 
+      // Incase no invites
+      if (sendersIds.isEmpty) {
+        return Stream.value([]);
+      }
+
       return usersCollection
         .where(FieldPath.documentId, whereIn: sendersIds)
         .snapshots()
         .map((QuerySnapshot<Map<String, dynamic>> sendersSnapshot) {
-          _logger.i("Mapping received invites' users data...");
+          log.i("Mapping received invites' users data...");
 
           Map<String, dynamic> docsMap = {for (var doc in sendersSnapshot.docs) doc.id: doc};
 
@@ -266,7 +271,7 @@ class FirebaseUserRepository {
             .toList();
         });
     } catch (e) {
-      _logger.e("Fetching received invites error: $e");
+      log.e("Fetching received invites error: $e");
       throw Exception(e);
     }
   }
@@ -275,7 +280,7 @@ class FirebaseUserRepository {
   /// Returns a [Stream] with a [List] that holds an [Invite] with the corresponding [Usr].
   /// [List] is ordered by [Timestamp] ascending.
   Stream<List<(Usr, Invite)>> getCurrentUsersIssuedInvites(String userId) {
-    _logger.i("getCurrentUsersIssuedInvites() invoked...");
+    log.i("getCurrentUsersIssuedInvites() invoked...");
 
     try {
       // Manages the combined output
@@ -291,7 +296,7 @@ class FirebaseUserRepository {
         .orderBy("timestamp", descending: true)
         .snapshots()
         .listen((QuerySnapshot<Map<String, dynamic>> invitesSnapshot) {
-          _logger.i("Handling issued invites data...");
+          log.i("Handling issued invites data...");
 
           List<Invite> invites = invitesSnapshot.docs
             .map((doc) => Invite.fromDocument(doc.data()))
@@ -310,7 +315,7 @@ class FirebaseUserRepository {
             .where(FieldPath.documentId, whereIn: receiversIds)
             .snapshots()
             .listen((QuerySnapshot<Map<String, dynamic>> receiversSnapshot) {
-              _logger.i("Handling issued invite users data...");
+              log.i("Handling issued invite users data...");
               
               Map<String, Usr> usersMap = {
                 for (var doc in receiversSnapshot.docs)
@@ -324,7 +329,7 @@ class FirebaseUserRepository {
                 return user != null ? (user, invite) : null;
               }).where((element) => element != null).cast<(Usr, Invite)>().toList();
 
-              _logger.i("Emitting issued invites data");
+              log.i("Emitting issued invites data");
 
               // Emitting the results
               controller.add(finalList);
@@ -337,12 +342,12 @@ class FirebaseUserRepository {
         invitesSub?.cancel();
         controller.close();
 
-        _logger.w("Received invites controller cleaned up");
+        log.w("Received invites controller cleaned up");
       };
 
       return controller.stream;
     } catch (e) {
-      _logger.e("Fetching issued invites error: $e");
+      log.e("Fetching issued invites error: $e");
       throw Exception(e);
     }
   }
