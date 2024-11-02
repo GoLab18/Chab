@@ -127,6 +127,7 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                                 var (user, invite) = receivedInvites[index];
           
                                 return InviteTile(
+                                  key: ValueKey(invite.id),
                                   user: user,
                                   invite: cachedStatuses.containsKey(index) ? invite.copyWith(status: cachedStatuses[index]) : invite,
                                   tabIndex: _currentIndex,
@@ -142,6 +143,7 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                               var (user, invite) = sentInvites[index];
                                 
                               return InviteTile(
+                                key: ValueKey(invite.id),
                                 user: user,
                                 invite: invite,
                                 tabIndex: _currentIndex
