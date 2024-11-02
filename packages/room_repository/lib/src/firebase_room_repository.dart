@@ -3,11 +3,13 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:logger/logger.dart';
 
 import 'models/models.dart';
-import 'util/chat_room_tuple.dart';
 
 class FirebaseRoomRepository {
+  final Logger log = Logger(printer: SimplePrinter());
+  
   late final FirebaseFirestore firestoreInstance;
   late final CollectionReference<Map<String, dynamic>> roomsCollection;
   
@@ -16,13 +18,23 @@ class FirebaseRoomRepository {
     roomsCollection = firestoreInstance.collection("rooms");
   }
 
-  /// Fetches a single room with a [Message]s [List] Stream.
-  Future<ChatRoomTuple> getRoomWithMessages(String roomId) async {
-    Room room = await roomsCollection.doc(roomId).get().then((value) =>
-      Room.fromDocument(value.data()!)
-    );
+  /// Fetches a single [Room] stream.
+  Stream<Room> getRoomStream(String roomId) {
+    log.i("getRoomStream() invoked...");
+
+    return roomsCollection
+      .doc(roomId)
+      .snapshots()
+      .map((DocumentSnapshot<Map<String, dynamic>> snapshot) =>
+        Room.fromDocument(snapshot.data()!)
+      );
+  }
+
+  /// Fetches [Message]s [List] stream.
+  Stream<List<Message>> getMessagesStream(String roomId) {
+    log.i("getMessagesStream() invoked...");
     
-    Stream<List<Message>> messagesStream = roomsCollection
+    return roomsCollection
       .doc(roomId)
       .collection("messages")
       .orderBy(
@@ -35,47 +47,64 @@ class FirebaseRoomRepository {
           (doc) => Message.fromDocument(doc.data())
         ).toList()
       );
-
-    return ChatRoomTuple(
-      room: room,
-      messagesStream: messagesStream
-    );
   }
 
   /// Fetches a Stream with [Room]s [List] that the user with id [userId] is apart of.
-  Future<Stream<List<Room>>> getUserRooms(String userId) async {
+  Stream<List<Room>> getUserRooms(String userId) {
+    log.i("getUserRooms() invoked...");
+
     try {
-      QuerySnapshot<Map<String, dynamic>> querySnapshot = await firestoreInstance
+      // Manages the combined output
+      StreamController<List<Room>> controller = StreamController.broadcast();
+
+      // Combined streams
+      StreamSubscription? membersSub;
+      StreamSubscription? roomsSub;
+
+      membersSub = firestoreInstance
         .collectionGroup("members")
         .where("userId", isEqualTo: userId)
-        .get();
-
-      List<String> roomsIds = querySnapshot
-        .docs
-        .map((doc) =>
-          doc.data()["roomId"] as String
-        )
-        .toList();
-
-      return roomsIds.isEmpty
-        ? Stream.value([])
-        : roomsCollection
-        .where(
-          FieldPath.documentId,
-          whereIn: roomsIds
-        )
-        .orderBy(
-          "lastMessageTimestamp",
-          descending: true
-        )
         .snapshots()
-        .map((QuerySnapshot<Map<String, dynamic>> snapshot) =>
-          snapshot.docs.map<Room>(
-            (doc) => Room.fromDocument(doc.data())
-          ).toList()
-        );
-      
+        .listen((querySnapshot) {
+          log.i("Handling room members data...");
+
+          List<String> roomsIds = querySnapshot.docs
+            .map((doc) => doc.data()["roomId"] as String)
+            .toList();
+
+          if (roomsIds.isEmpty) {
+            controller.add([]);
+            return;
+          }
+
+          roomsSub = roomsCollection
+            .where(FieldPath.documentId, whereIn: roomsIds)
+            .orderBy("lastMessageTimestamp", descending: true)
+            .snapshots()
+            .listen((roomSnapshot) {
+              log.i("Handling user rooms data...");
+
+              // Mapping documents to Room objects
+              List<Room> rooms = roomSnapshot.docs
+                .map<Room>((doc) => Room.fromDocument(doc.data()))
+                .toList();
+
+              controller.add(rooms);
+            });
+        });
+
+      // Cleaning up after cancel
+      controller.onCancel = () {
+        membersSub?.cancel();
+        roomsSub?.cancel();
+        controller.close();
+
+        log.w("User rooms controller cleaned up");
+      };
+
+      return controller.stream;
     } on FirebaseException catch (e) {
+      log.e("Fetching user rooms error: $e");
       throw Exception(e);
     }
   }
