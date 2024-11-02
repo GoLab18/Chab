@@ -6,6 +6,7 @@ import 'package:room_repository/room_repository.dart';
 import 'package:user_repository/user_repository.dart';
 
 import '../blocs/message_bloc/message_bloc.dart';
+import '../blocs/messages_bloc/messages_bloc.dart';
 import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/room_members_bloc/room_members_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
@@ -70,297 +71,258 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
           // Messages dynamic loading
           Expanded(
             child: Center(
-              child: BlocBuilder<RoomMembersBloc, RoomMembersState>(
-                builder: (context, roomMembersState) {
-                  return BlocBuilder<RoomBloc, RoomState>(
-                    builder: (context, roomState) {
-                      if (
-                        roomState.status == ChatRoomStatus.failure
-                          || roomMembersState.status == ChatRoomMembersStatus.failure
-                      ) {
-                        return Text(
-                          "Loading error",
-                          style: TextStyle(
-                            fontSize: 30,
-                            color: Theme.of(context).colorScheme.inversePrimary
+              child: BlocBuilder<RoomBloc, RoomState>(
+                builder: (context, roomState) {
+                  return BlocBuilder<RoomMembersBloc, RoomMembersState>(
+                    builder: (context, roomMembersState) {
+                      return BlocBuilder<MessagesBloc, MessagesState>(
+                        builder: (context, messagesState) {
+                          if (
+                            roomState.status == RoomStatus.failure
+                              || roomMembersState.status == RoomMembersStatus.failure
+                              || messagesState.status == MessagesStatus.failure
+                          ) {
+                            return Text(
+                              "Loading error",
+                              style: TextStyle(
+                                fontSize: 30,
+                                color: Theme.of(context).colorScheme.inversePrimary
+                              )
+                            );
+                          }
+                          
+                          if (
+                            roomState.status == RoomStatus.loading
+                              || roomMembersState.status == RoomMembersStatus.loading
+                              || messagesState.status == MessagesStatus.loading
+                              || roomState.room == null
+                              || (roomMembersState.privateChatRoomFriend == null && roomMembersState.groupMembers == null)
+                          ) {
+                            return const CircularProgressIndicator();
+                          }
+
+                          if (messagesState.status == MessagesStatus.empty) {
+                            return const IsEmptyMessageWidget();
+                          }
+
+                          // In case the room is a private room
+                          return roomState.room!.isPrivate
+                            ? Builder(
+                              builder: (context) {
+                                  List<Message> messages = messagesState.messages!;
+                                  Usr friend = roomMembersState.privateChatRoomFriend!;
+  
+                                  String lastSenderId = messages[0].senderId;
+  
+                                  // For displaying message sender's avatar
+                                  bool wasDateDisplayedBefore = false;
+  
+                                  // Becomes null if next message is non-existent
+                                  bool? isDateShown;
+          
+                                  DateUtil dateUtil = DateUtil();
+                                  
+                                  return Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: ListView.builder(
+                                      reverse: true,
+                                      controller: scrollController,
+                                      itemCount: messages.length,
+                                      itemBuilder: (BuildContext context, int index) {
+                                        var currentMessage = messages[index];
+          
+                                        bool nextMessageExists = index + 1 < messages.length;
+          
+                                        DateTime currentMessageDateTime = currentMessage.timestamp.toDate();
+  
+                                        // Based on the previous version of isDateShown
+                                        wasDateDisplayedBefore = (isDateShown != null && isDateShown!) ? true : false;
+          
+                                        if (nextMessageExists) {
+                                          dateUtil.nextMessageDateTime = messages[index + 1].timestamp.toDate();
+                                          isDateShown = dateUtil.isMessageDateDifferenceMoreThanOrEqualDay(currentMessageDateTime);
+                                        } else {
+                                          isDateShown == null;
+                                        }
+  
+                                        String senderId = currentMessage.senderId;
+                                        bool isCurrentUsersMessage = senderId == context.read<UsrBloc>().state.user!.id;
+  
+                                        bool isDifferentSender = lastSenderId != senderId;
+                                        if (isDifferentSender) lastSenderId = senderId;
+  
+                                        return Column(
+                                          key: ValueKey(currentMessage.id),
+                                          children: [
+                                            // Message sequence date view
+                                            (isDateShown == null || isDateShown!)
+                                              ? MessageSequenceDate(
+                                                DateUtil.isTodayDate(currentMessageDateTime)
+                                                  ? "Today"
+                                                  : DateUtil.getLongDateFormatFromNow(currentMessageDateTime)
+                                              )
+                                              : const SizedBox(height: 8),
+  
+                                            Row(
+                                              mainAxisAlignment: isCurrentUsersMessage
+                                                ? MainAxisAlignment.end : MainAxisAlignment.start,
+                                              crossAxisAlignment: CrossAxisAlignment.end,
+                                              children: [
+                                                if (!isCurrentUsersMessage) Padding(
+                                                  padding: const EdgeInsets.only(right: 8),
+                                                  child: (isDifferentSender || wasDateDisplayedBefore)
+                                                    ? CircleAvatar(
+                                                      radius: 16,
+                                                      foregroundImage: friend.picture.isNotEmpty
+                                                        ? NetworkImage(friend.picture)
+                                                        : null,
+                                                      backgroundColor: Theme.of(context).colorScheme.tertiary,
+                                                      child: Icon(
+                                                        Icons.person_outlined,
+                                                        size: 16,
+                                                        color: Theme.of(context).colorScheme.inversePrimary
+                                                      )
+                                                    )
+                                                    : const SizedBox(
+                                                      width: 32,
+                                                      height: 32
+                                                    )
+                                                ),
+                                                MessageBubble(
+                                                  message: currentMessage,
+                                                  isCurrentUserMessage: isCurrentUsersMessage
+                                                )
+                                              ]
+                                            )
+                                            // Message
+                                          ]
+                                        );
+                                      }
+                                    )
+                                  );
+                                }
                           )
-                        );
-                      } else if (
-                        roomState.status == ChatRoomStatus.loading
-                          || roomMembersState.status == ChatRoomMembersStatus.loading
-                      ) {
-                        return const CircularProgressIndicator();
-                      } else if (
-                        roomState.status == ChatRoomStatus.success
-                          || roomMembersState.status == ChatRoomMembersStatus.success
-                      ) {
-                        return roomState.roomTuple!.room.isPrivate
-                          ? StreamBuilder(
-                            stream: roomMembersState.privateChatRoomFriend,
-                            builder: (context, friendSnapshot) {
-                              return StreamBuilder(
-                              stream: roomState.roomTuple!.messagesStream,
-                              builder: (context, msgSnapshot) {
-                                if (
-                                  msgSnapshot.connectionState == ConnectionState.waiting
-                                    || friendSnapshot.connectionState == ConnectionState.waiting
-                                ) return const CircularProgressIndicator();
-                                
-                                if (msgSnapshot.hasError || friendSnapshot.hasError) {
-                                  return Text(
-                                    "Loading error",
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      color: Theme.of(context).colorScheme.inversePrimary
-                                    )
-                                  );
-                                }
-                                
-                                if (
-                                  !msgSnapshot.hasData || msgSnapshot.data!.isEmpty
-                                    || !friendSnapshot.hasData || friendSnapshot.data!.isEmpty
-                                ) return const IsEmptyMessageWidget();
-                                
-                                final messages = msgSnapshot.data!;
-                                Usr friend = friendSnapshot.data!;
 
-                                String lastSenderId = messages[0].senderId;
+                          // In case the room is a group chat room
+                          : Builder(
+                            builder: (context) {
+                              List<Message>? messages = messagesState.messages!;
+                              Map<String, Usr>? members = roomMembersState.groupMembers!;
 
-                                // For displaying message sender's avatar
-                                bool wasDateDisplayedBefore = false;
+                              String lastSenderId = messages[0].senderId;
 
-                                // Becomes null if next message is non-existent
-                                bool? isDateShown;
-        
-                                DateUtil dateUtil = DateUtil();
-                      
-                                return Padding(
-                                  padding: const EdgeInsets.all(8),
-                                  child: ListView.builder(
-                                    reverse: true,
-                                    controller: scrollController,
-                                    itemCount: messages.length,
-                                    itemBuilder: (BuildContext context, int index) {
-                                      var currentMessage = messages[index];
-        
-                                      bool nextMessageExists = index + 1 < messages.length;
-        
-                                      DateTime currentMessageDateTime = currentMessage.timestamp.toDate();
+                              // For displaying message sender's avatar
+                              bool wasDateDisplayedBefore = false;
 
-                                      // Based on the previous version of isDateShown
-                                      wasDateDisplayedBefore = (isDateShown != null && isDateShown!) ? true : false;
-        
-                                      if (nextMessageExists) {
-                                        dateUtil.nextMessageDateTime = messages[index + 1].timestamp.toDate();
-                                        isDateShown = dateUtil.isMessageDateDifferenceMoreThanOrEqualDay(currentMessageDateTime);
-                                      } else {
-                                        isDateShown == null;
-                                      }
+                              // Become null if next message is non-existent
+                              bool? isDateShown;
+                              bool? isNextSenderDifferent;
 
-                                      String senderId = currentMessage.senderId;
-                                      bool isCurrentUsersMessage = senderId == context.read<UsrBloc>().state.user!.id;
+                              bool isUsernameShown = false;
+                              
+                              DateUtil dateUtil = DateUtil();
+                              
+                              return Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: ListView.builder(
+                                  reverse: true,
+                                  controller: scrollController,
+                                  itemCount: messages.length,
+                                  itemBuilder: (BuildContext context, int index) {
+                                    var currentMessage = messages[index];
+                              
+                                    bool nextMessageExists = index + 1 < messages.length;
+                              
+                                    DateTime currentMessageDateTime = currentMessage.timestamp.toDate();
 
-                                      bool isDifferentSender = lastSenderId != senderId;
-                                      if (isDifferentSender) lastSenderId = senderId;
+                                    // Based on the previous version of isDateShown
+                                    wasDateDisplayedBefore = (isDateShown != null && isDateShown!) ? true : false;
 
-                                      return Column(
-                                        children: [
-                                          // Message sequence date view
-                                          (isDateShown == null || isDateShown!)
-                                            ? MessageSequenceDate(
-                                              DateUtil.isTodayDate(currentMessageDateTime)
-                                                ? "Today"
-                                                : DateUtil.getLongDateFormatFromNow(currentMessageDateTime)
-                                            )
-                                            : const SizedBox(height: 8),
+                                    String currentSenderId = currentMessage.senderId;
 
-                                          Row(
-                                            mainAxisAlignment: isCurrentUsersMessage
-                                              ? MainAxisAlignment.end : MainAxisAlignment.start,
-                                            crossAxisAlignment: CrossAxisAlignment.end,
-                                            children: [
-                                              if (!isCurrentUsersMessage) Padding(
-                                                padding: const EdgeInsets.only(right: 8),
-                                                child: (isDifferentSender || wasDateDisplayedBefore)
-                                                  ? CircleAvatar(
-                                                    radius: 16,
-                                                    foregroundImage: friend.picture.isNotEmpty
-                                                      ? NetworkImage(friend.picture)
-                                                      : null,
-                                                    backgroundColor: Theme.of(context).colorScheme.tertiary,
-                                                    child: Icon(
-                                                      Icons.person_outlined,
-                                                      size: 16,
-                                                      color: Theme.of(context).colorScheme.inversePrimary
-                                                    )
-                                                  )
-                                                  : const SizedBox(
-                                                    width: 32,
-                                                    height: 32
-                                                  )
-                                              ),
-                                              MessageBubble(
-                                                message: currentMessage,
-                                                isCurrentUserMessage: isCurrentUsersMessage
-                                              )
-                                            ]
-                                          )
-                                          // Message
-                                        ]
-                                      );
+                                    if (nextMessageExists) {
+                                      Message nextMesssage = messages[index + 1];
+
+                                      dateUtil.nextMessageDateTime = nextMesssage.timestamp.toDate();
+                                      isDateShown = dateUtil.isMessageDateDifferenceMoreThanOrEqualDay(currentMessageDateTime);
+                                      isNextSenderDifferent = currentSenderId != nextMesssage.senderId;
+                                    } else {
+                                      isDateShown = null;
+                                      isNextSenderDifferent = null;
                                     }
-                                  )
-                                );
-                              }
-                            );
-                          }
-                        )
-                        : StreamBuilder(
-                          stream: roomMembersState.roomMembersStream,
-                          builder: (context, membersSnapshot) {
-                            return StreamBuilder(
-                              stream: roomState.roomTuple!.messagesStream,
-                              builder: (context, msgSnapshot) {
-                                if (
-                                  msgSnapshot.connectionState == ConnectionState.waiting
-                                    || membersSnapshot.connectionState == ConnectionState.waiting
-                                ) return const CircularProgressIndicator();
-                                
-                                if (msgSnapshot.hasError || membersSnapshot.hasError) {
-                                  return Text(
-                                    "Loading error",
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      color: Theme.of(context).colorScheme.inversePrimary
-                                    )
-                                  );
-                                }
-                                
-                                if (
-                                  !msgSnapshot.hasData || msgSnapshot.data!.isEmpty
-                                    || !membersSnapshot.hasData || membersSnapshot.data!.isEmpty
-                                ) return const IsEmptyMessageWidget();
-                                
-                                final messages = msgSnapshot.data!;
-                                final members = membersSnapshot.data!;
 
-                                String lastSenderId = messages[0].senderId;
+                                    bool isCurrentUsersMessage = currentSenderId == context.read<UsrBloc>().state.user!.id;
 
-                                // For displaying message sender's avatar
-                                bool wasDateDisplayedBefore = false;
+                                    // Null if last message sender is the same as current message sender
+                                    Usr sender = members[currentSenderId]!;
 
-                                // Become null if next message is non-existent
-                                bool? isDateShown;
-                                bool? isNextSenderDifferent;
+                                    bool isCurrentSenderDifferent = lastSenderId != currentSenderId;
+                                    if (isCurrentSenderDifferent) lastSenderId = currentSenderId;
 
-                                bool isUsernameShown = false;
-                                
-                                DateUtil dateUtil = DateUtil();
+                                    // Username is shown when the current is sender is not the current user and
+                                    // the next sender is a different one or the date will be displayed
+                                    isUsernameShown = !isCurrentUsersMessage
+                                      && (isNextSenderDifferent == null || isNextSenderDifferent!
+                                        || isDateShown == null || isDateShown!);
 
-                                
-                                return Padding(
-                                  padding: const EdgeInsets.all(8),
-                                  child: ListView.builder(
-                                    reverse: true,
-                                    controller: scrollController,
-                                    itemCount: messages.length,
-                                    itemBuilder: (BuildContext context, int index) {
-                                      var currentMessage = messages[index];
-                                
-                                      bool nextMessageExists = index + 1 < messages.length;
-                                
-                                      DateTime currentMessageDateTime = currentMessage.timestamp.toDate();
-
-                                      // Based on the previous version of isDateShown
-                                      wasDateDisplayedBefore = (isDateShown != null && isDateShown!) ? true : false;
-
-                                      String currentSenderId = currentMessage.senderId;
-
-                                      if (nextMessageExists) {
-                                        Message nextMesssage = messages[index + 1];
-
-                                        dateUtil.nextMessageDateTime = nextMesssage.timestamp.toDate();
-                                        isDateShown = dateUtil.isMessageDateDifferenceMoreThanOrEqualDay(currentMessageDateTime);
-                                        isNextSenderDifferent = currentSenderId != nextMesssage.senderId;
-                                      } else {
-                                        isDateShown = null;
-                                        isNextSenderDifferent = null;
-                                      }
-
-                                      bool isCurrentUsersMessage = currentSenderId == context.read<UsrBloc>().state.user!.id;
-
-                                      // Null if last message sender is the same as current message sender
-                                      Usr sender = members[currentSenderId]!;
-
-                                      bool isCurrentSenderDifferent = lastSenderId != currentSenderId;
-                                      if (isCurrentSenderDifferent) lastSenderId = currentSenderId;
-
-                                      // Username is shown when the current is sender is not the current user and
-                                      // the next sender is a different one or the date will be displayed
-                                      isUsernameShown = !isCurrentUsersMessage
-                                        && (isNextSenderDifferent == null || isNextSenderDifferent!
-                                          || isDateShown == null || isDateShown!);
-
-                                      return Column(
-                                        children: [
-                                          // Message sequence date view
-                                          (isDateShown == null || isDateShown!)
-                                            ? MessageSequenceDate(
-                                              DateUtil.isTodayDate(currentMessageDateTime)
-                                                ? "Today"
-                                                : DateUtil.getLongDateFormatFromNow(currentMessageDateTime)
-                                            )
-                                            : const SizedBox(height: 8),
-                            
-                                          Row(
-                                            mainAxisAlignment: isCurrentUsersMessage
-                                              ? MainAxisAlignment.end : MainAxisAlignment.start,
-                                            crossAxisAlignment: CrossAxisAlignment.end,
-                                            children: [
-                                              if (!isCurrentUsersMessage) Padding(
-                                                padding: const EdgeInsets.only(right: 8),
-                                                child: (isCurrentSenderDifferent || wasDateDisplayedBefore || index == 0)
-                                                  // Sender profile picture
-                                                  ? CircleAvatar(
-                                                    radius: 16,
-                                                    foregroundImage: sender.picture.isNotEmpty
-                                                      ? NetworkImage(sender.picture)
-                                                      : null,
-                                                    backgroundColor: Theme.of(context).colorScheme.tertiary,
-                                                    child: Icon(
-                                                      Icons.person_outlined,
-                                                      size: 16,
-                                                      color: Theme.of(context).colorScheme.inversePrimary
-                                                    )
-                                                  )
-                                                  : const SizedBox(
-                                                    width: 32,
-                                                    height: 32
-                                                  )
-                                              ),
-                                              
-                                              // Message
-                                              MessageBubble(
-                                                message: currentMessage,
-                                                isCurrentUserMessage: isCurrentUsersMessage,
-                                                sendersName: (isUsernameShown)
-                                                  ? sender.name
-                                                  : null
-                                              )
-                                            ]
+                                    return Column(
+                                      key: ValueKey(currentMessage.id),
+                                      children: [
+                                        // Message sequence date view
+                                        (isDateShown == null || isDateShown!)
+                                          ? MessageSequenceDate(
+                                            DateUtil.isTodayDate(currentMessageDateTime)
+                                              ? "Today"
+                                              : DateUtil.getLongDateFormatFromNow(currentMessageDateTime)
                                           )
-                                        ]
-                                      );
-                                    }
-                                  )
-                                );
-                              }
-                            );
-                          }
-                        );
-                      }
-                      
-                      throw Exception("Non-existent room_bloc state");
+                                          : const SizedBox(height: 8),
+                          
+                                        Row(
+                                          mainAxisAlignment: isCurrentUsersMessage
+                                            ? MainAxisAlignment.end : MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: [
+                                            if (!isCurrentUsersMessage) Padding(
+                                              padding: const EdgeInsets.only(right: 8),
+                                              child: (isCurrentSenderDifferent || wasDateDisplayedBefore || index == 0)
+                                                // Sender profile picture
+                                                ? CircleAvatar(
+                                                  radius: 16,
+                                                  foregroundImage: sender.picture.isNotEmpty
+                                                    ? NetworkImage(sender.picture)
+                                                    : null,
+                                                  backgroundColor: Theme.of(context).colorScheme.tertiary,
+                                                  child: Icon(
+                                                    Icons.person_outlined,
+                                                    size: 16,
+                                                    color: Theme.of(context).colorScheme.inversePrimary
+                                                  )
+                                                )
+                                                : const SizedBox(
+                                                  width: 32,
+                                                  height: 32
+                                                )
+                                            ),
+                                            
+                                            // Message
+                                            MessageBubble(
+                                              message: currentMessage,
+                                              isCurrentUserMessage: isCurrentUsersMessage,
+                                              sendersName: (isUsernameShown)
+                                                ? sender.name
+                                                : null
+                                            )
+                                          ]
+                                        )
+                                      ]
+                                    );
+                                  }
+                                )
+                              );
+                            }
+                          );
+                        }
+                      );
                     }
                   );
                 }
@@ -397,12 +359,12 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                     onPressed: () {
                       RoomState roomState = context.read<RoomBloc>().state;
 
-                      if (isSendButtonEnabled && roomState.status == ChatRoomStatus.success) {
+                      if (isSendButtonEnabled && roomState.status == RoomStatus.success) {
                         FocusScope.of(context).unfocus();
                         
                         context.read<MessageBloc>().add(
                           AddMessage(
-                            roomId: roomState.roomTuple!.room.id,
+                            roomId: roomState.room!.id,
                             message: Message(
                               id: "", // Will be auto generated in the backend.
                               content: newMessageController.text,

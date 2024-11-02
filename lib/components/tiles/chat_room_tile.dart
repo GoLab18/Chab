@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:room_repository/room_repository.dart';
 import 'package:user_repository/user_repository.dart';
 
+import '../../blocs/messages_bloc/messages_bloc.dart';
 import '../../blocs/room_members_bloc/room_members_bloc.dart';
 import '../../blocs/message_bloc/message_bloc.dart';
 import '../../blocs/room_bloc/room_bloc.dart';
@@ -21,336 +22,297 @@ class ChatRoomTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<RoomMembersBloc, RoomMembersState>(
-      builder: (context, roomMembersState) {
-        return BlocListener<RoomBloc, RoomState>(
-          listener: (context, state) {
-            if (state.status == ChatRoomStatus.success) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (BuildContext pageContext) => MultiBlocProvider(
-                    providers: [
-                      BlocProvider.value(
-                        value: context.read<UsrBloc>()
-                      ),
-                      BlocProvider.value(
-                        value: context.read<RoomMembersBloc>()..add(
-                          room.isPrivate
-                            ? PrivateChatRoomMembersRequested(
-                              roomId: room.id,
-                              currentUserId: context.read<UsrBloc>().state.user!.id
-                            )
-                            : GroupChatRoomMembersRequested(room.id)
-                        )
-                      ),
-                      BlocProvider.value(
-                        value: context.read<RoomBloc>()
-                      ),
-                      BlocProvider(
-                        create: (BuildContext messageBlocContext) => MessageBloc(
-                          roomRepository: context.read<FirebaseRoomRepository>()
-                        )
-                      )
-                    ],
-                    child: const ChatRoomPage()
-                  )
+    return InkWell(
+      splashColor: Theme.of(context).colorScheme.secondary,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (BuildContext pageContext) => MultiBlocProvider(
+            providers: [
+              BlocProvider.value(
+                value: context.read<UsrBloc>()
+              ),
+              BlocProvider.value(
+                value: context.read<RoomBloc>()..add(RoomRequested(room.id))
+              ),
+              BlocProvider.value(
+                value: context.read<RoomMembersBloc>()
+              ),
+              BlocProvider(
+                create: (BuildContext messageBlocContext) => MessageBloc(
+                  roomRepository: context.read<FirebaseRoomRepository>()
                 )
-              );
-            }
-          },
-          child: InkWell(
-            splashColor: Theme.of(context).colorScheme.secondary,
-            onTap: () => context.read<RoomBloc>().add(RoomWithMessagesRequested(roomId: room.id)),
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Center(
-                child: SizedBox(
-                  height: 60,
-                  child:
-                  
-                  // Built differently based on the room type,
-                  // private chat room does not need a stream
-                  switch (roomMembersState.status) {
-                    ChatRoomMembersStatus.loading => const Center(child: CircularProgressIndicator()),
-                    ChatRoomMembersStatus.failure => Text(
-                      "Loading error",
-                      style: TextStyle(
-                        fontSize: 24,
-                        color: Theme.of(context).colorScheme.inversePrimary
-                      )
-                    ),
-                    ChatRoomMembersStatus.success => switch (room.isPrivate) {
-                      
-                      // Private chat room tile
-                      true => StreamBuilder<Usr>(
-                        stream: roomMembersState.privateChatRoomFriend,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
-                            return const Center(
-                              child: CircularProgressIndicator()
-                            );
-                          }
-                          
-                          if (snapshot.hasError || snapshot.data!.isEmpty) {
-                            return Text(
-                              "Loading error",
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Theme.of(context).colorScheme.inversePrimary
-                              )
-                            );
-                          }
-  
-                          // Current user's private chat room friend
-                          Usr friend = snapshot.data!;
+              ),
+              BlocProvider(
+                create: (BuildContext messagesBlocContext) => MessagesBloc(
+                  roomRepository: context.read<FirebaseRoomRepository>()
+                )..add(MessagesRequested(room.id))
+              )
+            ],
+            child: const ChatRoomPage()
+          )
+        )
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Center(
+          child: SizedBox(
+            height: 60,
+            child: BlocBuilder<RoomMembersBloc, RoomMembersState>(
+              builder: (context, state) {
+                if (
+                  state.status == RoomMembersStatus.loading
+                  || (state.privateChatRoomFriend == null && state.groupMembers == null)
+                ) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                if (state.status == RoomMembersStatus.failure) {
+                  return Text(
+                    "Loading error",
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: Theme.of(context).colorScheme.inversePrimary
+                    )
+                  );
+                }
+
+                return switch (room.isPrivate) {
+                  
+                  // Private chat room tile
+                  true => Builder(
+                    builder: (context) {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            clipBehavior: Clip.none,
+                            fit: StackFit.loose,
                             children: [
-                              Stack(
-                                alignment: Alignment.center,
-                                clipBehavior: Clip.none,
-                                fit: StackFit.loose,
-                                children: [
-                                  // Chat room photo
-                                  CircleAvatar(
-                                    radius: 30,
-                                    foregroundImage: friend.picture.isNotEmpty
-                                      ? NetworkImage(friend.picture)
-                                      : null,
-                                    backgroundColor: Theme.of(context).colorScheme.tertiary,
-                                    child: Icon(
-                                      Icons.person_outlined,
-                                      color: Theme.of(context).colorScheme.inversePrimary
-                                    )
-                                  ),
-                                  
-                                  // Online status
-                                  Visibility(
-                                    visible: true,
-                                    child: Positioned(
-                                      bottom: 0,
-                                      right: 0,
-                                      child: Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          Container(
-                                            width: 20,
-                                            height: 20,
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context).colorScheme.surface,
-                                              shape: BoxShape.circle
-                                            ),
-                                          ),
-                                      
-                                          Container(
-                                            width: 12,
-                                            height: 12,
-                                            decoration: const BoxDecoration(
-                                              color: Colors.green,
-                                              shape: BoxShape.circle
-                                            )
-                                          )
-                                        ] 
-                                      )
-                                    )
-                                  )
-                                ]
+                              // Chat room photo -> friends photo
+                              CircleAvatar(
+                                radius: 30,
+                                foregroundImage: state.privateChatRoomFriend!.picture.isNotEmpty
+                                  ? NetworkImage(state.privateChatRoomFriend!.picture)
+                                  : null,
+                                backgroundColor: Theme.of(context).colorScheme.tertiary,
+                                child: Icon(
+                                  Icons.person_outlined,
+                                  color: Theme.of(context).colorScheme.inversePrimary
+                                )
                               ),
-                          
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 10,
-                                    top: 2,
-                                    bottom: 2
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 6),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // Friend's name
-                                        Text(
-                                          friend.name, // max 33 chars can fit
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            color: Theme.of(context).colorScheme.inversePrimary,
-                                          )
+                              
+                              // Online status
+                              Visibility(
+                                visible: true,
+                                child: Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.surface,
+                                          shape: BoxShape.circle
                                         ),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            // Most recent message
-                                            Flexible(
-                                              child: Row(
-                                                children: [
-                                                  // "You" tag on current user's message
-                                                  if (room.lastMessageSenderId == context.read<UsrBloc>().state.user!.id) Padding(
-                                                    padding: const EdgeInsets.only(right: 4),
-                                                    child: Text(
-                                                      "You:",
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                      style: TextStyle(
-                                                        fontWeight: FontWeight.w900,
-                                                        fontSize: 12,
-                                                        color: Theme.of(context).colorScheme.tertiary
-                                                      )
-                                                    )
-                                                  ),
-                                          
-                                                  // Picture icon if it was apart of the last message
-                                                  if (room.lastMessageHasPicture != null && room.lastMessageHasPicture!) Padding(
-                                                    padding: const EdgeInsets.only(right: 8),
-                                                    child: Icon(
-                                                      Icons.photo_outlined,
-                                                      size: 14,
-                                                      color: Theme.of(context).colorScheme.tertiary
-                                                    )
-                                                  ),
-                          
-                                                  (room.lastMessageContent != null)
-                                                    // Message content if not empty
-                                                    ? Expanded(
-                                                        child: Padding(
-                                                          padding: const EdgeInsets.only(right: 12),
-                                                          child: (room.lastMessageContent!.isNotEmpty)
-                                                            ? Text(
-                                                              room.lastMessageContent!,
-                                                              maxLines: 1,
-                                                              overflow: TextOverflow.ellipsis,
-                                                              style: TextStyle(
-                                                                fontSize: 12,
-                                                                color: Theme.of(context).colorScheme.tertiary
-                                                              )
-                                                            )
-                                                            : null
-                                                        )
-                                                      )
-                                                    : Text(
-                                                      "Say hi!",
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Theme.of(context).colorScheme.inversePrimary
-                                                      )
-                                                    )
-                                                ]
-                                              )
-                                            ),
-                                            
-                                            // Last message's timestamp
-                                            Text(
-                                              DateUtil.getShortDateFormatFromNow(room.lastMessageTimestamp.toDate()),
-                                              style: TextStyle(
-                                                color: Theme.of(context).colorScheme.tertiary
-                                              )
-                                            )
-                                          ]
+                                      ),
+                                  
+                                      Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.green,
+                                          shape: BoxShape.circle
                                         )
-                                      ]
-                                    )
+                                      )
+                                    ] 
                                   )
                                 )
                               )
                             ]
-                          );
-                        }
-                      ),
-          
-                      // Group chat room tile
-                      false => StreamBuilder<Map<String, Usr>>(
-                        stream: roomMembersState.roomMembersStream,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
-                            return const Center(
-                              child: CircularProgressIndicator()
-                            );
-                          }
-                          
-                          if (snapshot.hasError || snapshot.data!.isEmpty) {
-                            return Text(
-                              "Loading error",
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Theme.of(context).colorScheme.inversePrimary
-                              )
-                            );
-                          }
-  
-                          List<Usr> usersList = snapshot.data!.values.toList();
-
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Stack(
-                                alignment: Alignment.center,
-                                clipBehavior: Clip.none,
-                                fit: StackFit.loose,
-                                children: [
-                                  // Chat room photo
-                                  CircleAvatar(
-                                    radius: 30,
-                                    foregroundImage:
-                                    (room.picture != null && room.picture!.isNotEmpty)
-                                      ? NetworkImage(room.picture!)
-                                      : null,
-                                    backgroundColor: Theme.of(context).colorScheme.tertiary,
-                                    child: Icon(
-                                      Icons.person_outlined,
-                                      color: Theme.of(context).colorScheme.inversePrimary
-                                    )
-                                  ),
-                                  
-                                  // Online status
-                                  Visibility(
-                                    visible: false,
-                                    child: Positioned(
-                                      bottom: 0,
-                                      right: 0,
-                                      child: Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          Container(
-                                            width: 20,
-                                            height: 20,
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context).colorScheme.surface,
-                                              shape: BoxShape.circle
-                                            )
-                                          ),
-                                      
-                                          Container(
-                                            width: 12,
-                                            height: 12,
-                                            decoration: const BoxDecoration(
-                                              color: Colors.green,
-                                              shape: BoxShape.circle
-                                            )
-                                          )
-                                        ] 
-                                      )
-                                    )
-                                  )
-                                ]
+                          ),
+                      
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 10,
+                                top: 2,
+                                bottom: 2
                               ),
-                          
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 10,
-                                    top: 2,
-                                    bottom: 2
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 6),
-                                    child: Column(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Friend's name
+                                    Text(
+                                      state.privateChatRoomFriend!.name, // max 33 chars can fit
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.inversePrimary,
+                                      )
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // Most recent message
+                                        Flexible(
+                                          child: Row(
+                                            children: [
+                                              // "You" tag on current user's message
+                                              if (room.lastMessageSenderId == context.read<UsrBloc>().state.user!.id) Padding(
+                                                padding: const EdgeInsets.only(right: 4),
+                                                child: Text(
+                                                  "You:",
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w900,
+                                                    fontSize: 12,
+                                                    color: Theme.of(context).colorScheme.tertiary
+                                                  )
+                                                )
+                                              ),
+                                      
+                                              // Picture icon if it was apart of the last message
+                                              if (room.lastMessageHasPicture != null && room.lastMessageHasPicture!) Padding(
+                                                padding: const EdgeInsets.only(right: 8),
+                                                child: Icon(
+                                                  Icons.photo_outlined,
+                                                  size: 14,
+                                                  color: Theme.of(context).colorScheme.tertiary
+                                                )
+                                              ),
+                      
+                                              (room.lastMessageContent != null)
+                                                // Message content if not empty
+                                                ? Expanded(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(right: 12),
+                                                      child: (room.lastMessageContent!.isNotEmpty)
+                                                        ? Text(
+                                                          room.lastMessageContent!,
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            color: Theme.of(context).colorScheme.tertiary
+                                                          )
+                                                        )
+                                                        : null
+                                                    )
+                                                  )
+                                                : Text(
+                                                  "Say hi!",
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Theme.of(context).colorScheme.inversePrimary
+                                                  )
+                                                )
+                                            ]
+                                          )
+                                        ),
+                                        
+                                        // Last message's timestamp
+                                        Text(
+                                          DateUtil.getShortDateFormatFromNow(room.lastMessageTimestamp.toDate()),
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.tertiary
+                                          )
+                                        )
+                                      ]
+                                    )
+                                  ]
+                                )
+                              )
+                            )
+                          )
+                        ]
+                      );
+                    }
+                  ),
+                            
+                  // Group chat room tile
+                  false => Builder(
+                    builder: (context) {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            clipBehavior: Clip.none,
+                            fit: StackFit.loose,
+                            children: [
+                              // Chat room photo
+                              CircleAvatar(
+                                radius: 30,
+                                foregroundImage:
+                                (room.picture != null && room.picture!.isNotEmpty)
+                                  ? NetworkImage(room.picture!)
+                                  : null,
+                                backgroundColor: Theme.of(context).colorScheme.tertiary,
+                                child: Icon(
+                                  Icons.people_outlined,
+                                  color: Theme.of(context).colorScheme.inversePrimary
+                                )
+                              ),
+                              
+                              // Online status
+                              Visibility(
+                                visible: false,
+                                child: Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.surface,
+                                          shape: BoxShape.circle
+                                        )
+                                      ),
+                                  
+                                      Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.green,
+                                          shape: BoxShape.circle
+                                        )
+                                      )
+                                    ] 
+                                  )
+                                )
+                              )
+                            ]
+                          ),
+                      
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 10,
+                                top: 2,
+                                bottom: 2
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Builder(
+                                  builder: (_) {
+                                    List<Usr> usersList = state.groupMembers!.values.toList();
+                            
+                                    return Column(
                                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
@@ -390,7 +352,7 @@ class ChatRoomTile extends StatelessWidget {
                                                       )
                                                     )
                                                   ),
-                    
+                                                  
                                                   // Picture icon if it was apart of the last message
                                                   if (room.lastMessageHasPicture != null && room.lastMessageHasPicture!) Padding(
                                                     padding: const EdgeInsets.only(right: 8),
@@ -400,7 +362,7 @@ class ChatRoomTile extends StatelessWidget {
                                                       color: Theme.of(context).colorScheme.tertiary
                                                     )
                                                   ),
-
+                                    
                                                   // TODO getting kicked out message instead of the normal one
                                                   
                                                   (room.lastMessageContent != null)
@@ -444,22 +406,22 @@ class ChatRoomTile extends StatelessWidget {
                                           ]
                                         )
                                       ]
-                                    )
-                                  )
+                                    );
+                                  }
                                 )
                               )
-                            ]
-                          );
-                        }
-                      )
+                            )
+                          )
+                        ]
+                      );
                     }
-                  }
-                )
-              )
+                  )
+                };
+              }
             )
           )
-        );
-      }
+        )
+      )
     );
   }
 }
