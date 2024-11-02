@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:user_repository/user_repository.dart';
@@ -13,10 +15,16 @@ class RoomMembersBloc extends Bloc<RoomMembersEvent, RoomMembersState> {
   }) : super(const RoomMembersState.loading()) {
     on<PrivateChatRoomMembersRequested>((event, emit) async {
       try {
-        Stream<Usr> privateChatRoomFriend = await userRepository.getPrivateChatRoomFriend(event.roomId, event.currentUserId);
+        Stream<Usr> privateChatStream = await userRepository.getPrivateChatRoomFriend(event.roomId, event.currentUserId);
 
-        emit(RoomMembersState.success(privateChatRoomFriend: privateChatRoomFriend));
-      } catch (e) {
+        await emit.forEach(
+          privateChatStream,
+          onData: (Usr friend) {
+            return RoomMembersState.success(privateChatRoomFriend: friend);
+          },
+          onError: (_, __) => const RoomMembersState.failure()
+        );
+      } catch (_) {
         emit(const RoomMembersState.failure());
       }
     });
@@ -24,9 +32,15 @@ class RoomMembersBloc extends Bloc<RoomMembersEvent, RoomMembersState> {
     on<GroupChatRoomMembersRequested>((event, emit) async {
       try {
         Stream<Map<String, Usr>> roomMembersStream = await userRepository.getGroupChatRoomMembersStream(event.roomId);
-        
-        emit(RoomMembersState.success(roomMembersStream: roomMembersStream));
-      } catch (e) {
+
+        await emit.forEach(
+          roomMembersStream,
+          onData: (Map<String, Usr> members) {
+            return RoomMembersState.success(groupChatMembers: members);
+          },
+          onError: (_, __) => const RoomMembersState.failure()
+        );
+      } catch (_) {
         emit(const RoomMembersState.failure());
       }
     });

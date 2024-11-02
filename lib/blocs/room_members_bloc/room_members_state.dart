@@ -1,34 +1,32 @@
 part of 'room_members_bloc.dart';
 
-enum ChatRoomMembersStatus {
+enum RoomMembersStatus {
   success,
   loading,
   failure
 }
 
 final class RoomMembersState {
-  final Stream<Map<String, Usr>>? roomMembersStream;
-  final Stream<Usr>? privateChatRoomFriend;
-  final ChatRoomMembersStatus status;
+  final Map<String, Usr>? groupMembers;
+  final Usr? privateChatRoomFriend;
+  final RoomMembersStatus status;
 
   const RoomMembersState({
-    this.roomMembersStream,
+    this.groupMembers,
     this.privateChatRoomFriend,
-    this.status = ChatRoomMembersStatus.loading
+    this.status = RoomMembersStatus.loading
   });
 
   const RoomMembersState.loading() : this();
 
   const RoomMembersState.success({
-    Stream<Map<String, Usr>>? roomMembersStream,
-    Stream<Usr>? privateChatRoomFriend
+    Map<String, Usr>? groupChatMembers,
+    Usr? privateChatRoomFriend
   }) : this(
-    roomMembersStream: roomMembersStream,
+    groupMembers: groupChatMembers,
     privateChatRoomFriend: privateChatRoomFriend,
-    status: ChatRoomMembersStatus.success
+    status: RoomMembersStatus.success
   );
 
-  bool get isNull => privateChatRoomFriend == null;
-
-  const RoomMembersState.failure() : this(status: ChatRoomMembersStatus.failure);
+  const RoomMembersState.failure() : this(status: RoomMembersStatus.failure);
 }
