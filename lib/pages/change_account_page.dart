@@ -42,8 +42,8 @@ class ChangeAccountPage extends StatelessWidget {
                           fontSize: 14,
                           color: Theme.of(context).colorScheme.tertiary
                         )
-                      ),
-                    ),
+                      )
+                    )
                   );
                 }
               }
