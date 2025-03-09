@@ -1,4 +1,4 @@
-library user_repository;
+library;
 
 export 'src/models/models.dart';
 export 'src/firebase_user_repository.dart';
