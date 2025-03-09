@@ -14,35 +14,36 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create: (BuildContext context) => AuthBloc(
-              userRepository: context.read<FirebaseUserRepository>()
-            )
-          ),
-          BlocProvider(
-            create: (BuildContext context) => SignInBloc(
-              userRepository: context.read<FirebaseUserRepository>()
-            )
-          ),
-          BlocProvider(
-            create: (BuildContext context) => SignUpBloc(
-              userRepository: context.read<FirebaseUserRepository>()
-            )
-          ),
-          BlocProvider(
-            create: (BuildContext context) => ThemeBloc()
+      providers: [
+        BlocProvider(
+          create: (BuildContext context) => AuthBloc(
+            userRepository: context.read<FirebaseUserRepository>()
           )
-        ],
-        child: BlocBuilder<ThemeBloc, ThemeState>(
-          builder: (context, state) {
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              title: "Chab",
-              theme: state.themeData,
-              home: const AuthGate()
-            );
-          }
-        ));
+        ),
+        BlocProvider(
+          create: (BuildContext context) => SignInBloc(
+            userRepository: context.read<FirebaseUserRepository>()
+          )
+        ),
+        BlocProvider(
+          create: (BuildContext context) => SignUpBloc(
+            userRepository: context.read<FirebaseUserRepository>()
+          )
+        ),
+        BlocProvider(
+          create: (BuildContext context) => ThemeBloc()
+        )
+      ],
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, state) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: "Chab",
+            theme: state.themeData,
+            home: const AuthGate()
+          );
+        }
+      )
+    );
   }
 }

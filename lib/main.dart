@@ -1,5 +1,6 @@
 import 'package:chab/firebase_options.dart';
 import 'package:chab/my_app.dart';
+import 'package:chab/util/orientation_util.dart';
 import 'package:chab/util/shared_preferences_util.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,8 @@ void main() async {
   );
 
   await SharedPreferencesUtil.init();
+
+  await lockPhoneOrientationVertical();
 
   runApp(
     MultiRepositoryProvider(
