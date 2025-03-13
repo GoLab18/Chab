@@ -20,7 +20,7 @@ class PictureUtil {
       source: ImageSource.gallery,
       maxHeight: 320,
       maxWidth: 320,
-      imageQuality: 60
+      imageQuality: 100
     );
 
     CroppedFile? croppedImage;
