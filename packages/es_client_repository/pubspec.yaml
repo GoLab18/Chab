@@ -1,0 +1,13 @@
+name: es_client_repository
+description: Package which manages elasticsearch configuration and operations.
+publish_to: 'none'
+
+version: 0.1.0
+
+environment:
+  sdk: ^3.5.0
+  
+dependencies:
+  dio: ^5.8.0+1
+  crypto: ^3.0.6
+  logger: ^2.5.0

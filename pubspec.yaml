@@ -23,6 +23,9 @@ dependencies:
 
   room_repository:
     path: packages/room_repository
+
+  es_client_repository:
+    path: packages/es_client_repository
     
   image_picker: ^1.1.2
   image_cropper: ^9.0.0
