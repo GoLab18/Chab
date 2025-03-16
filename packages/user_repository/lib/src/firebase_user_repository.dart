@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:logger/logger.dart';
@@ -12,12 +13,15 @@ import 'util/typedefs.dart';
 class FirebaseUserRepository {
   final Logger log = Logger(printer: SimplePrinter());
 
+  final Dio esClient;
+
   late final FirebaseAuth _firebaseAuth;
   late final CollectionReference<Map<String, dynamic>> usersCollection;
   late final CollectionReference<Map<String, dynamic>> roomsCollection;
   late final CollectionReference<Map<String, dynamic>> friendInvitesCollection;
 
   FirebaseUserRepository({
+    required this.esClient,
     FirebaseAuth? firebaseAuth
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
     FirebaseFirestore firestoreInstance = FirebaseFirestore.instance;
@@ -28,14 +32,22 @@ class FirebaseUserRepository {
   }
 
   Stream<User?> get user {
-    return _firebaseAuth.authStateChanges().map<User?>((User? fbUser) {
-      return fbUser;
-    });
+    try {
+      return _firebaseAuth.authStateChanges().map<User?>((User? fbUser) {
+        log.i("Authentication state changed");
+        return fbUser;
+      });
+    } on FirebaseAuthException catch (e) {
+      log.e("User auth stream fetching failed, error: $e");
+      throw Exception(e);
+    }
   }
 
   /// Connects to firebase authentication and signs up
   /// Returns appropriate [Result] type on success or failure
   Future<Result<Usr, String>> signUp(Usr user, String password) async {
+    log.i("signUp() invoked...");
+
     try {
       UserCredential newUser = await _firebaseAuth.createUserWithEmailAndPassword(
         email: user.email,
@@ -46,8 +58,11 @@ class FirebaseUserRepository {
         id: newUser.user!.uid
       );
 
+      log.i("Sign up successful");
       return Result.success<Usr, String>(user);
     } on FirebaseAuthException catch (e) {
+      log.e("Sign up failed, error: $e");
+
       switch (e.code) {
         case 'email-already-in-use':
           return Result.failure<Usr, String>('Email address already in use');
@@ -67,14 +82,19 @@ class FirebaseUserRepository {
   /// Returns null if sign in was successful
   /// Returns appropriate errors if sign in was unsuccessful
   Future<String?> signIn(String email, String password) async {
+    log.i("signIn() invoked...");
+
     try {
       await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password
       );
 
+      log.i("Sign in with email: $email successful");
       return null;
     } on FirebaseAuthException catch (e) {
+      log.e("Sign in failed with email: $email, error: $e");
+
       switch (e.code) {
         case 'invalid-email':
           return 'Invalid email';
@@ -97,52 +117,91 @@ class FirebaseUserRepository {
   }
 
   Future<void> signOut() async {
+    log.i("signOut() invoked...");
+
     try {
       await _firebaseAuth.signOut();
+
+      log.i("Sign out successful");
     } on FirebaseAuthException catch (e) {
+      log.e("Sign out failed, error: $e");
       throw Exception(e.code);
     }
   }
 
   /// Sends a reset password email to a specified [email].
   Future<void> resetPassword(String email) async {
+    log.i("resetPassword() invoked...");
+
     try {
       await _firebaseAuth.sendPasswordResetEmail(
         email: email
       );
+      
+      log.i("Password reset for email: \"$email\" successful");
     } on FirebaseAuthException catch (e) {
+      log.e("Password reset failed for email: \"$email\", error: $e");
       throw Exception(e.code);
     }
   }
 
   Future<Usr> getUsr(String usrId) async {
+    log.i("getUsr() invoked...");
+
     try {
-      return await usersCollection.doc(usrId).get().then((value) =>
+      var usr = await usersCollection.doc(usrId).get().then((value) =>
         Usr.fromDocument(value.data()!)
       );
+
+      log.i("Getting user with id: \"$usrId\" successful");
+      return usr;
     } catch (e) {
+      log.e("Getting user with id: \"$usrId\" failed: $e");
       throw Exception(e);
     }
   }
 
   /// Adds a new user to the database.
   Future<void> addUser(Usr user) async {
+    log.i("addUser() invoked...");
+
     try {
       await usersCollection.doc(user.id).set(user.toDocument());
+      
+      await esClient.put(
+        "/users/_doc/${user.id}",
+        data: user.toEsObject()
+      );
+      
+      log.i("Adding user: $user successful");
     } catch (e) {
+      log.e("Adding user: $user failed: $e");
       throw Exception(e);
     }
   }
 
   /// Sets user fields like email, username etc.
   Future<void> setUserData(Usr user) async {
+    log.i("setUserData() invoked...");
+
     try {
       await usersCollection.doc(user.id).update({
         "name": user.name,
         "email": user.email,
         "bio": user.bio
       });
+
+      await esClient.post(
+        "/users/_update/${user.id}",
+        data: {
+          "doc": user.toEsObject(),
+          "doc_as_upsert": true
+        }
+      );
+
+      log.i("Setting user data with id: \"${user.id}\" successful");
     } catch (e) {
+      log.e("Setting user data with id: \"${user.id}\" failed: $e");
       throw Exception(e);
     }
   }
@@ -150,6 +209,8 @@ class FirebaseUserRepository {
   /// Function for strictly adding and updating user profile pictures.
   /// The picture is stored inside firebase storage and it's download URL is stored inside firebase firestore.
   Future<String> uploadPicture(String userId, String imagePath) async {
+    log.i("uploadPicture() invoked...");
+
     try {
       Reference firebaseStorageRef = FirebaseStorage.instance.ref().child(
         "Users/$userId/ProfilePictures/${userId}_pic"
@@ -165,14 +226,27 @@ class FirebaseUserRepository {
         "picture": picUrl
       });
 
+      await esClient.post(
+        "/users/_update/$userId",
+        data: {
+          "doc": {
+            "picture": picUrl
+          }
+        }
+      );
+
+      log.i("Uploading profile picture for user with id: \"$userId\" successful");
       return picUrl;
     } catch (e) {
+      log.e("Uploading profile picture for user with id: \"$userId\" failed: $e");
       throw Exception(e);
     }
   }
 
   /// Fetches private chat room friend's User instance.
   Future<Stream<Usr>> getPrivateChatRoomFriend(String roomId, String currentUserId) async {
+    log.i("getPrivateChatRoomFriend() invoked...");
+
     try {
       QuerySnapshot<Map<String, dynamic>> membersSnapshot = await roomsCollection
         .doc(roomId)
@@ -185,13 +259,18 @@ class FirebaseUserRepository {
         .toList()
         .firstWhere((memberId) => memberId != currentUserId);
 
-      return usersCollection
+      var r = usersCollection
         .doc(friendId)
         .snapshots()
         .map((DocumentSnapshot<Map<String, dynamic>> snapshot) =>
           Usr.fromDocument(snapshot.data()!)
         );
+
+      log.i("Fetching private chat room friend with id: \"$roomId\" successful");
+
+      return r;
     } catch (e) {
+      log.e("Fetching private chat room friend with id: \"$roomId\" failed: $e");
       throw Exception(e);
     }
   }
@@ -199,8 +278,10 @@ class FirebaseUserRepository {
   /// Fetches group chat room members Stream.
   /// Updates happen incrementally based on changes in group chat room members.
   Future<Stream<Map<String, Usr>>> getGroupChatRoomMembersStream(String roomId) async {
+    log.i("getGroupChatRoomMembersStream() invoked...");
+
     try {
-      return roomsCollection
+      var r = roomsCollection
         .doc(roomId)
         .collection("members")
         .snapshots()
@@ -225,7 +306,12 @@ class FirebaseUserRepository {
             })
         )
         .asBroadcastStream();
+
+      log.i("Fetching group chat room members with id: \"$roomId\" successful");
+
+      return r;
     } catch (e) {
+      log.e("Fetching group chat room members with id: \"$roomId\" failed: $e");
       throw Exception(e);
     }
   }
@@ -354,24 +440,45 @@ class FirebaseUserRepository {
 
   /// Updates the status [int] of a specified invite with an id [String].
   Future<void> updateInviteStatus(String inviteId, InviteStatus status) async {
+    log.i("updateInviteStatus() invoked...");
+
     try {
-      return await friendInvitesCollection
+      await friendInvitesCollection
         .doc(inviteId)
         .update({
           "status": status.index
         });
+
+      await esClient.post(
+        "/friend_invites/_update/$inviteId",
+        data: {
+          "doc": {
+            "status": status.index
+          }
+        }
+      );
+
+      log.i("Invite status update with id: \"$inviteId\" successful");
     } catch (e) {
+      log.e("Invite status update with id: \"$inviteId\" failed: $e");
       throw Exception(e);
     }
   }
 
   /// Delete an invite with a specified [String] id.
   Future<void> deleteInvite(String inviteId) async {
+    log.i("deleteInvite() invoked...");
+
     try {
       await friendInvitesCollection
         .doc(inviteId)
         .delete();
+
+      await esClient.delete("/friend_invites/_doc/$inviteId");
+
+      log.i("Invite deletion with id: \"$inviteId\" successful");
     } catch (e) {
+      log.e("Invite deletion with id: \"$inviteId\" failed: $e");
       throw Exception(e);
     }
   }
