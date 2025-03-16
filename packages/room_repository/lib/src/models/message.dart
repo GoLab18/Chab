@@ -95,4 +95,28 @@ class Message extends Equatable {
       timestamp: doc["timestamp"] as Timestamp
     );
   }
+
+  /// Data serialization for elasticsearch.
+  JsonMap toEsObject() {
+    return {
+      "id": id,
+      "content": content,
+      "edited": edited,
+      "picture": picture,
+      "senderId": senderId,
+      "timestamp": timestamp.toDate().toIso8601String()
+    };
+  }
+  
+  /// Data deserialization for elasticsearch.
+  static Message fromEsObject(JsonMap doc) {
+    return Message(
+      id: doc["id"] as String,
+      content: doc["content"] as String,
+      edited: doc["edited"] as bool,
+      picture: doc["picture"] as String,
+      senderId: doc["senderId"] as String,
+      timestamp: Timestamp.fromDate(DateTime.parse(doc["timestamp"] as String))
+    );
+  }
 }

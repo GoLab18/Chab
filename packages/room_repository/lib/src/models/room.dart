@@ -129,4 +129,34 @@ class Room extends Equatable {
       timestamp: doc["timestamp"] as Timestamp
     );
   }
+
+  /// Data serialization for elasticsearch.
+  JsonMap toEsObject() {
+    return {
+      "id": id,
+      "isPrivate": isPrivate,
+      if (lastMessageContent != null) "lastMessageContent": lastMessageContent,
+      if (lastMessageSenderId != null) "lastMessageSenderId": lastMessageSenderId,
+      if (lastMessageHasPicture != null) "lastMessageHasPicture": lastMessageHasPicture,
+      "lastMessageTimestamp": lastMessageTimestamp,
+      if (name != null) "name": name,
+      if (picture != null) "picture": picture,
+      "timestamp": timestamp.toDate().toIso8601String()
+    };
+  }
+  
+  /// Data deserialization for elasticsearch.
+  static Room fromEsObject(JsonMap doc) {
+    return Room(
+      id: doc["id"] as String,
+      isPrivate: doc["isPrivate"] as bool,
+      lastMessageContent: doc["lastMessageContent"] as String?,
+      lastMessageHasPicture: doc["lastMessageHasPicture"] as bool?,
+      lastMessageSenderId: doc["lastMessageSenderId"] as String?,
+      lastMessageTimestamp: doc["lastMessageTimestamp"] as Timestamp,
+      name: doc["name"] as String?,
+      picture: doc["picture"] as String?,
+      timestamp: Timestamp.fromDate(DateTime.parse(doc["timestamp"] as String))
+    );
+  }
 }

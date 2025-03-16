@@ -81,4 +81,28 @@ class Usr extends Equatable {
       timestamp: doc["timestamp"] as Timestamp
     );
   }
+
+  /// Data serialization for elasticsearch.
+  JsonMap toEsObject() {
+    return {
+      "id": id,
+      "email": email,
+      "name": name,
+      "picture": picture,
+      "bio": bio,
+      "timestamp": timestamp.toDate().toIso8601String()
+    };
+  }
+
+  /// Data deserialization for elasticsearch.
+  static Usr fromEsObject(JsonMap doc) {
+    return Usr(
+      id: doc["id"] as String,
+      email: doc["email"] as String,
+      name: doc["name"] as String,
+      picture: doc["picture"] as String,
+      bio: doc["bio"] as String,
+      timestamp: Timestamp.fromDate(DateTime.parse(doc["timestamp"] as String))
+    );
+  }
 }
