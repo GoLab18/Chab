@@ -10,7 +10,7 @@ const indices = {
             "filter": [
               "lowercase",
               "autocomplete_filter"
-            ]
+            ] 
           }
         },
         "filter": {
@@ -36,7 +36,12 @@ const indices = {
         "name": {
           "type": "text",
           "search_analyzer": "standard",
-          "analyzer": "autocomplete"
+          "analyzer": "autocomplete",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
         },
         "picture": notSearchedStringMapping,
         "timestamp": {
@@ -94,7 +99,12 @@ const indices = {
         "name": {
           "type": "text",
           "search_analyzer": "standard",
-          "analyzer": "autocomplete"
+          "analyzer": "autocomplete",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
         },
         "picture": notSearchedStringMapping,
         "timestamp": {
@@ -127,7 +137,6 @@ const indices = {
   },
 
 
-  // TODO possibly not needed
   "members": {
     "mappings": {
       "dynamic": "strict",
@@ -139,8 +148,7 @@ const indices = {
   },
 
 
-  // TODO possibly not needed
-  "friend_invites": {
+  "friend_invites": { 
     "mappings": {
       "dynamic": "strict",
       "properties": {
@@ -160,7 +168,5 @@ const indices = {
 
 const notSearchedStringMapping = {
   "type": "keyword",
-  "norms": false,
-  "doc_values": false,
-  "index": false
+  "norms": false
 };
