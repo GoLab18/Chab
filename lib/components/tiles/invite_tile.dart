@@ -194,8 +194,8 @@ class _InviteTileState extends State<InviteTile> {
               ]
             )
           )
-        ),
-      ),
+        )
+      )
     );
   }
 }
