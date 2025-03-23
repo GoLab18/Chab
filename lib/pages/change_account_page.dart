@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../components/tiles/account_tile.dart';
 import '../components/button_template.dart';
-import 'home_page.dart';
 
 class ChangeAccountPage extends StatelessWidget {
   const ChangeAccountPage({super.key});
@@ -54,14 +53,16 @@ class ChangeAccountPage extends StatelessWidget {
           // TODO navigates to a slightly changed sign up page
           Padding(
             padding: const EdgeInsets.all(12),
-            child: ButtonTemplate(
+            child: ButtonTemplate(    // TODO changing accounts if possible
               buttonText: "Make a new account",
-              onButtonPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (BuildContext context) => const HomePage())
-              )
-            ),
+              onButtonPressed: () {
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (BuildContext context) => const HomePage())
+                // );
+              }
+            )
           )
         ]
       )
