@@ -9,6 +9,7 @@ import '../../blocs/change_usr_info_bloc/change_usr_info_bloc.dart';
 import '../../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../../blocs/invites_bloc/invites_bloc.dart';
 import '../../blocs/room_operations_bloc/room_operations_bloc.dart';
+import '../../blocs/search_bloc/search_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../pages/find_friends_page.dart';
 import '../../pages/profile_page.dart';
@@ -60,6 +61,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
       MaterialPageRoute(
         builder: (BuildContext pageContext) => MultiBlocProvider(
           providers: [
+            BlocProvider.value(
+              value: context.read<SearchBloc>()
+            ),
+            BlocProvider.value(
+              value: context.read<UsrBloc>()
+            ),
             BlocProvider(
               create: (context) => InvitesBloc(
                 userRepository: fuRepo

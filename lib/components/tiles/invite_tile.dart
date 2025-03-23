@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:user_repository/user_repository.dart';
 
 import '../../blocs/invites_operations_bloc/invites_operations_bloc.dart';
+import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../util/date_util.dart';
 
 class InviteTile extends StatefulWidget {
@@ -138,7 +139,8 @@ class _InviteTileState extends State<InviteTile> {
                     context.read<InvitesOperationsBloc>().add(UpdateInviteStatus(
                       inviteId: widget.invite.id,
                       newStatus: InviteStatus.accepted,
-                      fromUserId: widget.user.id
+                      toUser: context.read<UsrBloc>().state.user!,
+                      fromUser: widget.user
                     ));
         
                     widget.onStatusChanged!(InviteStatus.accepted);

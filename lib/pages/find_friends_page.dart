@@ -6,6 +6,7 @@ import 'package:user_repository/user_repository.dart';
 import '../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../blocs/invites_bloc/invites_bloc.dart';
 import '../blocs/room_operations_bloc/room_operations_bloc.dart';
+import '../blocs/search_bloc/search_bloc.dart';
 import '../components/app_bars/search_app_bar.dart';
 import '../components/is_empty_message_widget.dart';
 
@@ -45,7 +46,7 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: const SearchAppBar(),
+      appBar: const SearchAppBar(searchTarget: SearchTarget.users), // TODO maybe do some GlobalKey magic (?)
       body: Padding(
         padding: const EdgeInsets.all(4),
         child: Center(

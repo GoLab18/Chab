@@ -6,6 +6,7 @@ import 'package:user_repository/user_repository.dart';
 import '../../blocs/auth_bloc/auth_bloc.dart';
 import '../../blocs/change_usr_info_bloc/change_usr_info_bloc.dart';
 import '../../blocs/rooms_bloc/rooms_bloc.dart';
+import '../../blocs/search_bloc/search_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../pages/home_page.dart';
 import 'login_register.dart';
@@ -40,6 +41,11 @@ class AuthGate extends StatelessWidget {
               ),
               BlocProvider(
                 create: (BuildContext context) => ChangeUsrInfoBloc(
+                  userRepository: context.read<FirebaseUserRepository>()
+                )
+              ),
+              BlocProvider(
+                create: (BuildContext context) => SearchBloc(
                   userRepository: context.read<FirebaseUserRepository>()
                 )
               )
