@@ -2,87 +2,23 @@
 const indices = {
   "users": {
     "settings": {
-      "analysis": {
-        "analyzer": {
-          "autocomplete": {
-            "type": "custom",
-            "tokenizer": "keyword",
-            "filter": [
-              "lowercase",
-              "autocomplete_filter"
-            ] 
-          }
-        },
-        "filter": {
-          "autocomplete_filter": {
-            "type": "edge_ngram",
-            "min_gram": "1",
-            "max_gram": "20"
-          }
-        }
-      }
+      "analysis": analysisEdgeNgram
     },
     "mappings": {
       "dynamic": "strict",
-      "properties": {
-        "bio": {
-          "type": "text",
-          "norms": false
-        },
-        "email": {
-          "type": "keyword"
-        },
-        "id": notSearchedStringMapping,
-        "name": {
-          "type": "text",
-          "search_analyzer": "standard",
-          "analyzer": "autocomplete",
-          "fields": {
-            "keyword": {
-              "type": "keyword"
-            }
-          }
-        },
-        "picture": notSearchedStringMapping,
-        "timestamp": {
-          "type": "date"
-        }
-      }
+      "properties": userProperties
     }
   },
 
 
   "rooms": {
     "settings": {
-      "analysis": {
-        "analyzer": {
-          "autocomplete": {
-            "type": "custom",
-            "tokenizer": "keyword",
-            "filter": [
-              "lowercase",
-              "autocomplete_filter"
-            ]
-          }
-        },
-        "filter": {
-          "autocomplete_filter": {
-            "type": "edge_ngram",
-            "min_gram": "1",
-            "max_gram": "20"
-          }
-        }
-      }
+      "analysis": analysisEdgeNgram
     },
     "mappings": {
       "dynamic": "strict",
       "properties": {
-        "id": {
-          "type": "keyword",
-          "norms": false,
-          "doc_values": false,
-          "index": false
-        },
+        "id": notSearchedStringMapping,
         "isPrivate": {
           "type": "boolean"
         },
@@ -137,21 +73,17 @@ const indices = {
   },
 
 
-  "members": {
+  // Merged friendships subcollection with friend_invites collection from firebase.
+  // It is not deleted on user deleting an invite, only when the friendship ends.
+  // New documents are indexed with invite id.
+  "friendships_invites": {
+    "settings": {
+      "analysis": analysisEdgeNgram
+    },
     "mappings": {
       "dynamic": "strict",
       "properties": {
-        "roomId": notSearchedStringMapping,
-        "userId": notSearchedStringMapping
-      }
-    }
-  },
-
-
-  "friend_invites": { 
-    "mappings": {
-      "dynamic": "strict",
-      "properties": {
+        // Invites related
         "fromUser": notSearchedStringMapping,
         "id": notSearchedStringMapping,
         "status": {
@@ -160,8 +92,72 @@ const indices = {
         "timestamp": {
           "type": "date"
         },
-        "toUser": notSearchedStringMapping
+        "toUser": notSearchedStringMapping,
+
+        // Friendships related.
+        // Will only be included when the friendship is settled.
+        "firstUser": {
+          "properties": { // Important ones taken from users index
+            "id": notSearchedStringMapping,
+            "name": {
+              "type": "text",
+              "search_analyzer": "standard",
+              "analyzer": "autocomplete",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "picture": notSearchedStringMapping,
+            "timestamp": {
+              "type": "date"
+            }
+          }
+        },
+        "secondUser": {
+          "properties": { // Important ones taken from users index
+            "id": notSearchedStringMapping,
+            "name": {
+              "type": "text",
+              "search_analyzer": "standard",
+              "analyzer": "autocomplete",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "picture": notSearchedStringMapping,
+            "timestamp": {
+              "type": "date"
+            }
+          }
+        },
+        "since": {
+          "type": "date"
+        }
       }
+    }
+  }
+};
+
+const analysisEdgeNgram = {
+  "analyzer": {
+    "autocomplete": {
+      "type": "custom",
+      "tokenizer": "keyword",
+      "filter": [
+        "lowercase",
+        "autocomplete_filter"
+      ] 
+    }
+  },
+  "filter": {
+    "autocomplete_filter": {
+      "type": "edge_ngram",
+      "min_gram": "1",
+      "max_gram": "20"
     }
   }
 };
@@ -169,4 +165,29 @@ const indices = {
 const notSearchedStringMapping = {
   "type": "keyword",
   "norms": false
+};
+
+const userProperties = {
+  "bio": {
+    "type": "text",
+    "norms": false
+  },
+  "email": {
+    "type": "keyword"
+  },
+  "id": notSearchedStringMapping,
+  "name": {
+    "type": "text",
+    "search_analyzer": "standard",
+    "analyzer": "autocomplete",
+    "fields": {
+      "keyword": {
+        "type": "keyword"
+      }
+    }
+  },
+  "picture": notSearchedStringMapping,
+  "timestamp": {
+    "type": "date"
+  }
 };
