@@ -664,7 +664,14 @@ class FirebaseUserRepository {
             "keep_alive": keepAliveMinutes
           },
           "query": {
-            "match": { "name": query }
+            "bool": {
+              "must": [
+                { "match": { "name": query } }
+              ],
+              "must_not": [
+                { "term": { "id": currUserId } } // Current user excluded
+              ]
+            }
           },
           "sort": [
             { "name.keyword": "asc" },
