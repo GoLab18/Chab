@@ -496,15 +496,16 @@ class FirebaseUserRepository {
     }
   }
 
-  void addInvite(String fromUserId, String toUserId) {
+  /// Adds a new invite from [fromUserId] to [toUserId] into friend_invites collection and into friendships_invites ES index.
+  Future<void> addInvite(String fromUserId, String toUserId) async {
     log.i("addInvite() invoked..."); 
 
     try {
       var docRef = friendInvitesCollection.doc();
       Invite newInvite = Invite(id: docRef.id, fromUser: fromUserId, toUser: toUserId);
-      docRef.set(newInvite.toDocument());
+      await docRef.set(newInvite.toDocument());
 
-      esClient.put(
+      await esClient.put(
         "/friendships_invites/_doc/${docRef.id}",
         data: newInvite.toEsObject()
       );
