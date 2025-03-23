@@ -64,7 +64,7 @@ class Invite extends Equatable {
       "id": id,
       "fromUser": fromUser,
       "toUser": toUser,
-      "status": status,
+      "status": status.index,
       "timestamp": timestamp
     };
   }
@@ -86,7 +86,7 @@ class Invite extends Equatable {
       "id": id,
       "fromUser": fromUser,
       "toUser": toUser,
-      "status": status,
+      "status": status.index,
       "timestamp": timestamp.toDate().toIso8601String()
     };
   }
