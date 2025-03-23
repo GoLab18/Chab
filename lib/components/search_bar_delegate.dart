@@ -5,8 +5,6 @@ import '../blocs/search_bloc/search_bloc.dart';
 import 'tiles/user_with_invite_tile.dart';
 
 class SearchBarDelegate extends SearchDelegate {
-  final List<String> mocks = <String>["Shades", "Blades", "Mascarades", "Babes", "Mates", "Gates"];
-
   final SearchTarget searchTarget;
   final SearchBloc searchBloc;
   final String currUserId;
