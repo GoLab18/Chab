@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:user_repository/user_repository.dart';
 
 import '../../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../util/date_util.dart';
-import '../button_template.dart';
 
 class UserWithInviteTile extends StatefulWidget {
   final Usr user;
   final Invite? invite;
   final Friendship? friendship;
+  final InvitesOperationsBloc invOpsBloc;
+  final UsrBloc usrBloc;
 
-  const UserWithInviteTile(this.user, this.invite, this.friendship, {super.key});
+  const UserWithInviteTile(this.user, this.invite, this.friendship, this.invOpsBloc, this.usrBloc, {super.key});
 
   @override
   State<UserWithInviteTile> createState() => _UserWithInviteTileState();
@@ -97,14 +97,14 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
                 if (
                   widget.invite != null
                   && widget.invite!.status == InviteStatus.pending
-                  && widget.invite!.toUser == widget.user.id
+                  && widget.invite!.fromUser == widget.user.id
                 ) IconButton(
                   onPressed: () {
                     setState(() {
-                      context.read<InvitesOperationsBloc>().add(UpdateInviteStatus(
+                      widget.invOpsBloc.add(UpdateInviteStatus(
                         inviteId: widget.invite!.id,
                         newStatus: InviteStatus.accepted,
-                        toUser: context.read<UsrBloc>().state.user!,
+                        toUser: widget.usrBloc.state.user!,
                         fromUser: widget.user
                       ));
                     });
@@ -120,11 +120,11 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
                 if (
                   widget.invite != null
                   && widget.invite!.status == InviteStatus.pending
-                  && widget.invite!.toUser == widget.user.id
+                  && widget.invite!.fromUser == widget.user.id
                 ) IconButton(
                   onPressed: () {
                     setState(() {
-                      context.read<InvitesOperationsBloc>().add(UpdateInviteStatus(
+                      widget.invOpsBloc.add(UpdateInviteStatus(
                         inviteId: widget.invite!.id,
                         newStatus: InviteStatus.declined
                       ));
@@ -137,16 +137,21 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
                   )
                 ),
 
-                if (widget.invite == null) ButtonTemplate(
-                  buttonText: "Send invite",
-                  onButtonPressed: () {
+                if (widget.invite == null) IconButton.filled(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  onPressed: () {
                     setState(() {
-                      context.read<InvitesOperationsBloc>().add(AddInvite(
-                        context.read<UsrBloc>().state.user!.id,
+                      widget.invOpsBloc.add(AddInvite(
+                        widget.usrBloc.state.user!.id,
                         widget.user.id
                       ));
                     });
-                  }
+                  },
+                  icon: Icon(
+                    Icons.person_add_alt_1_outlined,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.inversePrimary
+                  )
                 )
               ]
             )
