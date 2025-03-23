@@ -83,13 +83,13 @@ class Usr extends Equatable {
   }
 
   /// Data serialization for elasticsearch.
-  JsonMap toEsObject() {
+  JsonMap toEsObject([bool isFriendshipsInvitesIndexCopy = false]) {
     return {
       "id": id,
-      "email": email,
+      if (!isFriendshipsInvitesIndexCopy) "email": email,
       "name": name,
       "picture": picture,
-      "bio": bio,
+      if (!isFriendshipsInvitesIndexCopy) "bio": bio,
       "timestamp": timestamp.toDate().toIso8601String()
     };
   }
