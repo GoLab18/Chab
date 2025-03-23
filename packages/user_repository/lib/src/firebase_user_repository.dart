@@ -459,20 +459,46 @@ class FirebaseUserRepository {
   }
 
   /// Updates the status [int] of a specified invite with an id [String].
-  Future<void> updateInviteStatus(String inviteId, InviteStatus status) async {
-    log.i("updateInviteStatus() invoked...");
+  /// Creates a new [Friendship] instance and fills elasticsearch friendships_invites index on [InviteStatus.accepted].
+  Future<void> handleInviteStatusUpdate(String inviteId, InviteStatus status, [Usr? currUser, Usr? fromUser]) async {
+    log.i("handleInviteStatusUpdate() invoked...");
 
     try {
-      await friendInvitesCollection
-        .doc(inviteId)
-        .update({
+      WriteBatch batch = FirebaseFirestore.instance.batch();
+
+      batch.update(
+        friendInvitesCollection.doc(inviteId),
+        {
           "status": status.index
-        });
+        }
+      );
+      
+      Timestamp? sinceTimestamp;
+
+      if (status == InviteStatus.accepted) {
+        var frndSh = Friendship(friendId: fromUser!.id);
+        sinceTimestamp = frndSh.since;
+
+        batch.set(
+          usersCollection.doc(currUser!.id).collection("friendships").doc(fromUser.id),
+          frndSh.toDocument()
+        );
+
+        batch.set(
+          usersCollection.doc(fromUser.id).collection("friendships").doc(currUser.id),
+          Friendship(friendId: currUser.id, since: sinceTimestamp).toDocument()
+        );
+      }
+
+      await batch.commit();
 
       await esClient.post(
-        "/friend_invites/_update/$inviteId",
+        "/friendships_invites/_update/$inviteId",
         data: {
           "doc": {
+            if (status == InviteStatus.accepted) "firstUser": fromUser!.toEsObject(true),
+            if (status == InviteStatus.accepted) "secondUser": currUser!.toEsObject(true),
+            if (status == InviteStatus.accepted) "since": sinceTimestamp!.toDate().toIso8601String(),
             "status": status.index
           }
         }
@@ -494,7 +520,7 @@ class FirebaseUserRepository {
         .doc(inviteId)
         .delete();
 
-      await esClient.delete("/friend_invites/_doc/$inviteId");
+      await esClient.delete("/friendships_invites/_doc/$inviteId");
 
       log.i("Invite deletion with id: \"$inviteId\" successful");
     } catch (e) {
