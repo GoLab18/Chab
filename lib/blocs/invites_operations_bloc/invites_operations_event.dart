@@ -5,19 +5,21 @@ sealed class InvitesOperationsEvent {
 }
 
 final class AddInvite extends InvitesOperationsEvent {
-  final Invite newInvite;
-  const AddInvite(this.newInvite);
+  final String fromUserId, toUserId;
+
+  const AddInvite(this.fromUserId, this.toUserId);
 }
 
 final class UpdateInviteStatus extends InvitesOperationsEvent {
   final String inviteId;
   final InviteStatus newStatus;
-  final String? fromUserId; // Used only for accepted invites
+  final Usr? toUser, fromUser; // Used only for accepted invites to be stored in elasticsearch friendships_invites index
 
   const UpdateInviteStatus({
     required this.inviteId,
     required this.newStatus,
-    this.fromUserId
+    this.toUser,
+    this.fromUser
   });
 }
 

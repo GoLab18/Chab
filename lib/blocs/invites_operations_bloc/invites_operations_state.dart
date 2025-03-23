@@ -19,7 +19,7 @@ final class InvitesOperationsState {
 
   const InvitesOperationsState.loading() : this();
 
-  const InvitesOperationsState.success(InviteStatus? invStatus, String? fromUserId) : this(
+  const InvitesOperationsState.success([InviteStatus? invStatus, String? fromUserId]) : this(
     opStatus: InviteOperationStatus.success,
     invStatus: invStatus,
     fromUserId: fromUserId

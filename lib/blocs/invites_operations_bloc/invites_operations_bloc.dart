@@ -12,11 +12,11 @@ class InvitesOperationsBloc extends Bloc<InvitesOperationsEvent, InvitesOperatio
   }) : super(const InvitesOperationsState.loading()) {
     on<UpdateInviteStatus>((event, emit) {
       try {
-        userRepository.updateInviteStatus(event.inviteId, event.newStatus);
+        userRepository.handleInviteStatusUpdate(event.inviteId, event.newStatus, event.toUser, event.fromUser);
 
         emit(InvitesOperationsState.success(
           event.newStatus,
-          event.newStatus == InviteStatus.accepted ? event.fromUserId : null
+          event.newStatus == InviteStatus.accepted ? event.fromUser!.id : null
         ));
       } catch (e) {
         emit(const InvitesOperationsState.failure());
@@ -28,6 +28,16 @@ class InvitesOperationsBloc extends Bloc<InvitesOperationsEvent, InvitesOperatio
         userRepository.deleteInvite(event.inviteId);
 
         emit(const InvitesOperationsState.success(null, null));
+      } catch (e) {
+        emit(const InvitesOperationsState.failure());
+      }
+    });
+
+    on<AddInvite>((event, emit) {
+      try {
+        userRepository.addInvite(event.fromUserId, event.toUserId);
+
+        emit(InvitesOperationsState.success(InviteStatus.pending, event.fromUserId));
       } catch (e) {
         emit(const InvitesOperationsState.failure());
       }
