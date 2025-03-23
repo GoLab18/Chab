@@ -79,4 +79,26 @@ class Invite extends Equatable {
       timestamp: doc["timestamp"] as Timestamp
     );
   }
+
+  /// Data serialization for elasticsearch.
+  JsonMap toEsObject() {
+    return {
+      "id": id,
+      "fromUser": fromUser,
+      "toUser": toUser,
+      "status": status,
+      "timestamp": timestamp.toDate().toIso8601String()
+    };
+  }
+
+  /// Data deserialization for elasticsearch.
+  static Invite fromEsObject(JsonMap doc) {
+    return Invite(
+      id: doc["id"] as String,
+      fromUser: doc["fromUser"] as String,
+      toUser: doc["toUser"] as String,
+      status: InviteStatus.values[(doc["status"] as int)],
+      timestamp: Timestamp.fromDate(DateTime.parse(doc["timestamp"] as String))
+    );
+  }
 }
