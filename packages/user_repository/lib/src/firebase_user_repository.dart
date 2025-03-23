@@ -528,4 +528,162 @@ class FirebaseUserRepository {
       throw Exception(e);
     }
   }
+
+  /// Deletes a [Friendship] of users with ids [usrId1] and [usrId2].
+  Future<void> deleteFriendship(String usrId1, String usrId2) async {
+    log.i("deleteFriendship() invoked...");
+
+    try {
+      WriteBatch batch = FirebaseFirestore.instance.batch();
+
+      batch.delete(usersCollection.doc(usrId1).collection("friendships").doc(usrId2));
+      batch.delete(usersCollection.doc(usrId2).collection("friendships").doc(usrId1));
+
+      await batch.commit();
+
+      await esClient.delete(
+        "/friendships_invites/_delete_by_query",
+        data: {
+          "query": {
+            "bool": {
+              "should": [
+                {
+                  "bool": {
+                    "must": [
+                      { "term": { "firstUser.id": usrId1 } },
+                      { "term": { "secondUser.id": usrId2 } }
+                    ]
+                  }
+                },
+                {
+                  "bool": {
+                    "must": [
+                      { "term": { "firstUser.id": usrId2 } },
+                      { "term": { "secondUser.id": usrId1 } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      );
+
+      log.i("Friendship deletion of users with ids: \"$usrId1\" \"$usrId2\" successful");
+    } catch (e) {
+      log.e("Friendship deletion of users with ids: \"$usrId1\" \"$usrId2\" failed: $e");
+      throw Exception(e);
+    }
+  }
+
+  /// Searches for users through elasticsearch omitting [currUserId].
+  /// Pagination is allowed with [searchAfterContent] parameter that stores search_after.
+  /// If [userPitId] is null, it will inject new PIT to users index for data consistency.
+  /// Returns users and friendships information, PIT id and search_after content of type [List] of [String].
+  Future<((List<Usr>, List<(Invite, Friendship?)?>), String, List<dynamic>?)> searchUsers(
+    String query,
+    String currUserId,
+    String? userPitId,
+    List<dynamic>? searchAfterContent
+  ) async {
+    log.i("searchUsers() invoked...");
+    
+    try {
+      String keepAliveMinutes = "1m";
+      bool isInitial = userPitId == null;
+
+      if (isInitial) {        // TODO really don't want to do this on each suggestions reload, find a way to not make a new PIT on each reload
+        var uPitRes = await esClient.post("/users/_pit?keep_alive=$keepAliveMinutes");
+        userPitId = uPitRes.data["id"];
+      }
+
+      var uSearchRes = await esClient.get(
+        "/_search",
+        data: {
+          "size": 10,
+          "pit": {
+            "id": userPitId,
+            "keep_alive": keepAliveMinutes
+          },
+          "query": {
+            "match": { "name": query }
+          },
+          "sort": [
+            { "name.keyword": "asc" },
+            { "_score": "desc" },
+            { "id": "asc" } // For uniqueness
+          ],
+          if (!isInitial) "search_after": searchAfterContent!
+        }
+      );
+
+      List<dynamic> uHits = uSearchRes.data["hits"]["hits"];
+      if (uHits.isEmpty) return ((<Usr>[], <(Invite, Friendship?)?>[]), userPitId!, searchAfterContent);
+
+      List<String> userIds = uHits.map((hit) => hit["_source"]["id"] as String).toList();
+
+      var fiSearchRes = await esClient.get(
+        "/friendships_invites/_search",
+        data: {
+          "size": 10,
+          "_source": ["fromUser", "toUser", "id", "status", "timestamp", "since"],
+          "query": {
+            "bool": {
+              "should": [
+                {
+                  "bool": {
+                    "filter": [
+                      { "term": { "toUser": currUserId } },
+                      { "terms": { "fromUser": userIds } }
+                    ]
+                  }
+                },
+                {
+                  "bool": {
+                    "filter": [
+                      { "term": { "fromUser": currUserId } },
+                      { "terms": { "toUser": userIds } }
+                    ]
+                  }
+                }
+              ],
+              "minimum_should_match": 1
+            }
+          }
+        }
+      );
+
+      List<dynamic> fiHits = fiSearchRes.data["hits"]["hits"];
+
+      List<(Invite, Friendship?)> invitesUnordered = fiHits.map((hit) {
+        Invite inv = Invite.fromEsObject(hit["_source"]);
+        String friendId = (inv.toUser == currUserId) ? inv.fromUser : inv.toUser;
+
+        return (inv, (inv.status == InviteStatus.accepted) ? Friendship.fromEsObject(hit["_source"], friendId) : null);
+      }).toList();
+
+      Map<String, (Invite, Friendship?)> friendshipMap = {};
+      for (var invFr in invitesUnordered) {
+        String userId = (invFr.$1.fromUser == currUserId) ? invFr.$1.toUser : invFr.$1.fromUser;
+        friendshipMap[userId] = invFr;
+      }
+
+      List<(Invite, Friendship?)?> usersOrderInvFr = [];
+      List<Usr> users = uHits.map((hit) {
+        Usr user = Usr.fromEsObject(hit["_source"]);
+        (Invite, Friendship?)? invFr = friendshipMap.containsKey(user.id) ? friendshipMap[user.id] : null;
+
+        usersOrderInvFr.add(invFr);
+        return user;
+      }).toList();
+
+      searchAfterContent = uHits.isNotEmpty ? uHits.last["sort"] : null;
+
+      log.i("Elasticsearch users fetching successful");
+      return ((users, usersOrderInvFr), userPitId!, searchAfterContent);
+    } catch (e) {
+      log.e("Searching for users failed: $e");
+      throw Exception(e);
+    }
+  }
 }
