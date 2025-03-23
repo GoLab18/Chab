@@ -115,7 +115,7 @@ class SearchBarDelegate extends SearchDelegate {
         itemCount: state.results.$1.length + (state.status == SearchStatus.loading ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < state.results.$1.length) {
-            return UserWithInviteTile(state.results.$1[index], state.results.$2[index]?.$1, state.results.$2[index].$2);
+            return UserWithInviteTile(state.results.$1[index], state.results.$2[index]?.$1, state.results.$2[index]?.$2);
           } else {
             return Center(child: const CircularProgressIndicator());
           }
