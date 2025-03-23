@@ -191,11 +191,41 @@ class FirebaseUserRepository {
         "bio": user.bio
       });
 
+      var usrEsObject = user.toEsObject();
+
       await esClient.post(
         "/users/_update/${user.id}",
         data: {
-          "doc": user.toEsObject(),
+          "doc": usrEsObject,
           "doc_as_upsert": true
+        }
+      );
+
+      await esClient.post(
+        "/friendships_invites/_update_by_query",
+        data: {
+          "query": {
+            "bool": {
+              "should": [
+                { "term": { "firstUser.id": user.id } },
+                { "term": { "secondUser.id": user.id } }
+              ]
+            }
+          },
+          "script": {
+          "source": """
+            if (ctx._source.firstUser != null && ctx._source.firstUser.id == params.userId) {
+              ctx._source.firstUser.name = params.name;
+            }
+            if (ctx._source.secondUser != null && ctx._source.secondUser.id == params.userId) {
+              ctx._source.secondUser.name = params.name;
+            }
+          """,
+            "params": {
+              "userId": user.id,
+              "name": user.name
+            }
+          }
         }
       );
 
@@ -231,6 +261,34 @@ class FirebaseUserRepository {
         data: {
           "doc": {
             "picture": picUrl
+          }
+        }
+      );
+
+      await esClient.post(
+        "/friendships_invites/_update_by_query",
+        data: {
+          "query": {
+            "bool": {
+              "should": [
+                { "term": { "firstUser.id": userId } },
+                { "term": { "secondUser.id": userId } }
+              ]
+            }
+          },
+          "script": {
+            "source": """
+            if (ctx._source.firstUser != null && ctx._source.firstUser.id == params.userId) {
+              ctx._source.firstUser.picture = params.picture;
+            }
+            if (ctx._source.secondUser != null && ctx._source.secondUser.id == params.userId) {
+              ctx._source.secondUser.picture = params.picture;
+            }
+            """,
+            "params": {
+              "userId": userId,
+              "picture": picUrl
+            }
           }
         }
       );
