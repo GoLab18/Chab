@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../blocs/search_bloc/search_bloc.dart';
+import '../blocs/usr_bloc/usr_bloc.dart';
 import 'tiles/user_with_invite_tile.dart';
 
 class SearchBarDelegate extends SearchDelegate {
   final SearchTarget searchTarget;
-  final SearchBloc searchBloc;
   final String currUserId;
+  final SearchBloc searchBloc;
+  final InvitesOperationsBloc invOpsBloc;
+  final UsrBloc usrBloc;
 
   final ScrollController scrollController = ScrollController();
   VoidCallback? scrollListener;
 
   final cache = <String, dynamic>{}; // TODO implement caching for searching (adjust value type) and don't allow parallel requests
 
-  SearchBarDelegate(this.searchTarget, this.searchBloc, this.currUserId);
+  SearchBarDelegate(this.searchTarget, this.currUserId, this.searchBloc, this.invOpsBloc, this.usrBloc);
 
   @override
   String? get searchFieldLabel => "Search..";
@@ -113,7 +117,7 @@ class SearchBarDelegate extends SearchDelegate {
         itemCount: state.results.$1.length + (state.status == SearchStatus.loading ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < state.results.$1.length) {
-            return UserWithInviteTile(state.results.$1[index], state.results.$2[index]?.$1, state.results.$2[index]?.$2);
+            return UserWithInviteTile(state.results.$1[index], state.results.$2[index]?.$1, state.results.$2[index]?.$2, invOpsBloc, usrBloc);
           } else {
             return Center(child: const CircularProgressIndicator());
           }
