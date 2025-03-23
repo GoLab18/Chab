@@ -438,6 +438,26 @@ class FirebaseUserRepository {
     }
   }
 
+  void addInvite(String fromUserId, String toUserId) {
+    log.i("addInvite() invoked..."); 
+
+    try {
+      var docRef = friendInvitesCollection.doc();
+      Invite newInvite = Invite(id: docRef.id, fromUser: fromUserId, toUser: toUserId);
+      docRef.set(newInvite.toDocument());
+
+      esClient.put(
+        "/friendships_invites/_doc/${docRef.id}",
+        data: newInvite.toEsObject()
+      );
+
+      log.i("Invite from user with id: \"$fromUserId\", to user with id: \"$toUserId\", creation successful");
+    } catch (e) {
+      log.e("Invite from user with id: \"$fromUserId\", to user with id: \"$toUserId\", creation failed: $e");
+      throw Exception(e);
+    }
+  }
+
   /// Updates the status [int] of a specified invite with an id [String].
   Future<void> updateInviteStatus(String inviteId, InviteStatus status) async {
     log.i("updateInviteStatus() invoked...");
