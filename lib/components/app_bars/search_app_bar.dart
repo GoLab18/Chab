@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../blocs/search_bloc/search_bloc.dart';
+import '../../blocs/usr_bloc/usr_bloc.dart';
+import '../search_bar_delegate.dart';
 
 class SearchAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const SearchAppBar({super.key});
+  final SearchTarget searchTarget;
+
+  const SearchAppBar({super.key, required this.searchTarget});
 
   @override
   State<SearchAppBar> createState() => _SearchAppBarState();
@@ -12,73 +19,33 @@ class SearchAppBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _SearchAppBarState extends State<SearchAppBar> {
-  bool isInSearchMode = false;
-
-  // Replaces the app bar components with the search bar
-  void toggleSearchMode() {
-    setState(() {
-      isInSearchMode = !isInSearchMode;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Theme.of(context).colorScheme.secondary,
       elevation: 10,
-      automaticallyImplyLeading: !isInSearchMode,
-      title: isInSearchMode
-        ? SearchBar(
-          elevation: const WidgetStatePropertyAll(0),
-          shape: const WidgetStatePropertyAll(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(
-                Radius.circular(0)
-              )
-            )
-          ),
-          hintText: "Search..",
-          hintStyle: WidgetStatePropertyAll(
-            TextStyle(
-              color: Theme.of(context).hintColor
-            ),
-          ),
-          backgroundColor: const WidgetStatePropertyAll(
-            Colors.transparent
-          ),
-          autoFocus: true
+      title: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Text(
+          "Chab",
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.inversePrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold
+          )
         )
-        : Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "Chab",
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.inversePrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.bold
-            )
-          ),
-        ),
+      ),
       centerTitle: false,
       titleSpacing: 0,
       leadingWidth: 30,
-      leading: isInSearchMode
-        ? IconButton(
-          onPressed: toggleSearchMode,
-          icon: Icon(
-            Icons.arrow_back,
-            color: Theme.of(context).colorScheme.inversePrimary
-          )
-        )
-        : null,
       actions: <IconButton>[
         IconButton(
-          onPressed: isInSearchMode
-            ? () {
-              // TODO Searching
-              toggleSearchMode();
-            }
-            : toggleSearchMode,
+          onPressed: () {
+            showSearch(
+              context: context,
+              delegate: SearchBarDelegate(widget.searchTarget, context.read<SearchBloc>(), context.read<UsrBloc>().state.user!.id)
+            );
+          },
           icon: Icon(
             Icons.search_outlined,
             color: Theme.of(context).colorScheme.inversePrimary
