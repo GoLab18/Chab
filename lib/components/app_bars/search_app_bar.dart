@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../../blocs/search_bloc/search_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../search_bar_delegate.dart';
@@ -43,7 +44,13 @@ class _SearchAppBarState extends State<SearchAppBar> {
           onPressed: () {
             showSearch(
               context: context,
-              delegate: SearchBarDelegate(widget.searchTarget, context.read<SearchBloc>(), context.read<UsrBloc>().state.user!.id)
+              delegate: SearchBarDelegate(
+                widget.searchTarget,
+                context.read<UsrBloc>().state.user!.id,
+                context.read<SearchBloc>(),
+                context.read<InvitesOperationsBloc>(),
+                context.read<UsrBloc>()
+              )
             );
           },
           icon: Icon(
