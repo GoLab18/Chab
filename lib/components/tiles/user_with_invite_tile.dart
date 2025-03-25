@@ -19,7 +19,50 @@ class UserWithInviteTile extends StatefulWidget {
 }
 
 class _UserWithInviteTileState extends State<UserWithInviteTile> {
-  void navigateToUserPage(BuildContext context) {
+  Invite? invite;
+  Friendship? friendship;
+
+  @override
+  void initState() {
+    super.initState();
+
+    invite = widget.invite;
+    friendship = widget.friendship;
+  }
+
+  void acceptInvite() {
+    widget.invOpsBloc.add(UpdateInviteStatus(
+      inviteId: invite!.id,
+      newStatus: InviteStatus.accepted,
+      toUser: widget.usrBloc.state.user!,
+      fromUser: widget.user
+    ));
+
+    setState(() {
+      invite = invite?.copyWith(status: InviteStatus.accepted);
+    });
+  }
+
+  void declineInvite() {
+    widget.invOpsBloc.add(UpdateInviteStatus(
+      inviteId: invite!.id,
+      newStatus: InviteStatus.declined
+    ));
+
+    setState(() {
+      invite = invite?.copyWith(status: InviteStatus.declined);
+    });
+  }
+
+  void sendInvite() {
+    invite = Invite(id: "", fromUser: widget.usrBloc.state.user!.id, toUser: widget.user.id);
+
+    widget.invOpsBloc.add(AddInvite(invite!));
+
+    setState(() {});
+  }
+  
+  void navigateToUserPage(BuildContext context, Usr user) {
 
   }
 
@@ -28,7 +71,7 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
       null => "Not a friend",
       InviteStatus.declined => "Not a friend",
       InviteStatus.pending => isFromCurrUserInvite ? "Invite sent" : "Invite received",
-      InviteStatus.accepted => "Friends since ${DateUtil.getShortDateFormatFromNow(widget.friendship!.since.toDate())}"
+      InviteStatus.accepted => "Friends since ${DateUtil.getShortDateFormatFromNow(friendship!.since.toDate())}"
     };
   }
 
@@ -36,7 +79,7 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
   Widget build(BuildContext context) {
     return Material(
       child: InkWell(
-        onTap: () => navigateToUserPage(context),
+        onTap: () => navigateToUserPage(context, widget.user),
         splashColor: Theme.of(context).colorScheme.tertiary.withOpacity(0.5),
         child: Padding(
           padding: const EdgeInsets.all(4),
@@ -79,9 +122,9 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
                         ),
 
                         Text(
-                          (widget.invite == null)
+                          (invite == null)
                             ? assertFriendshipStatusString()
-                            : assertFriendshipStatusString(widget.invite!.status, (widget.invite!.fromUser != widget.user.id) ? true : false),
+                            : assertFriendshipStatusString(invite!.status, (invite!.fromUser != widget.user.id) ? true : false),
                           maxLines: 1,
                           style: TextStyle(
                             fontSize: 12,
@@ -95,20 +138,11 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
         
                 // Accepts invite
                 if (
-                  widget.invite != null
-                  && widget.invite!.status == InviteStatus.pending
-                  && widget.invite!.fromUser == widget.user.id
+                  invite != null
+                  && invite!.status == InviteStatus.pending
+                  && invite!.fromUser == widget.user.id
                 ) IconButton(
-                  onPressed: () {
-                    setState(() {
-                      widget.invOpsBloc.add(UpdateInviteStatus(
-                        inviteId: widget.invite!.id,
-                        newStatus: InviteStatus.accepted,
-                        toUser: widget.usrBloc.state.user!,
-                        fromUser: widget.user
-                      ));
-                    });
-                  },
+                  onPressed: acceptInvite,
                   icon: Icon(
                     Icons.check_circle_outlined,
                     size: 26,
@@ -118,18 +152,11 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
 
                 // Declines invite
                 if (
-                  widget.invite != null
-                  && widget.invite!.status == InviteStatus.pending
-                  && widget.invite!.fromUser == widget.user.id
+                  invite != null
+                  && invite!.status == InviteStatus.pending
+                  && invite!.fromUser == widget.user.id
                 ) IconButton(
-                  onPressed: () {
-                    setState(() {
-                      widget.invOpsBloc.add(UpdateInviteStatus(
-                        inviteId: widget.invite!.id,
-                        newStatus: InviteStatus.declined
-                      ));
-                    });
-                  },
+                  onPressed: declineInvite,
                   icon: Icon(
                     Icons.cancel_outlined,
                     size: 26,
@@ -137,16 +164,9 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
                   )
                 ),
 
-                if (widget.invite == null) IconButton.filled(
+                if (invite == null) IconButton.filled(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  onPressed: () {
-                    setState(() {
-                      widget.invOpsBloc.add(AddInvite(
-                        widget.usrBloc.state.user!.id,
-                        widget.user.id
-                      ));
-                    });
-                  },
+                  onPressed: sendInvite,
                   icon: Icon(
                     Icons.person_add_alt_1_outlined,
                     size: 18,
