@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -183,23 +184,28 @@ class FirebaseRoomRepository {
         SetOptions(merge: true)
       );
 
-      await batch.commit();
-
-      await esClient.put(
-        "/messages/_doc/${msg.id}",
-        data: msg.toEsObject()
-      );
-
-      await esClient.post(
-        "/rooms/_update/$roomId",
-        data: {
+      var ndjsonData = [
+        { "index": { "_index": "messages", "_id": msg.id } },
+        msg.toEsObject(),
+        { "update": { "_index": "rooms", "_id": roomId } },
+        {
           "doc": {
-            "lastMessageContent": message.content,
-            "lastMessageHasPicture": message.picture.isEmpty ? false : true,
-            "lastMessageSenderId": message.senderId,
-            "lastMessageTimestamp": message.timestamp.toDate().toIso8601String()
+            "lastMessageContent": msg.content,
+            "lastMessageHasPicture": msg.picture.isNotEmpty,
+            "lastMessageSenderId": msg.senderId,
+            "lastMessageTimestamp": msg.timestamp.toDate().toIso8601String()
           }
         }
+      ];
+
+      await batch.commit();
+
+      await esClient.post(
+        "/_bulk",
+        data: "${ndjsonData.map(jsonEncode).join("\n")}\n",
+        options: Options(
+          headers: { "Content-Type": "application/x-ndjson" }
+        )
       );
 
       log.i("Adding message \"$message\" successful");
@@ -282,6 +288,9 @@ class FirebaseRoomRepository {
         }
       );
 
+      // TODO update room info also in ES, in general fix this method to account for proper updates to rooms data if the message is the latest one
+      // TODO might need to include lastMessageId in rooms data for that to work :|
+
       log.i("Message update successful");
     } catch (e) {
       log.e("Message update failed: $e");
@@ -306,7 +315,7 @@ class FirebaseRoomRepository {
   }
 
   /// Deletes a message from the firebase messages subcollection.
-  Future<void> deleteMessage(String roomId, String messageId) async {
+  Future<void> deleteMessage(String roomId, String messageId) async { // TODO don't remember here what i thought to do but adjust ES at least and UI
     log.i("deleteMessage() invoked...");
 
     try {
