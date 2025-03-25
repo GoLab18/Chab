@@ -110,14 +110,21 @@ class SearchBarDelegate extends SearchDelegate {
 
   ListView listViewForSearchTarget(SearchState state) {
     return switch (searchTarget) {
-      SearchTarget.users => ListView.builder(                // TODO key magic for every tile for less rebuilds (?)
-        cacheExtent: 500, // TODO 10 * item height (in pixels)
+      SearchTarget.users => ListView.builder(
+        cacheExtent: 500,
         controller: scrollController,
         physics: AlwaysScrollableScrollPhysics(),
         itemCount: state.results.$1.length + (state.status == SearchStatus.loading ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < state.results.$1.length) {
-            return UserWithInviteTile(state.results.$1[index], state.results.$2[index]?.$1, state.results.$2[index]?.$2, invOpsBloc, usrBloc);
+            return UserWithInviteTile(
+              key: ValueKey(state.results.$1[index].id),
+              state.results.$1[index],
+              state.results.$2[index]?.$1,
+              state.results.$2[index]?.$2,
+              invOpsBloc,
+              usrBloc
+            );
           } else {
             return Center(child: const CircularProgressIndicator());
           }
