@@ -146,48 +146,65 @@ class FirebaseRoomRepository {
       await roomRef.set(room.toDocument());
 
       await esClient.put(
-        "rooms/_doc/${room.id}",
+        "/rooms/_doc/${room.id}",
         data: room.toEsObject()
       );
 
       log.i("Room creation successful, room id: ${roomRef.id}");
       return roomRef.id;
     } catch (e) {
-      log.e("Room creation failed");
+      log.e("Room creation failed: $e");
       throw Exception(e);
     }
   }
 
-  /// Adds a new message to the firebase messages subcollection.
+  /// Adds a new message to the firebase messages subcollection and to elasticsearch.
+  /// Updates rooms collection data related to the latest message.
   Future<void> addMessage(String roomId, Message message) async {
     try {
-      // Get a reference to the messages subcollection
       CollectionReference<Map<String, dynamic>> messagesCollection = roomsCollection.doc(roomId).collection("messages");
       
-      // Generate a new document reference (contains the ID that will be stored in it).
       DocumentReference docRef = messagesCollection.doc();
 
       var msg = message.copyWith(id: docRef.id);
 
-      // Set the message with the ID.
-      await docRef.set(msg.toDocument());
+      WriteBatch batch = FirebaseFirestore.instance.batch();
 
-      // Make it the latest message in the chat room.
-      await roomsCollection.doc(roomId).set({
-        'lastMessageContent': message.content,
-        'lastMessageHasPicture': message.picture.isEmpty ? false : true,
-        "lastMessageSenderId": message.senderId,
-        'lastMessageTimestamp': message.timestamp
-      }, SetOptions(merge: true));
+      batch.set(docRef, msg.toDocument());
+
+      batch.set(
+        roomsCollection.doc(roomId),
+        {
+          "lastMessageContent": message.content,
+          "lastMessageHasPicture": message.picture.isEmpty ? false : true,
+          "lastMessageSenderId": message.senderId,
+          "lastMessageTimestamp": message.timestamp
+        },
+        SetOptions(merge: true)
+      );
+
+      await batch.commit();
 
       await esClient.put(
-        "messages/_doc/${msg.id}",
+        "/messages/_doc/${msg.id}",
         data: msg.toEsObject()
       );
-      
+
+      await esClient.post(
+        "/rooms/_update/$roomId",
+        data: {
+          "doc": {
+            "lastMessageContent": message.content,
+            "lastMessageHasPicture": message.picture.isEmpty ? false : true,
+            "lastMessageSenderId": message.senderId,
+            "lastMessageTimestamp": message.timestamp.toDate().toIso8601String()
+          }
+        }
+      );
+
       log.i("Adding message \"$message\" successful");
     } catch (e) {
-      log.e("Adding message \"$message\" failed");
+      log.e("Adding message \"$message\" failed: $e");
       throw Exception(e);
     }
   }
@@ -200,7 +217,7 @@ class FirebaseRoomRepository {
       await roomsCollection.doc(updatedRoom.id).update(updatedRoom.toDocument());
 
       await esClient.post(
-        "rooms/_update/${updatedRoom.id}",
+        "/rooms/_update/${updatedRoom.id}",
         data: {
           "doc": updatedRoom.toEsObject(),
           "doc_as_upsert": true
@@ -235,7 +252,7 @@ class FirebaseRoomRepository {
       });
 
       await esClient.post(
-        "rooms/_update/$roomId",
+        "/rooms/_update/$roomId",
         data: {
           "doc": {
             "picture": picUrl
@@ -258,7 +275,7 @@ class FirebaseRoomRepository {
       await roomsCollection.doc(roomId).collection("messages").doc(updatedMsg.id).update(updatedMsg.toDocument());
 
       await esClient.post(
-        "messages/_update/${updatedMsg.id}",
+        "/messages/_update/${updatedMsg.id}",
         data: {
           "doc": updatedMsg.toEsObject(),
           "doc_as_upsert": true
