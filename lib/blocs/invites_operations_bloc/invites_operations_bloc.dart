@@ -25,7 +25,7 @@ class InvitesOperationsBloc extends Bloc<InvitesOperationsEvent, InvitesOperatio
 
     on<DeleteInvite>((event, emit) {
       try {
-        userRepository.deleteInvite(event.inviteId);
+        userRepository.deleteInvite(event.inviteId, event.isInviteTransformedToFriendship);
 
         emit(const InvitesOperationsState.success(null, null));
       } catch (e) {

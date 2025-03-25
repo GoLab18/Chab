@@ -25,6 +25,7 @@ final class UpdateInviteStatus extends InvitesOperationsEvent {
 
 final class DeleteInvite extends InvitesOperationsEvent {
   final String inviteId;
+  final bool isInviteTransformedToFriendship;
 
-  const DeleteInvite(this.inviteId);
+  const DeleteInvite(this.inviteId, this.isInviteTransformedToFriendship);
 }

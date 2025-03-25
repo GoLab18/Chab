@@ -571,7 +571,9 @@ class FirebaseUserRepository {
   }
 
   /// Delete an invite with a specified [String] id.
-  Future<void> deleteInvite(String inviteId) async {
+  /// [isInviteTransformedToFriendship] = true signifies that invite got accepted
+  /// and related friendships_invites doc in elasticsearch shouldn't be deleted.
+  Future<void> deleteInvite(String inviteId, bool isInviteTransformedToFriendship) async {
     log.i("deleteInvite() invoked...");
 
     try {
@@ -579,7 +581,7 @@ class FirebaseUserRepository {
         .doc(inviteId)
         .delete();
 
-      await esClient.delete("/friendships_invites/_doc/$inviteId");
+      if (!isInviteTransformedToFriendship) await esClient.delete("/friendships_invites/_doc/$inviteId");
 
       log.i("Invite deletion with id: \"$inviteId\" successful");
     } catch (e) {
