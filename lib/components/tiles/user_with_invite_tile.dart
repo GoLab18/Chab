@@ -69,9 +69,18 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
   String assertFriendshipStatusString([InviteStatus? status, bool isFromCurrUserInvite = true]) {
     return switch (status) {
       null => "Not a friend",
-      InviteStatus.declined => "Not a friend",
+      InviteStatus.declined => "Your invite was declined",
       InviteStatus.pending => isFromCurrUserInvite ? "Invite sent" : "Invite received",
-      InviteStatus.accepted => "Friends since ${DateUtil.getShortDateFormatFromNow(friendship!.since.toDate())}"
+      InviteStatus.accepted => (friendship != null) ? "Friends since ${DateUtil.getShortDateFormatFromNow(friendship!.since.toDate())}" : "Accepted"
+    };
+  }
+
+  Color assertStatusColor(InviteStatus? status) {
+    return switch (status) {
+      null => Theme.of(context).colorScheme.secondary,
+      InviteStatus.declined => Theme.of(context).colorScheme.error.withAlpha(200),
+      InviteStatus.pending => Theme.of(context).colorScheme.tertiary,
+      InviteStatus.accepted => Theme.of(context).colorScheme.primary
     };
   }
 
@@ -128,7 +137,7 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
                           maxLines: 1,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.tertiary
+                            color: assertStatusColor(invite?.status)
                           )
                         )
                       ]
