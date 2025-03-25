@@ -138,7 +138,7 @@ class Room extends Equatable {
       if (lastMessageContent != null) "lastMessageContent": lastMessageContent,
       if (lastMessageSenderId != null) "lastMessageSenderId": lastMessageSenderId,
       if (lastMessageHasPicture != null) "lastMessageHasPicture": lastMessageHasPicture,
-      "lastMessageTimestamp": lastMessageTimestamp,
+      "lastMessageTimestamp": lastMessageTimestamp.toDate().toIso8601String(),
       if (name != null) "name": name,
       if (picture != null) "picture": picture,
       "timestamp": timestamp.toDate().toIso8601String()
@@ -153,7 +153,7 @@ class Room extends Equatable {
       lastMessageContent: doc["lastMessageContent"] as String?,
       lastMessageHasPicture: doc["lastMessageHasPicture"] as bool?,
       lastMessageSenderId: doc["lastMessageSenderId"] as String?,
-      lastMessageTimestamp: doc["lastMessageTimestamp"] as Timestamp,
+      lastMessageTimestamp: Timestamp.fromDate(DateTime.parse(doc["lastMessageTimestamp"] as String)),
       name: doc["name"] as String?,
       picture: doc["picture"] as String?,
       timestamp: Timestamp.fromDate(DateTime.parse(doc["timestamp"] as String))
