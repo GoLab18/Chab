@@ -5,9 +5,9 @@ sealed class InvitesOperationsEvent {
 }
 
 final class AddInvite extends InvitesOperationsEvent {
-  final String fromUserId, toUserId;
+  final Invite invite; // Without a proper id still, given on db indexing
 
-  const AddInvite(this.fromUserId, this.toUserId);
+  const AddInvite(this.invite);
 }
 
 final class UpdateInviteStatus extends InvitesOperationsEvent {

@@ -496,23 +496,23 @@ class FirebaseUserRepository {
     }
   }
 
-  /// Adds a new invite from [fromUserId] to [toUserId] into friend_invites collection and into friendships_invites ES index.
-  Future<void> addInvite(String fromUserId, String toUserId) async {
-    log.i("addInvite() invoked..."); 
+  /// Adds a new [invite] into friend_invites collection and into friendships_invites ES index.
+  Future<void> addInvite(Invite invite) async {
+    log.i("addInvite() invoked...");
 
     try {
       var docRef = friendInvitesCollection.doc();
-      Invite newInvite = Invite(id: docRef.id, fromUser: fromUserId, toUser: toUserId);
-      await docRef.set(newInvite.toDocument());
+      invite = invite.copyWith(id: docRef.id);
+      await docRef.set(invite.toDocument());
 
       await esClient.put(
         "/friendships_invites/_doc/${docRef.id}",
-        data: newInvite.toEsObject()
+        data: invite.toEsObject()
       );
 
-      log.i("Invite from user with id: \"$fromUserId\", to user with id: \"$toUserId\", creation successful");
+      log.i("Invite from user with id: \"${invite.fromUser}\", to user with id: \"${invite.toUser}\", creation successful");
     } catch (e) {
-      log.e("Invite from user with id: \"$fromUserId\", to user with id: \"$toUserId\", creation failed: $e");
+      log.e("Invite from user with id: \"${invite.fromUser}\", to user with id: \"${invite.toUser}\", creation failed: $e");
       throw Exception(e);
     }
   }

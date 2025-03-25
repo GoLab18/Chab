@@ -35,9 +35,9 @@ class InvitesOperationsBloc extends Bloc<InvitesOperationsEvent, InvitesOperatio
 
     on<AddInvite>((event, emit) {
       try {
-        userRepository.addInvite(event.fromUserId, event.toUserId);
+        userRepository.addInvite(event.invite);
 
-        emit(InvitesOperationsState.success(InviteStatus.pending, event.fromUserId));
+        emit(InvitesOperationsState.success(InviteStatus.pending, event.invite.fromUser));
       } catch (e) {
         emit(const InvitesOperationsState.failure());
       }
