@@ -105,4 +105,18 @@ class Usr extends Equatable {
       timestamp: Timestamp.fromDate(DateTime.parse(doc["timestamp"] as String))
     );
   }
+
+  /// Data deserialization for elasticsearch.
+  /// It handles deserialization for users copies inside friendships_invites index.
+  /// Sets omitted fields to empty strings.
+  static Usr fromEsListCopy(List<dynamic> docList) {
+    return Usr(
+      id: docList[0] as String,
+      email: "",
+      name: docList[1] as String,
+      picture: docList[2] as String,
+      bio: "",
+      timestamp: Timestamp.fromDate(DateTime.parse(docList[3] as String))
+    );
+  }
 }
