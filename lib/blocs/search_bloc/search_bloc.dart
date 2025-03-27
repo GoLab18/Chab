@@ -30,7 +30,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
               invitesFriendships = usersWithInvFr.$2;
             }
 
-            emit(SearchState.success((users, invitesFriendships), pitId, searchAfterContent, null));
+            emit(SearchState.success((users, invitesFriendships), pitId, searchAfterContent));
           } catch (_) {
             emit(SearchState.failure());
           }
@@ -50,7 +50,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
               memSugs = membersSuggestions;
             }
 
-            emit(SearchState.success(memSugs, pitId, searchAfterContent, event.alreadyAddedUsers));
+            emit(SearchState.success(memSugs, pitId, searchAfterContent));
           } catch (e) {
             emit(SearchState.failure());
           }
