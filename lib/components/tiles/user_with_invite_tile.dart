@@ -71,7 +71,7 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
       null => "Not a friend",
       InviteStatus.declined => "Your invite was declined",
       InviteStatus.pending => isFromCurrUserInvite ? "Invite sent" : "Invite received",
-      InviteStatus.accepted => (friendship != null) ? "Friends since ${DateUtil.getShortDateFormatFromNow(friendship!.since.toDate())}" : "Accepted"
+      InviteStatus.accepted => (friendship != null) ? "Friends since ${DateUtil.getLongDateFormatFromNow(friendship!.since.toDate())}" : "Accepted"
     };
   }
 
