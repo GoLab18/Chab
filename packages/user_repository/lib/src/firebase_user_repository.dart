@@ -213,14 +213,14 @@ class FirebaseUserRepository {
             }
           },
           "script": {
-          "source": """
-            if (ctx._source.firstUser != null && ctx._source.firstUser.id == params.userId) {
-              ctx._source.firstUser.name = params.name;
-            }
-            if (ctx._source.secondUser != null && ctx._source.secondUser.id == params.userId) {
-              ctx._source.secondUser.name = params.name;
-            }
-          """,
+            "source": """
+              if (ctx._source.firstUser != null && ctx._source.firstUser.id == params.userId) {
+                ctx._source.firstUser.name = params.name;
+              }
+              if (ctx._source.secondUser != null && ctx._source.secondUser.id == params.userId) {
+                ctx._source.secondUser.name = params.name;
+              }
+            """,
             "params": {
               "userId": user.id,
               "name": user.name
