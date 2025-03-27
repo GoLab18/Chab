@@ -12,6 +12,7 @@ import '../../blocs/room_operations_bloc/room_operations_bloc.dart';
 import '../../blocs/search_bloc/search_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../pages/find_friends_page.dart';
+import '../../pages/new_group_page.dart';
 import '../../pages/profile_page.dart';
 import 'drawer_bar.dart';
 import 'drawer_tile.dart';
@@ -45,6 +46,32 @@ class _CustomDrawerState extends State<CustomDrawer> {
             )
           ],
           child: const ProfilePage()
+        )
+      )
+    );
+  }
+
+  void openNewGroupPage() {
+    Navigator.pop(context);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext pageContext) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(
+              value: context.read<SearchBloc>()
+            ),
+            BlocProvider.value(
+              value: context.read<UsrBloc>()
+            ),
+            BlocProvider(
+              create: (context) => RoomOperationsBloc(
+                roomRepository: context.read<FirebaseRoomRepository>()
+              )
+            )
+          ],
+          child: NewGroupPage(context.read<UsrBloc>().state.user!.id)
         )
       )
     );
@@ -120,7 +147,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             DrawerTile(
               tileIcon: Icons.group_add_outlined,
               title: "New Group",
-              onTap: () {}
+              onTap: openNewGroupPage
             ),
 
             // Add Friends
