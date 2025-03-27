@@ -59,8 +59,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
       MaterialPageRoute(
         builder: (BuildContext pageContext) => MultiBlocProvider(
           providers: [
-            BlocProvider.value(
-              value: context.read<SearchBloc>()
+            BlocProvider(
+              create: (context) => SearchBloc(
+                userRepository: context.read<FirebaseUserRepository>()
+              )
             ),
             BlocProvider.value(
               value: context.read<UsrBloc>()
@@ -88,8 +90,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
       MaterialPageRoute(
         builder: (BuildContext pageContext) => MultiBlocProvider(
           providers: [
-            BlocProvider.value(
-              value: context.read<SearchBloc>()
+            BlocProvider(
+              create: (context) => SearchBloc(
+                userRepository: context.read<FirebaseUserRepository>()
+              )
             ),
             BlocProvider.value(
               value: context.read<UsrBloc>()

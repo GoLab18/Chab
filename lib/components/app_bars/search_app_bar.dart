@@ -45,11 +45,11 @@ class _SearchAppBarState extends State<SearchAppBar> {
             showSearch(
               context: context,
               delegate: SearchBarDelegate(
-                widget.searchTarget,
-                context.read<UsrBloc>().state.user!.id,
-                context.read<SearchBloc>(),
-                context.read<InvitesOperationsBloc>(),
-                context.read<UsrBloc>()
+                searchTarget: widget.searchTarget,
+                currUserId: context.read<UsrBloc>().state.user!.id,
+                searchBloc: context.read<SearchBloc>(),
+                invOpsBloc: context.read<InvitesOperationsBloc>(),
+                usrBloc: context.read<UsrBloc>()
               )
             );
           },
