@@ -678,7 +678,6 @@ class FirebaseUserRepository {
           },
           "sort": [
             { "name.keyword": "asc" },
-            { "_score": "desc" },
             { "id": "asc" } // For uniqueness
           ],
           if (!isInitial) "search_after": searchAfterContent!
@@ -751,6 +750,126 @@ class FirebaseUserRepository {
       return ((users, usersOrderInvFr), userPitId!, searchAfterContent);
     } catch (e) {
       log.e("Searching for users failed: $e");
+      throw Exception(e);
+    }
+  }
+
+  /// Searches for users that can be added to the new group - friends of a user with [currUserId].
+  /// Pagination is allowed with [searchAfterContent] parameter that stores search_after.
+  /// Excludes [alreadyAddedUsers] from the search results by their ids.
+  /// If [pitId] is null, it will inject new PIT to friendships_invites index for data consistency.
+  /// Returns [List] of [Usr], PIT id and search_after content of type [List] of [String].
+  Future<(List<Usr>, String, List<dynamic>?)> searchForNewGroupMembers(
+    String query,
+    String currUserId,
+    List<String>? alreadyAddedUsers,
+    String? pitId,
+    List<dynamic>? searchAfterContent
+  ) async {
+    log.i("searchForNewGroupMembers() invoked...");
+    
+    try {
+      String keepAliveMinutes = "1m";
+      bool isInitial = pitId == null;
+
+      if (isInitial) {        // TODO really don't want to do this on each suggestions reload, find a way to not make a new PIT on each reload
+        var uPitRes = await esClient.post("/friendships_invites/_pit?keep_alive=$keepAliveMinutes");
+        pitId = uPitRes.data["id"];
+      }
+
+      var uSearchRes = await esClient.get(
+        "/_search",
+        data: {
+          "size": 10,
+          "pit": {
+            "id": pitId,
+            "keep_alive": keepAliveMinutes
+          },
+          "query": {
+            "bool": {
+              "should": [
+                { "match": { "firstUser.name": query } },
+                { "match": { "secondUser.name": query } }
+              ],
+              "minimum_should_match": 1,
+              "must_not": [
+                {
+                  "bool": {
+                    "must": [
+                      { "match": { "firstUser.name": query } },
+                      { "terms": { "firstUser.id": [currUserId] } }
+                    ]
+                  }
+                },
+                {
+                  "bool": {
+                    "must": [
+                      { "match": { "secondUser.name": query } },
+                      { "terms": { "secondUser.id": [currUserId] } }
+                    ]
+                  }
+                },
+                if (alreadyAddedUsers != null) ...[
+                  { "terms": { "firstUser.id": alreadyAddedUsers } },
+                  { "terms": { "secondUser.id": alreadyAddedUsers } }
+                ]
+              ]
+            }
+          },
+          "script_fields": {
+            "friend": {
+              "script": {
+                "source": """
+                  String currUserId = params.currUserId;
+                  if (doc['firstUser.id'].value == currUserId) {
+                    return [doc['secondUser.id'].value, doc['secondUser.name.keyword'].value, 
+                      doc['secondUser.picture'].value, doc['secondUser.timestamp'].value];
+                  } else {
+                    return [doc['firstUser.id'].value, doc['firstUser.name.keyword'].value, 
+                      doc['firstUser.picture'].value, doc['firstUser.timestamp'].value];
+                  }
+                """,
+                "params": { "currUserId": currUserId }
+              }
+            }
+          },
+          "_source": false,
+          "fields": ["friend"],
+          "sort": [
+            {
+              "_script": {
+                "type": "string",
+                "script": {
+                  "source": """
+                    String currUserId = params.currUserId;
+                    if (doc['firstUser.id'].value == currUserId) {
+                      return doc['secondUser.name.keyword'].value;
+                    } else {
+                      return doc['firstUser.name.keyword'].value;
+                    }
+                  """,
+                  "params": { "currUserId": currUserId },
+                },
+                "order": "asc"
+              },
+            },
+            { "id": "asc" } // For uniqueness
+          ],
+          if (!isInitial) "search_after": searchAfterContent!
+        }
+      );
+
+      List<dynamic> uHits = uSearchRes.data["hits"]["hits"];
+      if (uHits.isEmpty) return (<Usr>[], pitId!, searchAfterContent);
+
+      List<Usr> usrMatches = uHits.map((hit) => Usr.fromEsListCopy(hit["fields"]["friend"])).toList();
+
+      searchAfterContent = uHits.isNotEmpty ? uHits.last["sort"] : null;
+
+      log.i("Searching for new group members successful");
+      return (usrMatches, pitId!, searchAfterContent);
+    } catch (e) {
+      log.e("Searching for new group members failed: $e");
       throw Exception(e);
     }
   }
