@@ -90,10 +90,10 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
       child: InkWell(
         onTap: () => navigateToUserPage(context, widget.user),
         splashColor: Theme.of(context).colorScheme.tertiary.withOpacity(0.5),
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: SizedBox(
-            height: 48,
+        child: SizedBox(
+          height: 70,
+          child: Padding(
+            padding: const EdgeInsets.all(4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -183,8 +183,8 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
                   )
                 )
               ]
-            )
-          )
+            ),
+          ),
         )
       )
     );
