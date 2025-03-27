@@ -4,21 +4,33 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../blocs/search_bloc/search_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
+import '../cubits/staged_members_cubit.dart';
+import 'tiles/add_group_member_tile.dart';
 import 'tiles/user_with_invite_tile.dart';
 
 class SearchBarDelegate extends SearchDelegate {
   final SearchTarget searchTarget;
   final String currUserId;
   final SearchBloc searchBloc;
-  final InvitesOperationsBloc invOpsBloc;
-  final UsrBloc usrBloc;
+  final InvitesOperationsBloc? invOpsBloc; // Needed only for friends searching
+  final UsrBloc? usrBloc;
+  final StagedMembersCubit? stagedMembersCubit; // For managing staged members to add to new group
+
+  bool isInitialSearch = true;
 
   final ScrollController scrollController = ScrollController();
   VoidCallback? scrollListener;
 
   final cache = <String, dynamic>{}; // TODO implement caching for searching (adjust value type) and don't allow parallel requests
 
-  SearchBarDelegate(this.searchTarget, this.currUserId, this.searchBloc, this.invOpsBloc, this.usrBloc);
+  SearchBarDelegate({
+    required this.searchTarget,
+    required this.currUserId,
+    required this.searchBloc,
+    this.invOpsBloc,
+    this.usrBloc,
+    this.stagedMembersCubit
+  });
 
   @override
   String? get searchFieldLabel => "Search..";
@@ -69,8 +81,10 @@ class SearchBarDelegate extends SearchDelegate {
 
   Widget _provideResults(BuildContext context) {
     if (query.isEmpty) return Center(child: Text("Search :)"));
+    
+    if (isInitialSearch) isInitialSearch = false;
 
-    searchBloc.add(SearchEvent(currUserId, searchTarget, query, null));
+    searchBloc.add(SearchEvent(currUserId, searchTarget, query, null, stagedMembersCubit?.state.map((usr) => usr.id).toList()));
 
     scrollListener ??= () => _fetchMore();
     scrollController.addListener(scrollListener!); // TODO maybe scroll controller should be inside to rebuild on each rebuild (?)
@@ -78,10 +92,10 @@ class SearchBarDelegate extends SearchDelegate {
     return BlocBuilder<SearchBloc, SearchState>(
       bloc: searchBloc,
       builder: (context, state) {
-        if (state.status == SearchStatus.success) {
-          return listViewForSearchTarget(state);
-        } else if (state.status == SearchStatus.loading) {
+        if (isInitialSearch || state.status == SearchStatus.loading) {
           return Center(child: const CircularProgressIndicator());
+        } else if (state.status == SearchStatus.success) {
+          return listViewForSearchTarget(state, context);
         } else if (state.status == SearchStatus.failure) {
           return Center(
             child: Text(
@@ -104,14 +118,18 @@ class SearchBarDelegate extends SearchDelegate {
       scrollController.position.pixels == scrollController.position.maxScrollExtent
       && searchBloc.state.status == SearchStatus.success
     ) {
-      searchBloc.add(SearchEvent(currUserId, searchTarget, query, searchBloc.state.results));
+      searchBloc.add(
+        SearchEvent(currUserId, searchTarget, query, searchBloc.state.results, stagedMembersCubit?.state.map((usr) => usr.id).toList())
+      );
     }
   }
 
-  ListView listViewForSearchTarget(SearchState state) {
+  ListView listViewForSearchTarget(SearchState state, BuildContext context) {
+    double cacheExtent = MediaQuery.of(context).size.height * 1.5;
+
     return switch (searchTarget) {
       SearchTarget.users => ListView.builder(
-        cacheExtent: 500,
+        cacheExtent: cacheExtent,
         controller: scrollController,
         physics: AlwaysScrollableScrollPhysics(),
         itemCount: state.results.$1.length + (state.status == SearchStatus.loading ? 1 : 0),
@@ -122,8 +140,29 @@ class SearchBarDelegate extends SearchDelegate {
               state.results.$1[index],
               state.results.$2[index]?.$1,
               state.results.$2[index]?.$2,
-              invOpsBloc,
-              usrBloc
+              invOpsBloc!,
+              usrBloc!
+            );
+          } else {
+            return Center(child: const CircularProgressIndicator());
+          }
+        }
+      ),
+      SearchTarget.members => ListView.builder(
+        cacheExtent: cacheExtent,
+        controller: scrollController,
+        physics: AlwaysScrollableScrollPhysics(),
+        itemCount: state.results.length + (state.status == SearchStatus.loading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index < state.results.length) {
+            return AddGroupMemberTile(
+              key: ValueKey(state.results[index].id),
+              user: state.results[index],
+              callbackIcon: Icons.add,
+              isMemberSubjectToAddition: true,
+              onButtonInvoked: (user) {
+                stagedMembersCubit!.stageMember(user);
+              }
             );
           } else {
             return Center(child: const CircularProgressIndicator());
@@ -131,8 +170,7 @@ class SearchBarDelegate extends SearchDelegate {
         }
       ),
       SearchTarget.chatRooms => throw UnimplementedError(), // TODO: Handle this case.
-      SearchTarget.messages => throw UnimplementedError(),   // TODO: Handle this case.
-      SearchTarget.members => throw UnimplementedError(),   // TODO: Handle this case.
+      SearchTarget.messages => throw UnimplementedError()   // TODO: Handle this case.
     };
 
   }

@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:user_repository/user_repository.dart';
 
-class AddGroupMemberTile extends StatelessWidget {
+class AddGroupMemberTile extends StatefulWidget {
   final Usr user;
   final IconData callbackIcon;
+  final bool isMemberSubjectToAddition;
   final void Function(Usr) onButtonInvoked;
 
   const AddGroupMemberTile({
     super.key,
     required this.user,
     required this.callbackIcon,
+    required this.isMemberSubjectToAddition,
     required this.onButtonInvoked
   });
 
+  @override
+  State<AddGroupMemberTile> createState() => _AddGroupMemberTileState();
+}
+
+class _AddGroupMemberTileState extends State<AddGroupMemberTile> {
+  bool isAdded = false;
+  
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -29,8 +38,8 @@ class AddGroupMemberTile extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  foregroundImage: user.picture.isNotEmpty
-                    ? NetworkImage(user.picture)
+                  foregroundImage: widget.user.picture.isNotEmpty
+                    ? NetworkImage(widget.user.picture)
                     : null,
                   backgroundColor: Theme.of(context).colorScheme.tertiary,
                   child: Icon(
@@ -57,7 +66,7 @@ class AddGroupMemberTile extends StatelessWidget {
                             child: Padding(
                               padding: const EdgeInsets.only(right: 14),
                               child: Text(
-                                user.name,
+                                widget.user.name,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.inversePrimary
                                 )
@@ -65,15 +74,32 @@ class AddGroupMemberTile extends StatelessWidget {
                             )
                           ),
 
-                          IconButton(
+                          if (!isAdded) IconButton.filled(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
                             onPressed: () {
-                              onButtonInvoked(user);
+                              widget.onButtonInvoked(widget.user);
+
+                              if (widget.isMemberSubjectToAddition) {
+                                setState(() {
+                                  isAdded = true;
+                                });
+                              }
                             },
                             icon: Icon(
-                              callbackIcon,
-                              color: Theme.of(context).colorScheme.inversePrimary,
-                              size: 18
+                              widget.callbackIcon,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.inversePrimary
                             )
+                          ),
+
+                          if (isAdded) Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              "Added",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary
+                              )
+                            ),
                           )
                         ]
                       )
