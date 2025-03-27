@@ -46,7 +46,7 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: const SearchAppBar(searchTarget: SearchTarget.users), // TODO maybe do some GlobalKey magic (?)
+      appBar: const SearchAppBar(searchTarget: SearchTarget.users),
       body: Padding(
         padding: const EdgeInsets.all(4),
         child: Center(
