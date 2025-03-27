@@ -7,12 +7,13 @@ part 'search_state.dart';
 
 class SearchBloc extends Bloc<SearchEvent, SearchState> {
   final FirebaseUserRepository userRepository;
+
   SearchBloc({
     required this.userRepository
   }) : super(SearchState.loading()) {
     on<SearchEvent>((event, emit) async {
       switch (event.searchTarget) {
-        case SearchTarget.users:      // TODO might be a good idea to trash previous requests when they are overshadowed (?) although idk if needed
+        case SearchTarget.users:
           try {
             final (usersWithInvFr, pitId, searchAfterContent) = await userRepository.searchUsers(event.query, event.userId, null, []);
             
@@ -29,10 +30,31 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
               invitesFriendships = usersWithInvFr.$2;
             }
 
-            emit(SearchState.success((users, invitesFriendships), pitId, searchAfterContent));
+            emit(SearchState.success((users, invitesFriendships), pitId, searchAfterContent, null));
           } catch (_) {
             emit(SearchState.failure());
           }
+
+          break;
+        
+        case SearchTarget.members:
+          try {
+            final (membersSuggestions, pitId, searchAfterContent) = 
+              await userRepository.searchForNewGroupMembers(event.query, event.userId, event.alreadyAddedUsers, null, []);
+            
+            List<Usr> memSugs;
+            if (event.previousResults != null) {
+              memSugs = event.previousResults;
+              memSugs.addAll(membersSuggestions);
+            } else {
+              memSugs = membersSuggestions;
+            }
+
+            emit(SearchState.success(memSugs, pitId, searchAfterContent, event.alreadyAddedUsers));
+          } catch (e) {
+            emit(SearchState.failure());
+          }
+          
           break;
         
         case SearchTarget.chatRooms:
@@ -40,10 +62,6 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
           break;
         
         case SearchTarget.messages:
-          // TODO
-          break;
-        
-        case SearchTarget.members:
           // TODO
           break;
       }
