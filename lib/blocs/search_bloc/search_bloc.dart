@@ -11,7 +11,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
   SearchBloc({
     required this.userRepository
   }) : super(SearchState.loading()) {
-    on<SearchEvent>((event, emit) async {
+    on<SearchQuery>((event, emit) async {
       switch (event.searchTarget) {
         case SearchTarget.users:
           try {
@@ -65,6 +65,10 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
           // TODO
           break;
       }
+    });
+
+    on<SearchReset>((event, emit) {
+      emit(SearchState.loading());
     });
   }
 }

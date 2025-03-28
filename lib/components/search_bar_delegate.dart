@@ -21,8 +21,6 @@ class SearchBarDelegate extends SearchDelegate {
   final ScrollController scrollController = ScrollController();
   VoidCallback? scrollListener;
 
-  final cache = <String, dynamic>{}; // TODO implement caching for searching (adjust value type) and don't allow parallel requests
-
   SearchBarDelegate({
     required this.searchTarget,
     required this.currUserId,
@@ -84,32 +82,37 @@ class SearchBarDelegate extends SearchDelegate {
     
     if (isInitialSearch) isInitialSearch = false;
 
-    searchBloc.add(SearchEvent(currUserId, searchTarget, query, null, stagedMembersCubit?.state.map((usr) => usr.id).toList()));
+    searchBloc.add(SearchQuery(currUserId, searchTarget, query, null, stagedMembersCubit?.state.map((usr) => usr.id).toList()));
 
     scrollListener ??= () => _fetchMore();
     scrollController.addListener(scrollListener!); // TODO maybe scroll controller should be inside to rebuild on each rebuild (?)
     
-    return BlocBuilder<SearchBloc, SearchState>(
-      bloc: searchBloc,
-      builder: (context, state) {
-        if (isInitialSearch || state.status == SearchStatus.loading) {
-          return Center(child: const CircularProgressIndicator());
-        } else if (state.status == SearchStatus.success) {
-          return listViewForSearchTarget(state, context);
-        } else if (state.status == SearchStatus.failure) {
-          return Center(
-            child: Text(
-              "Loading error",
-              style: TextStyle(
-                fontSize: 30,
-                color: Theme.of(context).colorScheme.inversePrimary
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) searchBloc.add(SearchReset());
+      },
+      child: BlocBuilder<SearchBloc, SearchState>(
+        bloc: searchBloc,
+        builder: (context, state) {
+          if (isInitialSearch || state.status == SearchStatus.loading) {
+            return Center(child: const CircularProgressIndicator());
+          } else if (state.status == SearchStatus.success) {
+            return listViewForSearchTarget(state, context);
+          } else if (state.status == SearchStatus.failure) {
+            return Center(
+              child: Text(
+                "Loading error",
+                style: TextStyle(
+                  fontSize: 30,
+                  color: Theme.of(context).colorScheme.inversePrimary
+                )
               )
-            )
-          );
+            );
+          }
+      
+          throw Exception("Non-existent search_bloc state");
         }
-
-        throw Exception("Non-existent search_bloc state");
-      }
+      ),
     );
   }
 
@@ -119,7 +122,7 @@ class SearchBarDelegate extends SearchDelegate {
       && searchBloc.state.status == SearchStatus.success
     ) {
       searchBloc.add(
-        SearchEvent(currUserId, searchTarget, query, searchBloc.state.results, stagedMembersCubit?.state.map((usr) => usr.id).toList())
+        SearchQuery(currUserId, searchTarget, query, searchBloc.state.results, stagedMembersCubit?.state.map((usr) => usr.id).toList())
       );
     }
   }
