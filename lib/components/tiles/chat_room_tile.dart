@@ -338,11 +338,13 @@ class ChatRoomTile extends StatelessWidget {
                                                   Padding(
                                                     padding: const EdgeInsets.only(right: 4),
                                                     child: Text(
-                                                      (room.lastMessageSenderId != context.read<UsrBloc>().state.user!.id)
-                                                        ? """${usersList.firstWhere((Usr member) =>
-                                                          member.id == room.lastMessageSenderId
-                                                        ).name}:"""
-                                                        : "You:",
+                                                      (room.lastMessageContent != null)
+                                                        ? (room.lastMessageSenderId != context.read<UsrBloc>().state.user!.id)
+                                                          ? """${usersList.firstWhere((Usr member) =>
+                                                            member.id == room.lastMessageSenderId
+                                                          ).name}:"""
+                                                          : "You:"
+                                                        : "",
                                                       maxLines: 1,
                                                       overflow: TextOverflow.ellipsis,
                                                       style: TextStyle(
