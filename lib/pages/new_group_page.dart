@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:user_repository/user_repository.dart';
 
 import '../blocs/search_bloc/search_bloc.dart';
+import '../components/avatar_action.dart';
 import '../components/fields/transparent_editable_text_field.dart';
 import '../components/search_bar_delegate.dart';
 import '../components/tiles/add_group_member_tile.dart';
@@ -44,55 +45,28 @@ class _NewGroupPageState extends State<NewGroupPage> {
                     child: Column(
                       children: [
                         const SizedBox(height: 80),
-                        
-                        Stack(
-                          alignment: Alignment.center,
-                          clipBehavior: Clip.none,
-                          fit: StackFit.loose,
-                          children: [
-                            // Group chat photo pick
-                            CircleAvatar(
-                              radius: 40,
-                              foregroundImage: selectedImagePath == null ? null : FileImage(File(selectedImagePath!)),
-                              child: Icon(
-                                Icons.people_outlined,
-                                color: Theme.of(context).colorScheme.inversePrimary
-                              )
-                            ),
-                        
-                            // Add a picture
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(       // TODO make a seperate widget of this stack (it is used here and inside profile_page)
-                                width: 30,            // TODO also maybe make the IconButton navigate to chat page for private_chat_page
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.secondary,
-                                  shape: BoxShape.circle
-                                ),
-                                child: IconButton(
-                                  padding: EdgeInsets.zero,
-                                  onPressed: () {
-                                    PictureUtil.uploadAndCropPicture(
-                                      context,
-                                      null,
-                                      (imagePath) {
-                                        setState(() {
-                                          selectedImagePath = imagePath;
-                                        });
-                                      }
-                                    );
-                                  },
-                                  icon: Icon(
-                                    Icons.add,
-                                    size: 18,
-                                    color: Theme.of(context).colorScheme.inversePrimary
-                                  )
-                                )
-                              )
-                            )
-                          ]
+
+                        AvatarAction(
+                          radius: 40,
+                          avatarImage: selectedImagePath == null ? null : FileImage(File(selectedImagePath!)),
+                          circleAvatarBackgroundIconData: Icons.people_outlined,
+                          actionContainerSize: 30,
+                          actionIcon: Icon(
+                            Icons.add,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.inversePrimary
+                          ),
+                          onActionPressed: () {
+                            PictureUtil.uploadAndCropPicture(
+                              context,
+                              null,
+                              (imagePath) {
+                                setState(() {
+                                  selectedImagePath = imagePath;
+                                });
+                              }
+                            );
+                          }
                         ),
         
                         // Selected chat group name

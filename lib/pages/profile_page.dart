@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../blocs/change_usr_info_bloc/change_usr_info_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
+import '../components/avatar_action.dart';
 import '../components/fields/dynamic_editable_field.dart';
 import '../components/fields/editable_field.dart';
 import '../components/app_bars/options_app_bar.dart';
@@ -152,54 +153,30 @@ class _ProfilePageState extends State<ProfilePage> {
                       // Profile picture
                       Padding(
                         padding: const EdgeInsets.only(bottom: 30),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          clipBehavior: Clip.none,
-                          fit: StackFit.loose,
-                          children: [
-                            CircleAvatar(
-                              radius: 50,
-                              foregroundImage: state.user!.picture.isNotEmpty
-                                ? NetworkImage(state.user!.picture)
-                                : null,
-                              child: Icon(
-                                Icons.person_outlined,
-                                color: Theme.of(context).colorScheme.inversePrimary
-                              )
-                            ),
-
-                            // Upload a picture
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.secondary,
-                                  shape: BoxShape.circle
-                                ),
-                                child: IconButton(
-                                  padding: EdgeInsets.zero,
-                                  onPressed: () => PictureUtil.uploadAndCropPicture(
-                                    context,
-                                    mounted,
-                                    (imagePath) => context.read<ChangeUsrInfoBloc>().add(
-                                      UploadPicture(
-                                        picture: imagePath,
-                                        userId: context.read<UsrBloc>().state.user!.id
-                                      )
-                                    )
-                                  ),
-                                  icon: Icon(
-                                    Icons.add,
-                                    size: 20,
-                                    color: Theme.of(context).colorScheme.inversePrimary
-                                  )
+                        child: AvatarAction(
+                          radius: 50,
+                          avatarImage: state.user!.picture.isNotEmpty
+                            ? NetworkImage(state.user!.picture)
+                            : null,
+                          circleAvatarBackgroundIconData: Icons.person_outlined,
+                          actionContainerSize: 36,
+                          actionIcon: Icon(
+                            Icons.add,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.inversePrimary
+                          ),
+                          onActionPressed: () {
+                            PictureUtil.uploadAndCropPicture(
+                              context,
+                              mounted,
+                              (imagePath) => context.read<ChangeUsrInfoBloc>().add(
+                                UploadPicture(
+                                  picture: imagePath,
+                                  userId: context.read<UsrBloc>().state.user!.id
                                 )
                               )
-                            )
-                          ]
+                            );
+                          }
                         )
                       ),
 

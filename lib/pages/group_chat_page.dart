@@ -5,6 +5,7 @@ import 'package:user_repository/user_repository.dart';
 import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/room_members_bloc/room_members_bloc.dart';
 import '../blocs/room_operations_bloc/room_operations_bloc.dart';
+import '../components/avatar_action.dart';
 import '../components/fields/transparent_editable_text_field.dart';
 import '../components/tiles/user_tile.dart';
 import '../components/tiles/utility_tile.dart';
@@ -38,62 +39,34 @@ class GroupChatPage extends StatelessWidget {
                             child: Column(
                               children: [
                                 const SizedBox(height: 80),
-                                
-                                Stack(
-                                  alignment: Alignment.center,
-                                  clipBehavior: Clip.none,
-                                  fit: StackFit.loose,
-                                  children: [
-                                    // Group chat photo
-                                    CircleAvatar(
-                                      radius: 40,
-                                      foregroundImage:
-                                      (
-                                        roomState.status == RoomStatus.success
-                                        && roomState.room != null
-                                        && roomState.room!.picture!.isNotEmpty
-                                      )
-                                        ? NetworkImage(roomState.room!.picture!)
-                                        : null,
-                                      child: Icon(
-                                        Icons.people_outlined,
-                                        color: Theme.of(context).colorScheme.inversePrimary
-                                      )
-                                    ),
-                                
-                                    // Upload a picture
-                                    Positioned(
-                                      bottom: 0,
-                                      right: 0,
-                                      child: Container(       // TODO make a seperate widget of this stack (it is used here and inside profile_page)
-                                        width: 30,            // TODO also maybe make the IconButton navigate to chat page for private_chat_page
-                                        height: 30,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.secondary,
-                                          shape: BoxShape.circle
-                                        ),
-                                        child: IconButton(
-                                          padding: EdgeInsets.zero,
-                                          onPressed: () {
-                                            if (roomState.status == RoomStatus.success && roomState.room != null) {
-                                              PictureUtil.uploadAndCropPicture(
-                                                context,
-                                                null,
-                                                (imagePath) => context.read<RoomOperationsBloc>().add(
-                                                  UploadRoomPicture(roomState.room!.id, imagePath)
-                                                )
-                                              );
-                                            }
-                                          },
-                                          icon: Icon(
-                                            Icons.add,
-                                            size: 18,
-                                            color: Theme.of(context).colorScheme.inversePrimary
-                                          )
+
+                                AvatarAction(
+                                  radius: 40,
+                                  avatarImage: (
+                                    roomState.status == RoomStatus.success
+                                    && roomState.room != null
+                                    && roomState.room!.picture!.isNotEmpty
+                                  )
+                                    ? NetworkImage(roomState.room!.picture!)
+                                    : null,
+                                  circleAvatarBackgroundIconData: Icons.people_outlined,
+                                  actionContainerSize: 30,
+                                  actionIcon: Icon(
+                                    Icons.add,
+                                    size: 18,
+                                    color: Theme.of(context).colorScheme.inversePrimary
+                                  ),
+                                  onActionPressed: () {
+                                    if (roomState.status == RoomStatus.success && roomState.room != null) {
+                                      PictureUtil.uploadAndCropPicture(
+                                        context,
+                                        null,
+                                        (imagePath) => context.read<RoomOperationsBloc>().add(
+                                          UploadRoomPicture(roomState.room!.id, imagePath)
                                         )
-                                      )
-                                    )
-                                  ]
+                                      );
+                                    }
+                                  }
                                 )
                               ]
                             )
