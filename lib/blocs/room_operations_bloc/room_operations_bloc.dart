@@ -15,7 +15,7 @@ class RoomOperationsBloc extends Bloc<RoomOperationsEvent, RoomOperationsState> 
       try {
         String roomId = await roomRepository.createRoom(true);
 
-        await roomRepository.addMembersToRoom(false ,roomId, [event.personOneId, event.personTwoId]);
+        await roomRepository.addMembersToRoom(false, roomId, [event.personOneId, event.personTwoId]);
         
         emit(const RoomOperationsState.success());
       } catch (e) {
@@ -25,9 +25,11 @@ class RoomOperationsBloc extends Bloc<RoomOperationsEvent, RoomOperationsState> 
 
     on<CreateGroupChatRoom>((event, emit) async {
       try {
-        String roomId = await roomRepository.createRoom(false);
+        String roomId = await roomRepository.createRoom(false, event.name);
 
         await roomRepository.addMembersToRoom(true, roomId, event.newMembersIds);
+
+        if (event.imagePath != null) await roomRepository.uploadRoomPicture(roomId, event.imagePath!);
         
         emit(const RoomOperationsState.success());
       } catch (e) {

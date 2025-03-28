@@ -18,9 +18,11 @@ final class CreatePrivateChatRoom extends RoomOperationsEvent {
 }
 
 final class CreateGroupChatRoom extends RoomOperationsEvent {
+  final String? name;
+  final String? imagePath;
   final List<String> newMembersIds;
 
-  const CreateGroupChatRoom(this.newMembersIds);
+  const CreateGroupChatRoom(this.name, this.imagePath, this.newMembersIds);
 
   @override
   List<Object> get props => [newMembersIds];
