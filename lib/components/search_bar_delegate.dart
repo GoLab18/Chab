@@ -78,7 +78,10 @@ class SearchBarDelegate extends SearchDelegate {
   }
 
   Widget _provideResults(BuildContext context) {
-    if (query.isEmpty) return Center(child: Text("Search :)"));
+    if (query.isEmpty) {
+      searchBloc.add(SearchReset());
+      return Center(child: Text("Search :)", style: TextStyle(color: Theme.of(context).colorScheme.inversePrimary)));
+    }
     
     if (isInitialSearch) isInitialSearch = false;
 
