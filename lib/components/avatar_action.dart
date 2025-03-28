@@ -25,7 +25,6 @@ class AvatarAction extends StatelessWidget {
       clipBehavior: Clip.none,
       fit: StackFit.loose,
       children: [
-        // Group chat photo
         CircleAvatar(
           radius: radius,
           foregroundImage: avatarImage,
@@ -35,7 +34,6 @@ class AvatarAction extends StatelessWidget {
           )
         ),
     
-        // Upload a picture
         Positioned(
           bottom: 0,
           right: 0,
