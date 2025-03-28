@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:user_repository/user_repository.dart';
 
+import '../blocs/room_operations_bloc/room_operations_bloc.dart';
 import '../blocs/search_bloc/search_bloc.dart';
+import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/avatar_action.dart';
 import '../components/fields/transparent_editable_text_field.dart';
 import '../components/search_bar_delegate.dart';
@@ -23,7 +25,7 @@ class NewGroupPage extends StatefulWidget {
 
 class _NewGroupPageState extends State<NewGroupPage> {
   String? selectedImagePath;
-  String selectedGroupName = "New Group";
+  String selectedGroupName = "Group";
   
   @override
   Widget build(BuildContext context) {
@@ -90,7 +92,12 @@ class _NewGroupPageState extends State<NewGroupPage> {
               actions: [
                 IconButton(
                   onPressed: () {
-                    // TODO create room
+                    var newMembersIds = context.read<StagedMembersCubit>().state.map((user) => user.id).toList();
+                    newMembersIds.add(context.read<UsrBloc>().state.user!.id);
+
+                    context.read<RoomOperationsBloc>().add(CreateGroupChatRoom(selectedGroupName, selectedImagePath, newMembersIds));
+
+                    Navigator.pop(context);
                   },
                   icon: Icon(Icons.check),
                   color: Theme.of(context).colorScheme.inversePrimary
