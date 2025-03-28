@@ -11,6 +11,7 @@ import '../../blocs/invites_bloc/invites_bloc.dart';
 import '../../blocs/room_operations_bloc/room_operations_bloc.dart';
 import '../../blocs/search_bloc/search_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
+import '../../cubits/staged_members_cubit.dart';
 import '../../pages/find_friends_page.dart';
 import '../../pages/new_group_page.dart';
 import '../../pages/profile_page.dart';
@@ -63,6 +64,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
               create: (context) => SearchBloc(
                 userRepository: context.read<FirebaseUserRepository>()
               )
+            ),
+            BlocProvider(
+              create: (context) => StagedMembersCubit(),
             ),
             BlocProvider.value(
               value: context.read<UsrBloc>()
