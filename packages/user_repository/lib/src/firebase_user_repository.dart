@@ -795,6 +795,16 @@ class FirebaseUserRepository {
               "must_not": [
                 {
                   "bool": {
+                    "must_not": [
+                      {
+                        "bool": {
+                          "must": [
+                            { "match": { "firstUser.name": query } },
+                            { "match": { "secondUser.name": query } },
+                          ]
+                        }
+                      }
+                    ],
                     "must": [
                       { "match": { "firstUser.name": query } },
                       { "terms": { "firstUser.id": [currUserId] } }
@@ -803,6 +813,16 @@ class FirebaseUserRepository {
                 },
                 {
                   "bool": {
+                    "must_not": [
+                      {
+                        "bool": {
+                          "must": [
+                            { "match": { "firstUser.name": query } },
+                            { "match": { "secondUser.name": query } },
+                          ]
+                        }
+                      }
+                    ],
                     "must": [
                       { "match": { "secondUser.name": query } },
                       { "terms": { "secondUser.id": [currUserId] } }
@@ -822,11 +842,9 @@ class FirebaseUserRepository {
                 "source": """
                   String currUserId = params.currUserId;
                   if (doc['firstUser.id'].value == currUserId) {
-                    return [doc['secondUser.id'].value, doc['secondUser.name.keyword'].value, 
-                      doc['secondUser.picture'].value, doc['secondUser.timestamp'].value];
+                    return [doc['secondUser.id'].value, doc['secondUser.name.keyword'].value, doc['secondUser.picture'].value];
                   } else {
-                    return [doc['firstUser.id'].value, doc['firstUser.name.keyword'].value, 
-                      doc['firstUser.picture'].value, doc['firstUser.timestamp'].value];
+                    return [doc['firstUser.id'].value, doc['firstUser.name.keyword'].value, doc['firstUser.picture'].value];
                   }
                 """,
                 "params": { "currUserId": currUserId }
