@@ -90,7 +90,7 @@ class Usr extends Equatable {
       "name": name,
       "picture": picture,
       if (!isFriendshipsInvitesIndexCopy) "bio": bio,
-      "timestamp": timestamp.toDate().toIso8601String()
+      if (!isFriendshipsInvitesIndexCopy)"timestamp": timestamp.toDate().toIso8601String()
     };
   }
 
@@ -115,8 +115,7 @@ class Usr extends Equatable {
       email: "",
       name: docList[1] as String,
       picture: docList[2] as String,
-      bio: "",
-      timestamp: Timestamp.fromDate(DateTime.parse(docList[3] as String))
+      bio: ""
     );
   }
 }
