@@ -15,9 +15,7 @@ import '../cubits/staged_members_cubit.dart';
 import '../util/picture_util.dart';
 
 class NewGroupPage extends StatefulWidget {
-  final String currUserId;
-
-  const NewGroupPage(this.currUserId, {super.key});
+  const NewGroupPage({super.key});
 
   @override
   State<NewGroupPage> createState() => _NewGroupPageState();
@@ -92,10 +90,10 @@ class _NewGroupPageState extends State<NewGroupPage> {
               actions: [
                 IconButton(
                   onPressed: () {
-                    var newMembersIds = context.read<StagedMembersCubit>().state.map((user) => user.id).toList();
-                    newMembersIds.add(context.read<UsrBloc>().state.user!.id);
+                    var newMembers = context.read<StagedMembersCubit>().state;
+                    newMembers.add(context.read<UsrBloc>().state.user!);
 
-                    context.read<RoomOperationsBloc>().add(CreateGroupChatRoom(selectedGroupName, selectedImagePath, newMembersIds));
+                    context.read<RoomOperationsBloc>().add(CreateGroupChatRoom(selectedGroupName, selectedImagePath, newMembers));
 
                     Navigator.pop(context);
                   },
@@ -104,21 +102,50 @@ class _NewGroupPageState extends State<NewGroupPage> {
                 ),
               ]
             ),
-        
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 0,
-                  bottom: 6
-                ),
-                child: Divider(
-                  color: Theme.of(context).colorScheme.tertiary
-                )
-              )
+
+            // Chosen members info
+            BlocBuilder<StagedMembersCubit, List<Usr>>(
+              builder: (context, stagedMembers) {
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        border: Border.symmetric(
+                          horizontal: BorderSide(
+                            color: Theme.of(context).colorScheme.tertiary
+                          )
+                        )
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Chosen Members",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.inversePrimary
+                              )
+                            ),
+                        
+                            // Members amount
+                            Text(
+                              stagedMembers.length.toString(),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.secondary
+                              )
+                            )
+                          ]
+                        )
+                      )
+                    )
+                  )
+                );
+              }
             ),
-        
+
             // Added members
             BlocBuilder<StagedMembersCubit, List<Usr>>(
               builder: (context, stagedMembers) {
@@ -148,9 +175,9 @@ class _NewGroupPageState extends State<NewGroupPage> {
             showSearch(
               context: context,
               delegate: SearchBarDelegate(
-                searchTarget: SearchTarget.members,
-                currUserId: widget.currUserId,
+                searchTarget: SearchTarget.newGroupMembers,
                 searchBloc: context.read<SearchBloc>(),
+                usrBloc: context.read<UsrBloc>(),
                 stagedMembersCubit: context.read<StagedMembersCubit>()
               )
             );

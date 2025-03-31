@@ -46,10 +46,9 @@ class _SearchAppBarState extends State<SearchAppBar> {
               context: context,
               delegate: SearchBarDelegate(
                 searchTarget: widget.searchTarget,
-                currUserId: context.read<UsrBloc>().state.user!.id,
                 searchBloc: context.read<SearchBloc>(),
-                invOpsBloc: context.read<InvitesOperationsBloc>(),
-                usrBloc: context.read<UsrBloc>()
+                usrBloc: context.read<UsrBloc>(),
+                invOpsBloc: (widget.searchTarget == SearchTarget.users) ? context.read<InvitesOperationsBloc>() : null
               )
             );
           },
