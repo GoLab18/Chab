@@ -6,14 +6,14 @@ import '../blocs/search_bloc/search_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../cubits/staged_members_cubit.dart';
 import 'tiles/add_group_member_tile.dart';
+import 'tiles/room_search_tile.dart';
 import 'tiles/user_with_invite_tile.dart';
 
 class SearchBarDelegate extends SearchDelegate {
   final SearchTarget searchTarget;
-  final String currUserId;
   final SearchBloc searchBloc;
+  final UsrBloc usrBloc;
   final InvitesOperationsBloc? invOpsBloc; // Needed only for friends searching
-  final UsrBloc? usrBloc;
   final StagedMembersCubit? stagedMembersCubit; // For managing staged members to add to new group
 
   bool isInitialSearch = true;
@@ -23,10 +23,9 @@ class SearchBarDelegate extends SearchDelegate {
 
   SearchBarDelegate({
     required this.searchTarget,
-    required this.currUserId,
     required this.searchBloc,
+    required this.usrBloc,
     this.invOpsBloc,
-    this.usrBloc,
     this.stagedMembersCubit
   });
 
@@ -83,9 +82,7 @@ class SearchBarDelegate extends SearchDelegate {
       return Center(child: Text("Search :)", style: TextStyle(color: Theme.of(context).colorScheme.inversePrimary)));
     }
     
-    if (isInitialSearch) isInitialSearch = false;
-
-    searchBloc.add(SearchQuery(currUserId, searchTarget, query, null, stagedMembersCubit?.state.map((usr) => usr.id).toList()));
+    searchBloc.add(SearchQuery(usrBloc.state.user!.id, searchTarget, query, null, stagedMembersCubit?.state.map((usr) => usr.id).toList()));
 
     scrollListener ??= () => _fetchMore();
     scrollController.addListener(scrollListener!); // TODO maybe scroll controller should be inside to rebuild on each rebuild (?)
@@ -98,6 +95,7 @@ class SearchBarDelegate extends SearchDelegate {
         bloc: searchBloc,
         builder: (context, state) {
           if (isInitialSearch || state.status == SearchStatus.loading) {
+            if (isInitialSearch) isInitialSearch = false;
             return Center(child: const CircularProgressIndicator());
           } else if (state.status == SearchStatus.success) {
             return listViewForSearchTarget(state, context);
@@ -112,10 +110,10 @@ class SearchBarDelegate extends SearchDelegate {
               )
             );
           }
-      
+
           throw Exception("Non-existent search_bloc state");
         }
-      ),
+      )
     );
   }
 
@@ -125,7 +123,7 @@ class SearchBarDelegate extends SearchDelegate {
       && searchBloc.state.status == SearchStatus.success
     ) {
       searchBloc.add(
-        SearchQuery(currUserId, searchTarget, query, searchBloc.state.results, stagedMembersCubit?.state.map((usr) => usr.id).toList())
+        SearchQuery(usrBloc.state.user!.id, searchTarget, query, searchBloc.state.results, stagedMembersCubit?.state.map((usr) => usr.id).toList())
       );
     }
   }
@@ -147,14 +145,14 @@ class SearchBarDelegate extends SearchDelegate {
               state.results.$2[index]?.$1,
               state.results.$2[index]?.$2,
               invOpsBloc!,
-              usrBloc!
+              usrBloc
             );
           } else {
             return Center(child: const CircularProgressIndicator());
           }
         }
       ),
-      SearchTarget.members => ListView.builder(
+      SearchTarget.newGroupMembers => ListView.builder(
         cacheExtent: cacheExtent,
         controller: scrollController,
         physics: AlwaysScrollableScrollPhysics(),
@@ -175,8 +173,27 @@ class SearchBarDelegate extends SearchDelegate {
           }
         }
       ),
-      SearchTarget.chatRooms => throw UnimplementedError(), // TODO: Handle this case.
-      SearchTarget.messages => throw UnimplementedError()   // TODO: Handle this case.
+      SearchTarget.chatRooms => ListView.builder(
+        cacheExtent: cacheExtent,
+        controller: scrollController,
+        physics: AlwaysScrollableScrollPhysics(),
+        itemCount: state.results.length + (state.status == SearchStatus.loading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index < state.results.length) {
+            return RoomSearchTile(
+              key: ValueKey(state.results[index].$1.id),
+              room: state.results[index].$1,
+              username: state.results[index].$2,
+              userPicUrl: state.results[index].$3,
+              usrBloc: usrBloc
+            );
+          } else {
+            return Center(child: const CircularProgressIndicator());
+          }
+        }
+      ),
+      SearchTarget.messages => throw UnimplementedError(),   // TODO: Handle this case.
+      SearchTarget.groupMembers => throw UnimplementedError()   // TODO: Handle this case.
     };
 
   }

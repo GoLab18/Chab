@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:room_repository/room_repository.dart';
 import 'package:user_repository/user_repository.dart';
 
 part 'search_event.dart';
@@ -7,9 +8,11 @@ part 'search_state.dart';
 
 class SearchBloc extends Bloc<SearchEvent, SearchState> {
   final FirebaseUserRepository userRepository;
+  final FirebaseRoomRepository roomRepository;
 
   SearchBloc({
-    required this.userRepository
+    required this.userRepository,
+    required this.roomRepository
   }) : super(SearchState.loading()) {
     on<SearchQuery>((event, emit) async {
       switch (event.searchTarget) {
@@ -37,7 +40,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
 
           break;
         
-        case SearchTarget.members:
+        case SearchTarget.newGroupMembers:
           try {
             final (membersSuggestions, pitId, searchAfterContent) = 
               await userRepository.searchForNewGroupMembers(event.query, event.userId, event.alreadyAddedUsers, null, []);
@@ -58,10 +61,29 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
           break;
         
         case SearchTarget.chatRooms:
-          // TODO
+          try {
+            final (chatRooms, pitId, searchAfterContent) = await roomRepository.searchChatRooms(event.query, event.userId, null, []);
+            
+            List<(Room, String, String)> rooms;
+            if (event.previousResults != null) {
+              rooms = event.previousResults;
+              rooms.addAll(chatRooms);
+            } else {
+              rooms = chatRooms;
+            }
+
+            emit(SearchState.success(rooms, pitId, searchAfterContent));
+          } catch (_) {
+            emit(SearchState.failure());
+          }
+
           break;
         
         case SearchTarget.messages:
+          // TODO
+          break;
+        
+        case SearchTarget.groupMembers:
           // TODO
           break;
       }

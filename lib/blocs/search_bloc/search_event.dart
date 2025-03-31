@@ -4,7 +4,8 @@ enum SearchTarget {
   users,
   chatRooms,
   messages,
-  members
+  newGroupMembers,
+  groupMembers
 }
 
 sealed class SearchEvent extends Equatable {

@@ -6,7 +6,7 @@ enum SearchStatus {
   failure
 }
 
-class SearchState {
+class SearchState extends Equatable {
   final SearchStatus status;
   final dynamic results;
   final String? pitId;
@@ -25,4 +25,7 @@ class SearchState {
       : this(status: SearchStatus.success, results: r, pitId: pi, searchAfterContent: sac);
 
     const SearchState.failure() : this(status: SearchStatus.failure);
+    
+      @override
+      List<Object?> get props => [status, results, pitId, searchAfterContent];
 }
