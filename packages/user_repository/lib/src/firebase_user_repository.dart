@@ -347,7 +347,7 @@ class FirebaseUserRepository {
           snapshot.docs.map((doc) => doc.id).toList()
         )
         .asyncExpand((List<String> roomMembersIds) =>
-          roomMembersIds.isEmpty  
+          roomMembersIds.isEmpty
             ? Stream.value(<String, Usr>{})
             : usersCollection
             .where(FieldPath.documentId, whereIn: roomMembersIds)
@@ -685,7 +685,10 @@ class FirebaseUserRepository {
       );
 
       List<dynamic> uHits = uSearchRes.data["hits"]["hits"];
-      if (uHits.isEmpty) return ((<Usr>[], <(Invite, Friendship?)?>[]), userPitId!, searchAfterContent);
+      if (uHits.isEmpty) {
+        log.i("Elasticsearch users fetching successful -> no values found");
+        return ((<Usr>[], <(Invite, Friendship?)?>[]), userPitId!, searchAfterContent);
+      }
 
       List<String> userIds = uHits.map((hit) => hit["_source"]["id"] as String).toList();
 
@@ -787,52 +790,66 @@ class FirebaseUserRepository {
           },
           "query": {
             "bool": {
-              "should": [
-                { "match": { "firstUser.name": query } },
-                { "match": { "secondUser.name": query } }
-              ],
-              "minimum_should_match": 1,
-              "must_not": [
+              "must": [
                 {
                   "bool": {
-                    "must_not": [
-                      {
-                        "bool": {
-                          "must": [
-                            { "match": { "firstUser.name": query } },
-                            { "match": { "secondUser.name": query } },
-                          ]
-                        }
-                      }
-                    ],
-                    "must": [
+                    "should": [
                       { "match": { "firstUser.name": query } },
-                      { "terms": { "firstUser.id": [currUserId] } }
+                      { "match": { "secondUser.name": query } }
+                    ],
+                    "minimum_should_match": 1,
+                    "must_not": [
+                      {
+                        "bool": {
+                          "must_not": [
+                            {
+                              "bool": {
+                                "must": [
+                                  { "match": { "firstUser.name": query } },
+                                  { "match": { "secondUser.name": query } },
+                                ]
+                              }
+                            }
+                          ],
+                          "must": [
+                            { "match": { "firstUser.name": query } },
+                            { "term": { "firstUser.id": currUserId } }
+                          ]
+                        }
+                      },
+                      {
+                        "bool": {
+                          "must_not": [
+                            {
+                              "bool": {
+                                "must": [
+                                  { "match": { "firstUser.name": query } },
+                                  { "match": { "secondUser.name": query } },
+                                ]
+                              }
+                            }
+                          ],
+                          "must": [
+                            { "match": { "secondUser.name": query } },
+                            { "term": { "secondUser.id": currUserId } }
+                          ]
+                        }
+                      },
+                      if (alreadyAddedUsers != null) ...[
+                        { "terms": { "firstUser.id": alreadyAddedUsers } },
+                        { "terms": { "secondUser.id": alreadyAddedUsers } }
+                      ]
                     ]
                   }
                 },
                 {
                   "bool": {
-                    "must_not": [
-                      {
-                        "bool": {
-                          "must": [
-                            { "match": { "firstUser.name": query } },
-                            { "match": { "secondUser.name": query } },
-                          ]
-                        }
-                      }
-                    ],
-                    "must": [
-                      { "match": { "secondUser.name": query } },
-                      { "terms": { "secondUser.id": [currUserId] } }
+                    "should": [
+                      { "term": { "firstUser.id": currUserId } },
+                      { "term": { "secondUser.id": currUserId } }
                     ]
                   }
-                },
-                if (alreadyAddedUsers != null) ...[
-                  { "terms": { "firstUser.id": alreadyAddedUsers } },
-                  { "terms": { "secondUser.id": alreadyAddedUsers } }
-                ]
+                }
               ]
             }
           },
@@ -869,7 +886,7 @@ class FirebaseUserRepository {
                   "params": { "currUserId": currUserId },
                 },
                 "order": "asc"
-              },
+              }
             },
             { "id": "asc" } // For uniqueness
           ],
@@ -878,7 +895,10 @@ class FirebaseUserRepository {
       );
 
       List<dynamic> uHits = uSearchRes.data["hits"]["hits"];
-      if (uHits.isEmpty) return (<Usr>[], pitId!, searchAfterContent);
+      if (uHits.isEmpty) {
+        log.i("Searching for new group members successful -> no values found");
+        return (<Usr>[], pitId!, searchAfterContent);
+      }
 
       List<Usr> usrMatches = uHits.map((hit) => Usr.fromEsListCopy(hit["fields"]["friend"])).toList();
 
