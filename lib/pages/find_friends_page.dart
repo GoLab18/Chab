@@ -7,13 +7,12 @@ import '../blocs/invites_operations_bloc/invites_operations_bloc.dart';
 import '../blocs/invites_bloc/invites_bloc.dart';
 import '../blocs/room_operations_bloc/room_operations_bloc.dart';
 import '../blocs/search_bloc/search_bloc.dart';
+import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/app_bars/search_app_bar.dart';
 import '../components/is_empty_message_widget.dart';
 
 class FindFriendsPage extends StatefulWidget {
-  final String currentUserId;
-
-  const FindFriendsPage(this.currentUserId, {super.key});
+  const FindFriendsPage({super.key});
 
   @override
   State<FindFriendsPage> createState() => _FindFriendsPageState();
@@ -117,8 +116,8 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                                 && state.invStatus == InviteStatus.accepted
                               ) {
                                 context.read<RoomOperationsBloc>().add(CreatePrivateChatRoom(
-                                  widget.currentUserId,
-                                  state.fromUserId!
+                                  context.read<UsrBloc>().state.user!,
+                                  state.fromUser!
                                 ));
                               }
                             },
@@ -168,10 +167,10 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
           foregroundColor: Theme.of(context).colorScheme.inversePrimary,
           shape: const CircleBorder(),
           onPressed: () => {
-            // TODO
+            // TODO delete all sent invites at once
           },
           child: const Icon(
-            Icons.add
+            Icons.delete_outline_outlined
           ),
         )
         : null,

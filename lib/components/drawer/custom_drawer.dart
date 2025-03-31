@@ -60,10 +60,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
       MaterialPageRoute(
         builder: (BuildContext pageContext) => MultiBlocProvider(
           providers: [
-            BlocProvider(
-              create: (context) => SearchBloc(
-                userRepository: context.read<FirebaseUserRepository>()
-              )
+            BlocProvider.value(
+              value: context.read<SearchBloc>()
             ),
             BlocProvider(
               create: (context) => StagedMembersCubit(),
@@ -77,7 +75,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
               )
             )
           ],
-          child: NewGroupPage(context.read<UsrBloc>().state.user!.id)
+          child: const NewGroupPage()
         )
       )
     );
@@ -87,17 +85,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
     Navigator.pop(context);
 
     FirebaseUserRepository fuRepo = context.read<FirebaseUserRepository>();
-    String userId = context.read<UsrBloc>().state.user!.id;
 
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (BuildContext pageContext) => MultiBlocProvider(
           providers: [
-            BlocProvider(
-              create: (context) => SearchBloc(
-                userRepository: context.read<FirebaseUserRepository>()
-              )
+            BlocProvider.value(
+              value: context.read<SearchBloc>()
             ),
             BlocProvider.value(
               value: context.read<UsrBloc>()
@@ -105,7 +100,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             BlocProvider(
               create: (context) => InvitesBloc(
                 userRepository: fuRepo
-              )..add(InvitesEvent(userId))
+              )..add(InvitesEvent(context.read<UsrBloc>().state.user!.id))
             ),
             BlocProvider(
               create: (context) => InvitesOperationsBloc(
@@ -118,7 +113,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
               )
             )
           ],
-          child: FindFriendsPage(userId)
+          child: FindFriendsPage()
         )
       )
     );
