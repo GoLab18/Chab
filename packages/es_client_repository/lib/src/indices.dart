@@ -6,11 +6,35 @@ const indices = {
     },
     "mappings": {
       "dynamic": "strict",
-      "properties": userProperties
+      "properties": {
+        "bio": {
+          "type": "text",
+          "norms": false
+        },
+        "email": {
+          "type": "keyword"
+        },
+        "id": notSearchedStringMapping,
+        "name": {
+          "type": "text",
+          "search_analyzer": "standard",
+          "analyzer": "autocomplete",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
+        },
+        "picture": notSearchedStringMapping,
+        "timestamp": {
+          "type": "date"
+        }
+      }
     }
   },
 
 
+  // Holds denormalized members data directly if a private chat room.
   "rooms": {
     "settings": {
       "analysis": analysisEdgeNgram
@@ -44,6 +68,36 @@ const indices = {
         },
         "picture": notSearchedStringMapping,
         "timestamp": {
+          "type": "date"
+        },
+
+        // Stored only when the room is private.
+        "firstMember": {
+          "properties": denormalizedUserProperties
+        },
+        "secondMember": {
+          "properties": denormalizedUserProperties
+        }
+      }
+    }
+  },
+
+
+  // Only holds group chat rooms members.
+  // Field userId is omitted for elasticsearch storage.
+  // _id field is equal to `<room_id><member_id>`
+  "members": {
+    "settings": {
+      "analysis": analysisEdgeNgram
+    },
+    "mappings": {
+      "dynamic": "strict",
+      "properties": {
+        "roomId": notSearchedStringMapping,
+        "member": {
+          "properties": denormalizedUserProperties
+        },
+        "kickOutTime": {
           "type": "date"
         }
       }
@@ -97,42 +151,10 @@ const indices = {
         // Friendships related.
         // Will only be included when the friendship is settled.
         "firstUser": {
-          "properties": { // Important ones taken from users index
-            "id": notSearchedStringMapping,
-            "name": {
-              "type": "text",
-              "search_analyzer": "standard",
-              "analyzer": "autocomplete",
-              "fields": {
-                "keyword": {
-                  "type": "keyword"
-                }
-              }
-            },
-            "picture": notSearchedStringMapping,
-            "timestamp": {
-              "type": "date"
-            }
-          }
+          "properties": denormalizedUserProperties
         },
         "secondUser": {
-          "properties": { // Important ones taken from users index
-            "id": notSearchedStringMapping,
-            "name": {
-              "type": "text",
-              "search_analyzer": "standard",
-              "analyzer": "autocomplete",
-              "fields": {
-                "keyword": {
-                  "type": "keyword"
-                }
-              }
-            },
-            "picture": notSearchedStringMapping,
-            "timestamp": {
-              "type": "date"
-            }
-          }
+          "properties": denormalizedUserProperties
         },
         "since": {
           "type": "date"
@@ -167,14 +189,7 @@ const notSearchedStringMapping = {
   "norms": false
 };
 
-const userProperties = {
-  "bio": {
-    "type": "text",
-    "norms": false
-  },
-  "email": {
-    "type": "keyword"
-  },
+const denormalizedUserProperties = {
   "id": notSearchedStringMapping,
   "name": {
     "type": "text",
@@ -186,8 +201,5 @@ const userProperties = {
       }
     }
   },
-  "picture": notSearchedStringMapping,
-  "timestamp": {
-    "type": "date"
-  }
+  "picture": notSearchedStringMapping
 };
