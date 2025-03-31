@@ -52,57 +52,54 @@ class _AddGroupMemberTileState extends State<AddGroupMemberTile> {
                   child: Padding(
                     padding: const EdgeInsets.only(
                       left: 10,
-                      top: 2,
-                      bottom: 2
+                      top: 16,
+                      bottom: 16
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Username
-                          Flexible(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 14),
-                              child: Text(
-                                widget.user.name,
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.inversePrimary
-                                )
-                              )
-                            )
-                          ),
-
-                          if (!isAdded) IconButton.filled(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            onPressed: () {
-                              widget.onButtonInvoked(widget.user);
-
-                              if (widget.isMemberSubjectToAddition) {
-                                setState(() {
-                                  isAdded = true;
-                                });
-                              }
-                            },
-                            icon: Icon(
-                              widget.callbackIcon,
-                              size: 18,
-                              color: Theme.of(context).colorScheme.inversePrimary
-                            )
-                          ),
-
-                          if (isAdded) Padding(
-                            padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Username
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 14),
                             child: Text(
-                              "Added",
+                              widget.user.name,
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary
+                                color: Theme.of(context).colorScheme.inversePrimary
                               )
-                            ),
+                            )
                           )
-                        ]
-                      )
+                        ),
+                    
+                        if (!isAdded) IconButton.filled(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          onPressed: () {
+                            widget.onButtonInvoked(widget.user);
+                    
+                            if (widget.isMemberSubjectToAddition) {
+                              setState(() {
+                                isAdded = true;
+                              });
+                            }
+                          },
+                          icon: Icon(
+                            widget.callbackIcon,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.inversePrimary
+                          )
+                        ),
+                    
+                        if (isAdded) Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            "Added",
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary
+                            )
+                          )
+                        )
+                      ]
                     )
                   )
                 )
