@@ -181,10 +181,11 @@ class SearchBarDelegate extends SearchDelegate {
         itemBuilder: (context, index) {
           if (index < state.results.length) {
             return RoomSearchTile(
-              key: ValueKey(state.results[index].$1.id),
-              room: state.results[index].$1,
-              username: state.results[index].$2,
-              userPicUrl: state.results[index].$3,
+              key: ValueKey(state.results[index].$1),
+              roomId: state.results[index].$1,
+              isPrivate: state.results[index].$2,
+              name: state.results[index].$3,
+              picUrl: state.results[index].$4,
               usrBloc: usrBloc
             );
           } else {

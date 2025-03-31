@@ -11,16 +11,18 @@ import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../pages/chat_room_page.dart';
 
 class RoomSearchTile extends StatelessWidget {
-  final Room room;
-  final String? username;
-  final String? userPicUrl;
+  final String roomId;
+  final bool isPrivate;
+  final String name;
+  final String? picUrl;
   final UsrBloc usrBloc;
 
   const RoomSearchTile({
     super.key,
-    required this.room,
-    this.username,
-    this.userPicUrl,
+    required this.roomId,
+    required this.isPrivate,
+    required this.name,
+    this.picUrl,
     required this.usrBloc
   });
 
@@ -40,18 +42,18 @@ class RoomSearchTile extends StatelessWidget {
                 create: (_) => RoomMembersBloc(
                   userRepository: context.read<FirebaseUserRepository>()
                 )..add(
-                  room.isPrivate
+                  isPrivate
                     ? PrivateChatRoomMembersRequested(
-                      roomId: room.id,
+                      roomId: roomId,
                       currentUserId: usrBloc.state.user!.id
                     )
-                    : GroupChatRoomMembersRequested(room.id)
+                    : GroupChatRoomMembersRequested(roomId)
                 )
               ),
               BlocProvider(
                 create: (_) => RoomBloc(
                   roomRepository: context.read<FirebaseRoomRepository>()
-                )..add(RoomRequested(room.id))
+                )..add(RoomRequested(roomId))
               ),
               BlocProvider(
                 create: (BuildContext messageBlocContext) => MessageBloc(
@@ -61,7 +63,7 @@ class RoomSearchTile extends StatelessWidget {
               BlocProvider(
                 create: (BuildContext messagesBlocContext) => MessagesBloc(
                   roomRepository: context.read<FirebaseRoomRepository>()
-                )..add(MessagesRequested(room.id))
+                )..add(MessagesRequested(roomId))
               )
             ],
             child: const ChatRoomPage()
@@ -78,14 +80,9 @@ class RoomSearchTile extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  foregroundImage: switch (room.isPrivate) {
-                    true => (userPicUrl != null && userPicUrl!.isNotEmpty)
-                      ? NetworkImage(userPicUrl!)
-                      : null,
-                    false => (room.picture != null && room.picture!.isNotEmpty)
-                      ? NetworkImage(room.picture!)
-                      : null,
-                  },
+                  foregroundImage: (picUrl != null && picUrl!.isNotEmpty)
+                    ? NetworkImage(picUrl!)
+                    : null,
                   backgroundColor: Theme.of(context).colorScheme.tertiary,
                   child: Icon(
                     Icons.person_outlined,
@@ -105,13 +102,21 @@ class RoomSearchTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          (room.isPrivate)
-                            ? username!
-                            : room.name!,
+                          name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.inversePrimary,
+                          )
+                        ),
+
+                        Text(
+                          (isPrivate) ? "Private chat" : "Group chat",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.tertiary
                           )
                         )
                       ]

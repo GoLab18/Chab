@@ -64,7 +64,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
           try {
             final (chatRooms, pitId, searchAfterContent) = await roomRepository.searchChatRooms(event.query, event.userId, null, []);
             
-            List<(Room, String, String)> rooms;
+            List<(String, bool, String, String)> rooms;
             if (event.previousResults != null) {
               rooms = event.previousResults;
               rooms.addAll(chatRooms);
