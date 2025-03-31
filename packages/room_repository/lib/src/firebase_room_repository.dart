@@ -135,8 +135,9 @@ class FirebaseRoomRepository {
   /// If [isPrivate] equals true then the newly created room is a private chat room.
   /// Else it is a group chat room room.
   /// [roomName] can be set for group chat room creation.
+  /// [privateRoomMembers] has to be provided for private rooms.
   /// Returns a [String] room id.
-  Future<String> createRoom(bool isPrivate, [String? roomName]) async {
+  Future<String> createRoom(bool isPrivate, [String? roomName, List<Map<String, dynamic>>? privateRoomMembers]) async {
     log.i("createRoom() invoked...");
 
     try {  
@@ -148,10 +149,21 @@ class FirebaseRoomRepository {
 
       await roomRef.set(room.toDocument());
 
-      await esClient.put(
-        "/rooms/_doc/${room.id}",
-        data: room.toEsObject()
-      );
+      if (isPrivate) {
+        await esClient.put(
+          "/rooms/_doc/${room.id}",
+          data: room.toEsObject()..addAll({
+            "firstMember": privateRoomMembers![0],
+            "secondMember": privateRoomMembers[1]
+          })
+        );
+      } else {
+        await esClient.put(
+          "/rooms/_doc/${room.id}",
+          data: room.toEsObject()
+        );
+      }
+
 
       log.i("Room creation successful, room id: ${roomRef.id}");
       return roomRef.id;
@@ -186,6 +198,8 @@ class FirebaseRoomRepository {
         SetOptions(merge: true)
       );
 
+      await batch.commit();
+
       var ndjsonData = [
         { "index": { "_index": "messages", "_id": msg.id } },
         msg.toEsObject(),
@@ -199,8 +213,6 @@ class FirebaseRoomRepository {
           }
         }
       ];
-
-      await batch.commit();
 
       await esClient.post(
         "/_bulk",
@@ -333,40 +345,64 @@ class FirebaseRoomRepository {
   }
 
   /// Adds members to the room.
-  /// If [newMembersIds] is equal to one, only one member gets added.
-  /// [isGroupChatRoom] flag is for storing additional data for each member. 
-  /// Throws on an empty [newMembersIds] list.
-  Future<void> addMembersToRoom(bool isGroupChatRoom, String roomId, List<String> newMembersIds) async {
+  /// If [newMembersIds] is equal to one, only one member gets added, otherwise it is handled with bulk requests.
+  /// [newMembers] is optional, used for denormalization in elasticsearch and should be null if private chat room is handled.
+  Future<void> addMembersToRoom(String roomId, List<String> newMembersIds, [List<Map<String, dynamic>>? newMembers]) async {
     log.i("addMembersToRoom() invoked...");
 
     try {
-      if (newMembersIds.isEmpty) throw Exception("newMembersId list cannot be empty");
+      if (newMembersIds.isEmpty) throw Exception("newMembersId list can't be empty");
 
       CollectionReference<Map<String, dynamic>> membersRef = roomsCollection.doc(roomId).collection("members");
 
       if (newMembersIds.length == 1) {
         await membersRef.doc(newMembersIds[0]).set({
           "roomId": roomId,
-          "userId": newMembersIds[0],
-          if (isGroupChatRoom) "isMemberStill": true        // TODO what about this isMemberStill (?)
+          "userId": newMembersIds[0]
         });
 
-        log.i("Adding members to room with id \"$roomId\" successful");
-        return;
+        if (newMembers != null) {
+          esClient.put(
+            "/members/_doc/$roomId${newMembersIds[0]}",
+            data: {
+              "roomId": roomId,
+              "member": newMembers[0]
+            }
+          );
+        }
+      } else {
+        WriteBatch batch = FirebaseFirestore.instance.batch();
+
+        List<Map<String, dynamic>> ndjsonData = [];
+
+        for (int i = 0; i < newMembersIds.length; i++) {
+          DocumentReference<Map<String, dynamic>> newMemberRef = membersRef.doc(newMembersIds[i]);
+          
+          batch.set(newMemberRef, {
+            "roomId": roomId,
+            "userId": newMembersIds[i]
+          });
+
+          if (newMembers != null) {
+            ndjsonData.addAll([
+              { "index": { "_index": "members", "_id": newMembersIds[i] } },
+              newMembers[i]
+            ]);
+          }
+        }
+
+        await batch.commit();
+
+        if (newMembers != null) {
+          await esClient.post(
+            "/_bulk",
+            data: "${ndjsonData.map(jsonEncode).join("\n")}\n",
+            options: Options(
+              headers: { "Content-Type": "application/x-ndjson" }
+            )
+          );
+        }
       }
-
-      WriteBatch batch = FirebaseFirestore.instance.batch();
-
-      for (String memberId in newMembersIds) {
-        DocumentReference<Map<String, dynamic>> newMemberRef = membersRef.doc(memberId);
-        
-        batch.set(newMemberRef, {
-          "roomId": roomId,
-          "userId": memberId
-        });
-      }
-
-      await batch.commit();
 
       log.i("Adding members to room with id \"$roomId\" successful");
     } catch (e) {
