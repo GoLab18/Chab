@@ -174,6 +174,9 @@ class FirebaseUserRepository {
       );
       
       log.i("Adding user: $user successful");
+    } on DioException catch (e) {
+      log.e("Adding user: $user failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Adding user: $user failed: $e");
       throw Exception(e);
@@ -230,6 +233,9 @@ class FirebaseUserRepository {
       );
 
       log.i("Setting user data with id: \"${user.id}\" successful");
+    } on DioException catch (e) {
+      log.e("Setting user data with id: \"${user.id}\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Setting user data with id: \"${user.id}\" failed: $e");
       throw Exception(e);
@@ -295,6 +301,9 @@ class FirebaseUserRepository {
 
       log.i("Uploading profile picture for user with id: \"$userId\" successful");
       return picUrl;
+    } on DioException catch (e) {
+      log.e("Uploading profile picture for user with id: \"$userId\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Uploading profile picture for user with id: \"$userId\" failed: $e");
       throw Exception(e);
@@ -327,6 +336,9 @@ class FirebaseUserRepository {
       log.i("Fetching private chat room friend with id: \"$roomId\" successful");
 
       return r;
+    } on DioException catch (e) {
+      log.e("Fetching private chat room friend with id: \"$roomId\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Fetching private chat room friend with id: \"$roomId\" failed: $e");
       throw Exception(e);
@@ -511,6 +523,9 @@ class FirebaseUserRepository {
       );
 
       log.i("Invite from user with id: \"${invite.fromUser}\", to user with id: \"${invite.toUser}\", creation successful");
+    } on DioException catch (e) {
+      log.e("Invite from user with id: \"${invite.fromUser}\", to user with id: \"${invite.toUser}\", creation failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Invite from user with id: \"${invite.fromUser}\", to user with id: \"${invite.toUser}\", creation failed: $e");
       throw Exception(e);
@@ -564,6 +579,9 @@ class FirebaseUserRepository {
       );
 
       log.i("Invite status update with id: \"$inviteId\" successful");
+    } on DioException catch (e) {
+      log.e("Invite status update with id: \"$inviteId\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Invite status update with id: \"$inviteId\" failed: $e");
       throw Exception(e);
@@ -584,6 +602,9 @@ class FirebaseUserRepository {
       if (!isInviteTransformedToFriendship) await esClient.delete("/friendships_invites/_doc/$inviteId");
 
       log.i("Invite deletion with id: \"$inviteId\" successful");
+    } on DioException catch (e) {
+      log.e("Invite deletion with id: \"$inviteId\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Invite deletion with id: \"$inviteId\" failed: $e");
       throw Exception(e);
@@ -631,6 +652,9 @@ class FirebaseUserRepository {
       );
 
       log.i("Friendship deletion of users with ids: \"$usrId1\" \"$usrId2\" successful");
+    } on DioException catch (e) {
+      log.e("Friendship deletion of users with ids: \"$usrId1\" \"$usrId2\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Friendship deletion of users with ids: \"$usrId1\" \"$usrId2\" failed: $e");
       throw Exception(e);
@@ -669,7 +693,7 @@ class FirebaseUserRepository {
           "query": {
             "bool": {
               "must": [
-                { "match": { "name": query } }
+                { "match_phrase": { "name": query } }
               ],
               "must_not": [
                 { "term": { "id": currUserId } } // Current user excluded
@@ -751,6 +775,9 @@ class FirebaseUserRepository {
 
       log.i("Elasticsearch users fetching successful");
       return ((users, usersOrderInvFr), userPitId!, searchAfterContent);
+    } on DioException catch (e) {
+      log.e("Searching for users failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Searching for users failed: $e");
       throw Exception(e);
@@ -794,8 +821,8 @@ class FirebaseUserRepository {
                 {
                   "bool": {
                     "should": [
-                      { "match": { "firstUser.name": query } },
-                      { "match": { "secondUser.name": query } }
+                      { "match_phrase": { "firstUser.name": query } },
+                      { "match_phrase": { "secondUser.name": query } }
                     ],
                     "minimum_should_match": 1,
                     "must_not": [
@@ -805,14 +832,14 @@ class FirebaseUserRepository {
                             {
                               "bool": {
                                 "must": [
-                                  { "match": { "firstUser.name": query } },
-                                  { "match": { "secondUser.name": query } },
+                                  { "match_phrase": { "firstUser.name": query } },
+                                  { "match_phrase": { "secondUser.name": query } },
                                 ]
                               }
                             }
                           ],
                           "must": [
-                            { "match": { "firstUser.name": query } },
+                            { "match_phrase": { "firstUser.name": query } },
                             { "term": { "firstUser.id": currUserId } }
                           ]
                         }
@@ -823,14 +850,14 @@ class FirebaseUserRepository {
                             {
                               "bool": {
                                 "must": [
-                                  { "match": { "firstUser.name": query } },
-                                  { "match": { "secondUser.name": query } },
+                                  { "match_phrase": { "firstUser.name": query } },
+                                  { "match_phrase": { "secondUser.name": query } },
                                 ]
                               }
                             }
                           ],
                           "must": [
-                            { "match": { "secondUser.name": query } },
+                            { "match_phrase": { "secondUser.name": query } },
                             { "term": { "secondUser.id": currUserId } }
                           ]
                         }
@@ -906,6 +933,9 @@ class FirebaseUserRepository {
 
       log.i("Searching for new group members successful");
       return (usrMatches, pitId!, searchAfterContent);
+    } on DioException catch (e) {
+      log.e("Searching for new group members failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Searching for new group members failed: $e");
       throw Exception(e);

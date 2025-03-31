@@ -167,6 +167,9 @@ class FirebaseRoomRepository {
 
       log.i("Room creation successful, room id: ${roomRef.id}");
       return roomRef.id;
+    } on DioException catch (e) {
+      log.e("Room creation failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Room creation failed: $e");
       throw Exception(e);
@@ -223,6 +226,9 @@ class FirebaseRoomRepository {
       );
 
       log.i("Adding message \"$message\" successful");
+    } on DioException catch (e) {
+      log.e("Adding message \"$message\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Adding message \"$message\" failed: $e");
       throw Exception(e);
@@ -245,6 +251,9 @@ class FirebaseRoomRepository {
       );
 
       log.i("Room update successful");
+    } on DioException catch (e) {
+      log.e("Room update failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Room update failed: $e");
       throw Exception(e);
@@ -281,6 +290,9 @@ class FirebaseRoomRepository {
       );
 
       log.i("Uploading room picture for room with id: \"$roomId\" successful");
+    } on DioException catch (e) {
+      log.e("Uploading room picture for room with id: \"$roomId\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Uploading room picture for room with id: \"$roomId\" failed: $e");
       throw Exception(e);
@@ -306,6 +318,9 @@ class FirebaseRoomRepository {
       // TODO might need to include lastMessageId in rooms data for that to work :|
 
       log.i("Message update successful");
+    } on DioException catch (e) {
+      log.e("Message update failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Message update failed: $e");
       throw Exception(e);
@@ -322,6 +337,9 @@ class FirebaseRoomRepository {
       await esClient.delete("/rooms/_doc/$roomId");
 
       log.i("Room deletion with id \"$roomId\" successful");
+    } on DioException catch (e) {
+      log.e("Room deletion with id \"$roomId\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Room deletion with id \"$roomId\" failed: $e");
       throw Exception(e);
@@ -338,6 +356,9 @@ class FirebaseRoomRepository {
       await esClient.delete("/messages/_doc/$messageId");
 
       log.i("Message deletion with id \"$messageId\" successful");
+    } on DioException catch (e) {
+      log.e("Message deletion with id \"$messageId\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Message deletion with id \"$messageId\" failed: $e");
       throw Exception(e);
@@ -405,8 +426,224 @@ class FirebaseRoomRepository {
       }
 
       log.i("Adding members to room with id \"$roomId\" successful");
+    } on DioException catch (e) {
+      log.e("Adding members to room with id \"$roomId\" failed: ${e.response}");
+      throw Exception(e);
     } catch (e) {
       log.e("Adding members to room with id \"$roomId\" failed: $e");
+      throw Exception(e);
+    }
+  }
+
+  /// Handles kicking out a member with id [memberId] out of a group chat room with id [roomId].
+  Future<void> kickOutRoomMember(String memberId, String roomId) async {
+    log.i("kickOutRoomMember() invoked...");
+
+    try {
+      var kickOutTimeDoc = { "kickOutTime": Timestamp.now() };
+
+      await roomsCollection.doc(roomId).collection("members").doc(memberId).update(kickOutTimeDoc);
+      
+      esClient.put(
+        "/members/_update/$roomId$memberId",
+        data: {
+          "doc": kickOutTimeDoc
+        }
+      );
+
+      log.i("Kicking out member with id \"$memberId\" from room with id \"$roomId\" successful");
+    } on DioException catch (e) {
+      log.e("Kicking out member with id \"$memberId\" from room with id \"$roomId\" failed: ${e.response}");
+      throw Exception(e);
+    } catch (e) {
+      log.e("Kicking out member with id \"$memberId\" from room with id \"$roomId\" failed: $e");
+      throw Exception(e);
+    }
+  }
+
+  /// Searches for rooms through elasticsearch by [query] using n-grams.
+  /// Pagination is allowed with [searchAfterContent] parameter that stores search_after.
+  /// If [pitId] is null, it will inject new PIT for data consistency.
+  /// Returns a tuple with [List] of [String] ids, isPrivate [bool]s, names and pictures urls of type [String].
+  /// Name and picture url values are dependent on whether the room is private or not (either room values or private chat room friend values).
+  /// On top of that PIT id and search_after content of type [List] of [String].
+  Future<(List<(String, bool, String, String)>, String, List<dynamic>?)> searchChatRooms(
+    String query,
+    String currUserId,
+    String? pitId,
+    List<dynamic>? searchAfterContent
+  ) async {
+    log.i("searchChatRooms() invoked...");
+    
+    try {
+      String keepAliveMinutes = "1m";
+      bool isInitial = pitId == null;
+
+      if (isInitial) {
+        var rPitRes = await esClient.post("/rooms/_pit?keep_alive=$keepAliveMinutes");
+        pitId = rPitRes.data["id"];
+      }
+
+      var rSearchRes = await esClient.get(
+        "/_search",
+        data: {
+          "size": 10,
+          "pit": {
+            "id": pitId,
+            "keep_alive": keepAliveMinutes
+          },
+          "query": {
+            "bool": {
+              "should": [
+                {
+                  "bool": {
+                    "must": [
+                      {
+                        "bool": {
+                          "must": [
+                            { "term": { "isPrivate": true } }
+                          ],
+                          "should": [
+                            { "match_phrase": { "firstMember.name": query } },
+                            { "match_phrase": { "secondMember.name": query } }
+                          ],
+                          "minimum_should_match": 1,
+                          "must_not": [
+                            {
+                              "bool": {
+                                "must_not": [
+                                  {
+                                    "bool": {
+                                      "must": [
+                                        { "match_phrase": { "firstMember.name": query } },
+                                        { "match_phrase": { "secondMember.name": query } },
+                                      ]
+                                    }
+                                  }
+                                ],
+                                "must": [
+                                  { "match_phrase": { "firstMember.name": query } },
+                                  { "term": { "firstMember.id": currUserId } }
+                                ]
+                              }
+                            },
+                            {
+                              "bool": {
+                                "must_not": [
+                                  {
+                                    "bool": {
+                                      "must": [
+                                        { "match_phrase": { "firstMember.name": query } },
+                                        { "match_phrase": { "secondMember.name": query } },
+                                      ]
+                                    }
+                                  }
+                                ],
+                                "must": [
+                                  { "match_phrase": { "secondMember.name": query } },
+                                  { "term": { "secondMember.id": currUserId } }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "bool": {
+                          "should": [
+                            { "term": { "firstMember.id": currUserId } },
+                            { "term": { "secondMember.id": currUserId } }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "bool": {
+                    "must": [
+                      { "term": { "isPrivate": false } },
+                      { "match_phrase": { "name": query } }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "script_fields": {
+            "room": {
+              "script": {
+                "source": """
+                  if (doc['isPrivate'].value) {
+                    String currUserId = params.currUserId;
+                    if (doc['firstMember.id'].value == currUserId) {
+                      return [doc['id'].value, doc['isPrivate'].value,
+                        doc['secondMember.name.keyword'].value, doc['secondMember.picture'].value];
+                    } else {
+                      return [doc['id'].value, doc['isPrivate'].value,
+                        doc['firstMember.name.keyword'].value, doc['firstMember.picture'].value];
+                    }
+                  } else {
+                    return [doc['id'].value, doc['isPrivate'].value, doc['name.keyword'].value, doc['picture'].value];
+                  }
+                """,
+                "params": { "currUserId": currUserId }
+              }
+            }
+          },
+          "_source": false,
+          "fields": ["room"],
+          "sort": [
+            {
+              "_script": {
+                "type": "string",
+                "script": {
+                  "source": """
+                    if (doc['isPrivate'].value) {
+                      String currUserId = params.currUserId;
+                      if (doc['firstMember.id'].value == currUserId) {
+                        return doc['secondMember.name.keyword'].value;
+                      } else {
+                        return doc['firstMember.name.keyword'].value;
+                      }
+                    } else {
+                      return doc['name.keyword'].value;
+                    }
+                  """,
+                  "params": { "currUserId": currUserId },
+                },
+                "order": "asc"
+              }
+            },
+            { "lastMessageTimestamp": "desc" },
+            { "id": "asc" } // For uniqueness
+          ],
+          if (!isInitial) "search_after": searchAfterContent!
+        }
+      );
+
+      log.w("DZIEJE $rSearchRes");      // TODO fix it
+
+      List<dynamic> rHits = rSearchRes.data["hits"]["hits"];
+      if (rHits.isEmpty) {
+        log.i("Searching for chat rooms successful -> no values found");
+        return (<(String, bool, String, String)>[], pitId!, searchAfterContent);
+      }
+
+      List<(String, bool, String, String)> usrMatches = rHits.map((hit) {
+        var room = hit["fields"]["room"];
+        return (room[0] as String, room[1] as bool, room[2] as String, room[3] as String);
+      }).toList();
+
+      searchAfterContent = rHits.isNotEmpty ? rHits.last["sort"] : null;
+
+      log.i("Searching for chat rooms successful");
+      return (usrMatches, pitId!, searchAfterContent);
+    } on DioException catch (e) {
+      log.e("Searching for chat rooms failed: ${e.response}");
+      throw Exception(e);
+    } catch (e) {
+      log.e("Searching for chat rooms failed: $e");
       throw Exception(e);
     }
   }
