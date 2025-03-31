@@ -8,24 +8,24 @@ sealed class RoomOperationsEvent extends Equatable {
 }
 
 final class CreatePrivateChatRoom extends RoomOperationsEvent {
-  final String personOneId;
-  final String personTwoId;
+  final Usr personOne;
+  final Usr personTwo;
 
-  const CreatePrivateChatRoom(this.personOneId, this.personTwoId);
+  const CreatePrivateChatRoom(this.personOne, this.personTwo);
 
   @override
-  List<Object> get props => [personOneId, personTwoId];
+  List<Object> get props => [personOne, personTwo];
 }
 
 final class CreateGroupChatRoom extends RoomOperationsEvent {
   final String? name;
   final String? imagePath;
-  final List<String> newMembersIds;
+  final List<Usr> newMembers;
 
-  const CreateGroupChatRoom(this.name, this.imagePath, this.newMembersIds);
+  const CreateGroupChatRoom(this.name, this.imagePath, this.newMembers);
 
   @override
-  List<Object> get props => [newMembersIds];
+  List<Object> get props => [newMembers];
 }
 
 final class UpdateChatRoom extends RoomOperationsEvent {
