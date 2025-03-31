@@ -16,7 +16,7 @@ class InvitesOperationsBloc extends Bloc<InvitesOperationsEvent, InvitesOperatio
 
         emit(InvitesOperationsState.success(
           event.newStatus,
-          event.newStatus == InviteStatus.accepted ? event.fromUser!.id : null
+          event.newStatus == InviteStatus.accepted ? event.fromUser! : null
         ));
       } catch (e) {
         emit(const InvitesOperationsState.failure());
@@ -37,7 +37,7 @@ class InvitesOperationsBloc extends Bloc<InvitesOperationsEvent, InvitesOperatio
       try {
         userRepository.addInvite(event.invite);
 
-        emit(InvitesOperationsState.success(InviteStatus.pending, event.invite.fromUser));
+        emit(InvitesOperationsState.success(InviteStatus.pending));
       } catch (e) {
         emit(const InvitesOperationsState.failure());
       }
