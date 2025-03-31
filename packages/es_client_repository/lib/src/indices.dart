@@ -110,6 +110,7 @@ const indices = {
     "mappings": {
       "dynamic": "strict",
       "properties": {
+        "roomId": notSearchedStringMapping, // Non-existent in firebase, here needed for particular room messages searching
         "content": {
           "type": "text"
         },

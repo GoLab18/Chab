@@ -97,8 +97,9 @@ class Message extends Equatable {
   }
 
   /// Data serialization for elasticsearch.
-  JsonMap toEsObject() {
+  JsonMap toEsObject(String roomId) {
     return {
+      "roomId": roomId,
       "id": id,
       "content": content,
       "edited": edited,

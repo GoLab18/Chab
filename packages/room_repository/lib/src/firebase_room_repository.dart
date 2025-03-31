@@ -205,7 +205,7 @@ class FirebaseRoomRepository {
 
       var ndjsonData = [
         { "index": { "_index": "messages", "_id": msg.id } },
-        msg.toEsObject(),
+        msg.toEsObject(roomId),
         { "update": { "_index": "rooms", "_id": roomId } },
         {
           "doc": {
@@ -309,7 +309,7 @@ class FirebaseRoomRepository {
       await esClient.post(
         "/messages/_update/${updatedMsg.id}",
         data: {
-          "doc": updatedMsg.toEsObject(),
+          "doc": updatedMsg.toEsObject(roomId),
           "doc_as_upsert": true
         }
       );
