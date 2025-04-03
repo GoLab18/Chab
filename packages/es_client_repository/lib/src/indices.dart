@@ -105,7 +105,6 @@ const indices = {
   },
 
 
-  // seenBy field is omitted for elasticsearch storage
   "messages": {
     "mappings": {
       "dynamic": "strict",
