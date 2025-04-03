@@ -9,7 +9,7 @@ import '../blocs/room_operations_bloc/room_operations_bloc.dart';
 import '../blocs/search_bloc/search_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/app_bars/search_app_bar.dart';
-import '../components/is_empty_message_widget.dart';
+import '../components/prompts/is_empty_message_widget.dart';
 
 class FindFriendsPage extends StatefulWidget {
   const FindFriendsPage({super.key});
@@ -102,7 +102,12 @@ class _FindFriendsPageState extends State<FindFriendsPage> {
                           (isCurrentPageReceivedInvites && receivedInvites.isEmpty)
                           || (!isCurrentPageReceivedInvites && sentInvites.isEmpty)
                         ) {
-                          return const IsEmptyMessageWidget();
+                          return IsEmptyMessageWidget(
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context).colorScheme.tertiary,
+                            text: "No ${isCurrentPageReceivedInvites ? "received" : "sent"} invites yet",
+                            iconData: isCurrentPageReceivedInvites ? Icons.inbox_outlined : Icons.outbox_outlined,
+                          );
                         }
                               
                         return _currentIndex == 0

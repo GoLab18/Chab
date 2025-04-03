@@ -11,8 +11,8 @@ import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/room_members_bloc/room_members_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/app_bars/chat_room_app_bar.dart';
-import '../components/is_empty_message_widget.dart';
-import '../components/message_sequence_date.dart';
+import '../components/prompts/is_empty_message_widget.dart';
+import '../components/prompts/message_divider.dart';
 import '../util/date_util.dart';
 
 class ChatRoomPage extends StatefulWidget {
@@ -104,7 +104,12 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                           }
 
                           if (messagesState.status == MessagesStatus.empty) {
-                            return const IsEmptyMessageWidget();
+                            return IsEmptyMessageWidget(
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context).colorScheme.tertiary,
+                              text: "No messages yet",
+                              iconData: Icons.chat_bubble_outlined,
+                            );
                           }
 
                           // In case the room is a private room
@@ -159,7 +164,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                         children: [
                                           // Message sequence date view
                                           (isDateShown == null || isDateShown!)
-                                            ? MessageSequenceDate(
+                                            ? MessageDivider(
                                               DateUtil.isTodayDate(currentMessageDateTime)
                                                 ? "Today"
                                                 : DateUtil.getLongDateFormatFromNow(currentMessageDateTime)
@@ -275,7 +280,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                         children: [
                                           // Message sequence date view
                                           (isDateShown == null || isDateShown!)
-                                            ? MessageSequenceDate(
+                                            ? MessageDivider(
                                               DateUtil.isTodayDate(currentMessageDateTime)
                                                 ? "Today"
                                                 : DateUtil.getLongDateFormatFromNow(currentMessageDateTime)

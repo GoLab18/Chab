@@ -7,6 +7,7 @@ import 'package:user_repository/user_repository.dart';
 import '../blocs/room_members_bloc/room_members_bloc.dart';
 import '../blocs/rooms_bloc/rooms_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
+import '../components/prompts/is_empty_message_widget.dart';
 import '../components/tiles/chat_room_tile.dart';
 
 class ChatRoomsListPage extends StatelessWidget {
@@ -54,6 +55,15 @@ class ChatRoomsListPage extends StatelessWidget {
                     }
     
                     List<Room> rooms = snapshot.data!;  // TODO AnimatedList widget impl
+
+                    if (rooms.isEmpty) {
+                      return IsEmptyMessageWidget(
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.tertiary,
+                        text: "No chat rooms yet",
+                        iconData: Icons.groups_2_outlined,
+                      );
+                    }
     
                     return SizedBox(
                       child: ListView.builder(
@@ -83,7 +93,7 @@ class ChatRoomsListPage extends StatelessWidget {
                                 )
                               )
                             ],
-                            child: ChatRoomTile(rooms[index])
+                            child: ChatRoomTile(rooms[index], key: ValueKey(rooms[index].id))   // TODO i think this ValueKey will be a game changer
                           );
                         }
                       )
