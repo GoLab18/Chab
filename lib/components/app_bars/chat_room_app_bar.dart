@@ -6,6 +6,8 @@ import 'package:user_repository/user_repository.dart';
 import '../../blocs/room_members_bloc/room_members_bloc.dart';
 import '../../blocs/room_bloc/room_bloc.dart';
 import '../../blocs/room_operations_bloc/room_operations_bloc.dart';
+import '../../blocs/search_bloc/search_bloc.dart';
+import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../pages/group_chat_page.dart';
 import '../../pages/private_chat_page.dart';
 import '../../util/room_name_util.dart';
@@ -28,6 +30,12 @@ class ChatRoomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             BlocProvider.value(
               value: context.read<RoomBloc>()
+            ),
+            BlocProvider.value(
+              value: context.read<UsrBloc>()
+            ),
+            BlocProvider.value(
+              value: context.read<SearchBloc>()
             ),
             BlocProvider(
               create: (BuildContext roomOpBlocContext) => RoomOperationsBloc(
