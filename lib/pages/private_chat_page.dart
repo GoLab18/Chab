@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:user_repository/user_repository.dart';
 
+import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/room_members_bloc/room_members_bloc.dart';
+import '../blocs/search_bloc/search_bloc.dart';
+import '../blocs/usr_bloc/usr_bloc.dart';
+import '../components/search_bar_delegate.dart';
 import '../components/tiles/utility_tile.dart';
 
 class PrivateChatPage extends StatelessWidget {
@@ -79,7 +83,7 @@ class PrivateChatPage extends StatelessWidget {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4),
                                   child: Text(
-                                    "HeidiLMFAO",
+                                    "Nickname not set",
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Theme.of(context).colorScheme.tertiary
@@ -106,7 +110,7 @@ class PrivateChatPage extends StatelessWidget {
                             physics: const NeverScrollableScrollPhysics(),
                             crossAxisCount: 4,
                             children: [
-                              // TODO audio, video, pinned messages, search messages, notifications toggle, search files, nickname(s), leave group/delete friend, mute
+                              // TODO audio, video, pinned messages, notifications toggle, search files, nickname(s), delete friend, mute
                               UtilityTile(
                                 title: "Audio",
                                 iconData: Icons.phone_outlined,
@@ -133,14 +137,24 @@ class PrivateChatPage extends StatelessWidget {
                                 onTap: () {}
                               ),
                               UtilityTile(
-                                title: "Messages",
-                                iconData: Icons.search_outlined,
-                                onTap: () {}
-                              ),
-                              UtilityTile(
                                 title: "Pinned",
                                 iconData: Icons.push_pin_outlined,
                                 onTap: () {}
+                              ),
+                              UtilityTile(
+                                title: "Messages",
+                                iconData: Icons.search_outlined,
+                                onTap: () {
+                                  showSearch(
+                                    context: context,
+                                    delegate: SearchBarDelegate(
+                                      searchTarget: SearchTarget.messages,
+                                      searchBloc: context.read<SearchBloc>(),
+                                      usrBloc: context.read<UsrBloc>(),
+                                      roomBloc: context.read<RoomBloc>()
+                                    )
+                                  );
+                                }
                               ),
                               UtilityTile(
                                 title: "Unfriend",

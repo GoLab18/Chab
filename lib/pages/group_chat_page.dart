@@ -5,8 +5,11 @@ import 'package:user_repository/user_repository.dart';
 import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/room_members_bloc/room_members_bloc.dart';
 import '../blocs/room_operations_bloc/room_operations_bloc.dart';
+import '../blocs/search_bloc/search_bloc.dart';
+import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/avatar_action.dart';
 import '../components/fields/transparent_editable_text_field.dart';
+import '../components/search_bar_delegate.dart';
 import '../components/tiles/user_tile.dart';
 import '../components/tiles/utility_tile.dart';
 import '../util/picture_util.dart';
@@ -33,7 +36,7 @@ class GroupChatPage extends StatelessWidget {
                       floating: true,
                       expandedHeight: 136.0,
                       flexibleSpace: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: FlexibleSpaceBar(
                           background: Center(
                             child: Column(
@@ -184,7 +187,17 @@ class GroupChatPage extends StatelessWidget {
                                 UtilityTile(
                                   title: "Messages",
                                   iconData: Icons.search_outlined,
-                                  onTap: () {}
+                                  onTap: () {
+                                    showSearch(
+                                      context: context,
+                                      delegate: SearchBarDelegate(
+                                        searchTarget: SearchTarget.messages,
+                                        searchBloc: context.read<SearchBloc>(),
+                                        usrBloc: context.read<UsrBloc>(),
+                                        roomBloc: context.read<RoomBloc>()
+                                      )
+                                    );
+                                  }
                                 ),
                                 UtilityTile(
                                   title: "Leave",
@@ -272,7 +285,7 @@ class GroupChatPage extends StatelessWidget {
                                               usersList.length,
                                               (index) => UserTile(usersList[index])
                                             )
-                                          ] 
+                                          ]
                                         )
                                       );
                                     }
