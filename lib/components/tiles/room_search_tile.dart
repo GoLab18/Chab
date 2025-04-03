@@ -7,6 +7,7 @@ import '../../blocs/message_bloc/message_bloc.dart';
 import '../../blocs/messages_bloc/messages_bloc.dart';
 import '../../blocs/room_bloc/room_bloc.dart';
 import '../../blocs/room_members_bloc/room_members_bloc.dart';
+import '../../blocs/search_bloc/search_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../pages/chat_room_page.dart';
 
@@ -16,14 +17,16 @@ class RoomSearchTile extends StatelessWidget {
   final String name;
   final String? picUrl;
   final UsrBloc usrBloc;
+  final SearchBloc searchBloc;
 
   const RoomSearchTile({
     super.key,
     required this.roomId,
     required this.isPrivate,
     required this.name,
-    this.picUrl,
-    required this.usrBloc
+    required this.picUrl,
+    required this.usrBloc,
+    required this.searchBloc
   });
 
   @override
@@ -37,6 +40,9 @@ class RoomSearchTile extends StatelessWidget {
             providers: [
               BlocProvider.value(
                 value: usrBloc
+              ),
+              BlocProvider.value(
+                value: searchBloc
               ),
               BlocProvider(
                 create: (_) => RoomMembersBloc(

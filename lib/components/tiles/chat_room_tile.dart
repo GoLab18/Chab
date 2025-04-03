@@ -7,6 +7,7 @@ import '../../blocs/messages_bloc/messages_bloc.dart';
 import '../../blocs/room_members_bloc/room_members_bloc.dart';
 import '../../blocs/message_bloc/message_bloc.dart';
 import '../../blocs/room_bloc/room_bloc.dart';
+import '../../blocs/search_bloc/search_bloc.dart';
 import '../../blocs/usr_bloc/usr_bloc.dart';
 import '../../pages/chat_room_page.dart';
 import '../../util/date_util.dart';
@@ -31,6 +32,9 @@ class ChatRoomTile extends StatelessWidget {
             providers: [
               BlocProvider.value(
                 value: context.read<UsrBloc>()
+              ),
+              BlocProvider.value(
+                value: context.read<SearchBloc>()
               ),
               BlocProvider.value(
                 value: context.read<RoomBloc>()..add(RoomRequested(room.id))
