@@ -13,11 +13,8 @@ class Message extends Equatable {
   final bool edited;
 
   /// Message picture.
+  /// Is empty if there is no picture attached.
   final String picture;
-
-  /// A representation of firebase array.
-  /// Holds a [List] of user ids that have seen the message.
-  late final List<String> seenBy;
 
   /// Id of the user that sent the message to the chat room.
   final String senderId;
@@ -31,16 +28,14 @@ class Message extends Equatable {
     required this.content,
     this.edited = false,
     this.picture = "",
-    List<String>? seenBy,
     required this.senderId,
     Timestamp? timestamp
   }) {
-    this.seenBy = seenBy ?? List.empty();
     this.timestamp = timestamp ?? Timestamp.now();
   }
   
   @override
-  List<Object?> get props => [id, content, edited, picture, seenBy, senderId, timestamp];
+  List<Object?> get props => [id, content, edited, picture, senderId, timestamp];
 
   static Message empty = Message(
     id: "",
@@ -65,7 +60,6 @@ class Message extends Equatable {
       content: content ?? this.content,
       edited: edited ?? this.edited,
       picture: picture ?? this.picture,
-      seenBy: seenBy ?? this.seenBy,
       senderId: senderId ?? this.senderId
     );
   }
@@ -77,7 +71,6 @@ class Message extends Equatable {
       "content": content,
       "edited": edited,
       "picture": picture,
-      "seenBy": seenBy,
       "senderId": senderId,
       "timestamp": timestamp
     };
@@ -90,7 +83,6 @@ class Message extends Equatable {
       content: doc["content"] as String,
       edited: doc["edited"] as bool,
       picture: doc["picture"] as String,
-      seenBy: (doc["seenBy"] as List<dynamic>).cast<String>(),
       senderId: doc["senderId"] as String,
       timestamp: doc["timestamp"] as Timestamp
     );
