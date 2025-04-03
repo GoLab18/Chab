@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../blocs/invites_operations_bloc/invites_operations_bloc.dart';
+import '../blocs/room_bloc/room_bloc.dart';
 import '../blocs/search_bloc/search_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../cubits/staged_members_cubit.dart';
+import 'prompts/message_divider.dart';
+import 'prompts/search_results_not_found.dart';
+import 'prompts/start_searching_prompt.dart';
 import 'tiles/add_group_member_tile.dart';
+import 'tiles/message_search_tile.dart';
 import 'tiles/room_search_tile.dart';
 import 'tiles/user_with_invite_tile.dart';
 
@@ -14,6 +19,7 @@ class SearchBarDelegate extends SearchDelegate {
   final SearchBloc searchBloc;
   final UsrBloc usrBloc;
   final InvitesOperationsBloc? invOpsBloc; // Needed only for friends searching
+  final RoomBloc? roomBloc; // For searching up messages and room members
   final StagedMembersCubit? stagedMembersCubit; // For managing staged members to add to new group
 
   bool isInitialSearch = true;
@@ -26,8 +32,11 @@ class SearchBarDelegate extends SearchDelegate {
     required this.searchBloc,
     required this.usrBloc,
     this.invOpsBloc,
+    this.roomBloc,
     this.stagedMembersCubit
-  });
+  }) {
+    scrollController.addListener(_fetchMore);
+  }
 
   @override
   String? get searchFieldLabel => "Search..";
@@ -79,13 +88,20 @@ class SearchBarDelegate extends SearchDelegate {
   Widget _provideResults(BuildContext context) {
     if (query.isEmpty) {
       searchBloc.add(SearchReset());
-      return Center(child: Text("Search :)", style: TextStyle(color: Theme.of(context).colorScheme.inversePrimary)));
+      return StartSearchingPrompt(Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.tertiary);
     }
     
-    searchBloc.add(SearchQuery(usrBloc.state.user!.id, searchTarget, query, null, stagedMembersCubit?.state.map((usr) => usr.id).toList()));
-
-    scrollListener ??= () => _fetchMore();
-    scrollController.addListener(scrollListener!); // TODO maybe scroll controller should be inside to rebuild on each rebuild (?)
+    searchBloc.add(
+      SearchQuery(
+        userId: usrBloc.state.user!.id,
+        searchTarget: searchTarget,
+        query: query,
+        roomId: roomBloc?.state.room!.id,
+        previousResults: null,
+        alreadyAddedUsers: stagedMembersCubit?.state.map((usr) => usr.id).toList(),
+        searchAfterContent: searchBloc.state.searchAfterContent
+      )
+    );
     
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -97,7 +113,9 @@ class SearchBarDelegate extends SearchDelegate {
           if (isInitialSearch || state.status == SearchStatus.loading) {
             if (isInitialSearch) isInitialSearch = false;
             return Center(child: const CircularProgressIndicator());
-          } else if (state.status == SearchStatus.success) {
+          } else if (state.status == SearchStatus.noResultsFound) {
+            return SearchResultsNotFound(Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.tertiary);
+          } else if (state.status == SearchStatus.allResultsFound || state.status == SearchStatus.success) {
             return listViewForSearchTarget(state, context);
           } else if (state.status == SearchStatus.failure) {
             return Center(
@@ -123,80 +141,86 @@ class SearchBarDelegate extends SearchDelegate {
       && searchBloc.state.status == SearchStatus.success
     ) {
       searchBloc.add(
-        SearchQuery(usrBloc.state.user!.id, searchTarget, query, searchBloc.state.results, stagedMembersCubit?.state.map((usr) => usr.id).toList())
+        SearchQuery(
+          userId: usrBloc.state.user!.id,
+          searchTarget: searchTarget,
+          query: query,
+          roomId: roomBloc!.state.room!.id,
+          previousResults: searchBloc.state.results,
+          alreadyAddedUsers: stagedMembersCubit?.state.map((usr) => usr.id).toList(),
+          pitId: searchBloc.state.pitId,
+          searchAfterContent: searchBloc.state.searchAfterContent
+        )
       );
     }
   }
 
   ListView listViewForSearchTarget(SearchState state, BuildContext context) {
-    double cacheExtent = MediaQuery.of(context).size.height * 1.5;
-
     return switch (searchTarget) {
-      SearchTarget.users => ListView.builder(
-        cacheExtent: cacheExtent,
-        controller: scrollController,
-        physics: AlwaysScrollableScrollPhysics(),
-        itemCount: state.results.$1.length + (state.status == SearchStatus.loading ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index < state.results.$1.length) {
-            return UserWithInviteTile(
-              key: ValueKey(state.results.$1[index].id),
-              state.results.$1[index],
-              state.results.$2[index]?.$1,
-              state.results.$2[index]?.$2,
-              invOpsBloc!,
-              usrBloc
-            );
-          } else {
-            return Center(child: const CircularProgressIndicator());
-          }
-        }
+      SearchTarget.users => renderProperListView(context, state.status, state.results.$1.length,
+        (index) => UserWithInviteTile(
+          key: ValueKey(state.results.$1[index].id),
+          state.results.$1[index],
+          state.results.$2[index]?.$1,
+          state.results.$2[index]?.$2,
+          invOpsBloc!,
+          usrBloc
+        )
       ),
-      SearchTarget.newGroupMembers => ListView.builder(
-        cacheExtent: cacheExtent,
-        controller: scrollController,
-        physics: AlwaysScrollableScrollPhysics(),
-        itemCount: state.results.length + (state.status == SearchStatus.loading ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index < state.results.length) {
-            return AddGroupMemberTile(
-              key: ValueKey(state.results[index].id),
-              user: state.results[index],
-              callbackIcon: Icons.add,
-              isMemberSubjectToAddition: true,
-              onButtonInvoked: (user) {
-                stagedMembersCubit!.stageMember(user);
-              }
-            );
-          } else {
-            return Center(child: const CircularProgressIndicator());
+      SearchTarget.newGroupMembers => renderProperListView(context, state.status, state.results.length,
+        (index) => AddGroupMemberTile(
+          key: ValueKey(state.results[index].id),
+          user: state.results[index],
+          callbackIcon: Icons.add,
+          isMemberSubjectToAddition: true,
+          onButtonInvoked: (user) {
+            stagedMembersCubit!.stageMember(user);
           }
-        }
+        )
       ),
-      SearchTarget.chatRooms => ListView.builder(
-        cacheExtent: cacheExtent,
-        controller: scrollController,
-        physics: AlwaysScrollableScrollPhysics(),
-        itemCount: state.results.length + (state.status == SearchStatus.loading ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index < state.results.length) {
-            return RoomSearchTile(
-              key: ValueKey(state.results[index].$1),
-              roomId: state.results[index].$1,
-              isPrivate: state.results[index].$2,
-              name: state.results[index].$3,
-              picUrl: state.results[index].$4,
-              usrBloc: usrBloc
-            );
-          } else {
-            return Center(child: const CircularProgressIndicator());
-          }
-        }
+      SearchTarget.chatRooms => renderProperListView(context, state.status, state.results.length,
+        (index) => RoomSearchTile(
+          key: ValueKey(state.results[index].$1),
+          roomId: state.results[index].$1,
+          isPrivate: state.results[index].$2,
+          name: state.results[index].$3,
+          picUrl: state.results[index].$4,
+          usrBloc: usrBloc,
+          searchBloc: searchBloc
+        )
       ),
-      SearchTarget.messages => throw UnimplementedError(),   // TODO: Handle this case.
+      SearchTarget.messages => renderProperListView(context, state.status, state.results.length,
+        (index) => MessageSearchTile(
+          key: ValueKey(state.results[index].$1.id),
+          message: state.results[index].$1,
+          name: state.results[index].$2,
+          picUrl: state.results[index].$3,
+          currUserId: usrBloc.state.user!.id
+        )
+      ),
       SearchTarget.groupMembers => throw UnimplementedError()   // TODO: Handle this case.
     };
+  }
 
+  ListView renderProperListView(BuildContext context, SearchStatus status, int itemCount, Widget Function(int) tileBuilder) {
+    return ListView.builder(
+      cacheExtent: MediaQuery.of(context).size.height * 1.5,
+      controller: scrollController,
+      physics: AlwaysScrollableScrollPhysics(),
+      itemCount: itemCount + 1,
+      itemBuilder: (context, index) {
+        if (index < itemCount) {
+          return tileBuilder(index);
+        } else {
+          return SizedBox(
+            height: 70,
+            child: status == SearchStatus.allResultsFound
+              ? MessageDivider("No more results found")
+              : Center(child: const CircularProgressIndicator())
+          );
+        }
+      }
+    );
   }
 
   @override
@@ -227,9 +251,7 @@ class SearchBarDelegate extends SearchDelegate {
 
   @override
   void dispose() {
-    if (scrollListener != null) scrollController.removeListener(scrollListener!);
     scrollController.dispose();
-
     super.dispose();
   }
 }
