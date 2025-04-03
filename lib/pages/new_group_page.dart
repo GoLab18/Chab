@@ -9,6 +9,7 @@ import '../blocs/search_bloc/search_bloc.dart';
 import '../blocs/usr_bloc/usr_bloc.dart';
 import '../components/avatar_action.dart';
 import '../components/fields/transparent_editable_text_field.dart';
+import '../components/prompts/is_empty_message_widget.dart';
 import '../components/search_bar_delegate.dart';
 import '../components/tiles/add_group_member_tile.dart';
 import '../cubits/staged_members_cubit.dart';
@@ -95,7 +96,7 @@ class _NewGroupPageState extends State<NewGroupPage> {
 
                     context.read<RoomOperationsBloc>().add(CreateGroupChatRoom(selectedGroupName, selectedImagePath, newMembers));
 
-                    Navigator.pop(context);
+                    Navigator.pop(context); // TODO don't tell me this is the problem here
                   },
                   icon: Icon(Icons.check),
                   color: Theme.of(context).colorScheme.inversePrimary
@@ -149,7 +150,8 @@ class _NewGroupPageState extends State<NewGroupPage> {
             // Added members
             BlocBuilder<StagedMembersCubit, List<Usr>>(
               builder: (context, stagedMembers) {
-                return SliverList.builder(
+                return stagedMembers.isNotEmpty
+                  ? SliverList.builder(
                   itemCount: stagedMembers.length,
                   itemBuilder: (context, index) => Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -162,6 +164,15 @@ class _NewGroupPageState extends State<NewGroupPage> {
                       }
                     )
                   )
+                )
+                : SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: IsEmptyMessageWidget(
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.tertiary,
+                    text: "No staged members yet",
+                    iconData: Icons.people_outlined,
+                  ),
                 );
               }
             )

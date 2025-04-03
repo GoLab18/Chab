@@ -68,7 +68,7 @@ class UserTile extends StatelessWidget {
                               // TODO Nickname
                               // if (nickname is present)
                               Text(
-                                "Lil Chigga",
+                                "Nickname not set",
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Theme.of(context).colorScheme.tertiary
@@ -90,7 +90,7 @@ class UserTile extends StatelessWidget {
                   )
                 )
               ]
-            ),
+            )
           )
         )
       )
