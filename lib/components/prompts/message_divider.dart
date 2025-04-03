@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class MessageSequenceDate extends StatelessWidget {
+class MessageDivider extends StatelessWidget {
   final String dateString;
 
-  const MessageSequenceDate(this.dateString, {super.key});
+  const MessageDivider(this.dateString, {super.key});
 
   @override
   Widget build(BuildContext context) {
