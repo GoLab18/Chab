@@ -354,6 +354,7 @@ class FirebaseUserRepository {
       var r = roomsCollection
         .doc(roomId)
         .collection("members")
+        .where("kickOutTime", isNull: true)
         .snapshots()
         .map((QuerySnapshot<Map<String, dynamic>> snapshot) =>
           snapshot.docs.map((doc) => doc.id).toList()
@@ -664,7 +665,7 @@ class FirebaseUserRepository {
   /// Searches for users through elasticsearch omitting [currUserId].
   /// Pagination is allowed with [searchAfterContent] parameter that stores search_after.
   /// If [userPitId] is null, it will inject new PIT to users index for data consistency.
-  /// Returns users and friendships information, PIT id and search_after content of type [List] of [String].
+  /// Returns users and friendships information, PIT id and search_after content.
   Future<((List<Usr>, List<(Invite, Friendship?)?>), String, List<dynamic>?)> searchUsers(
     String query,
     String currUserId,
@@ -677,7 +678,7 @@ class FirebaseUserRepository {
       String keepAliveMinutes = "1m";
       bool isInitial = userPitId == null;
 
-      if (isInitial) {        // TODO really don't want to do this on each suggestions reload, find a way to not make a new PIT on each reload
+      if (isInitial) {
         var uPitRes = await esClient.post("/users/_pit?keep_alive=$keepAliveMinutes");
         userPitId = uPitRes.data["id"];
       }
@@ -685,7 +686,7 @@ class FirebaseUserRepository {
       var uSearchRes = await esClient.get(
         "/_search",
         data: {
-          "size": 10,
+          "size": 20,
           "pit": {
             "id": userPitId,
             "keep_alive": keepAliveMinutes
@@ -704,7 +705,7 @@ class FirebaseUserRepository {
             { "name.keyword": "asc" },
             { "id": "asc" } // For uniqueness
           ],
-          if (!isInitial) "search_after": searchAfterContent!
+          if (searchAfterContent != null) "search_after": searchAfterContent
         }
       );
 
@@ -719,7 +720,7 @@ class FirebaseUserRepository {
       var fiSearchRes = await esClient.get(
         "/friendships_invites/_search",
         data: {
-          "size": 10,
+          "size": 20,
           "_source": ["fromUser", "toUser", "id", "status", "timestamp", "since"],
           "query": {
             "bool": {
@@ -788,7 +789,7 @@ class FirebaseUserRepository {
   /// Pagination is allowed with [searchAfterContent] parameter that stores search_after.
   /// Excludes [alreadyAddedUsers] from the search results by their ids.
   /// If [pitId] is null, it will inject new PIT to friendships_invites index for data consistency.
-  /// Returns [List] of [Usr], PIT id and search_after content of type [List] of [String].
+  /// Returns [List] of [Usr], PIT id and search_after content.
   Future<(List<Usr>, String, List<dynamic>?)> searchForNewGroupMembers(
     String query,
     String currUserId,
@@ -802,7 +803,7 @@ class FirebaseUserRepository {
       String keepAliveMinutes = "1m";
       bool isInitial = pitId == null;
 
-      if (isInitial) {        // TODO really don't want to do this on each suggestions reload, find a way to not make a new PIT on each reload
+      if (isInitial) {
         var uPitRes = await esClient.post("/friendships_invites/_pit?keep_alive=$keepAliveMinutes");
         pitId = uPitRes.data["id"];
       }
@@ -810,7 +811,7 @@ class FirebaseUserRepository {
       var uSearchRes = await esClient.get(
         "/_search",
         data: {
-          "size": 10,
+          "size": 20,
           "pit": {
             "id": pitId,
             "keep_alive": keepAliveMinutes
@@ -917,7 +918,7 @@ class FirebaseUserRepository {
             },
             { "id": "asc" } // For uniqueness
           ],
-          if (!isInitial) "search_after": searchAfterContent!
+          if (searchAfterContent != null) "search_after": searchAfterContent
         }
       );
 

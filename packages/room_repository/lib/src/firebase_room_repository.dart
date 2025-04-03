@@ -85,7 +85,7 @@ class FirebaseRoomRepository {
 
       membersSub = firestoreInstance
         .collectionGroup("members")
-        .where("userId", isEqualTo: userId)
+        .where("memberId", isEqualTo: userId)
         .snapshots()
         .listen((querySnapshot) {
           log.i("Handling room members data...");
@@ -216,6 +216,8 @@ class FirebaseRoomRepository {
           }
         }
       ];
+      
+      // await esClient.bulkRequest(ndjsonData); // TODO i could include es_client_repository and use this here and in user repo but idk
 
       await esClient.post(
         "/_bulk",
@@ -372,23 +374,19 @@ class FirebaseRoomRepository {
     log.i("addMembersToRoom() invoked...");
 
     try {
-      if (newMembersIds.isEmpty) throw Exception("newMembersId list can't be empty");
+      if (newMembersIds.isEmpty) throw ArgumentError("newMembersId list can't be empty");
 
       CollectionReference<Map<String, dynamic>> membersRef = roomsCollection.doc(roomId).collection("members");
 
+      var mem = Member(roomId: roomId, memberId: newMembersIds[0]);
+
       if (newMembersIds.length == 1) {
-        await membersRef.doc(newMembersIds[0]).set({
-          "roomId": roomId,
-          "userId": newMembersIds[0]
-        });
+        await membersRef.doc(newMembersIds[0]).set(mem.toDocument());
 
         if (newMembers != null) {
-          esClient.put(
+          await esClient.put(
             "/members/_doc/$roomId${newMembersIds[0]}",
-            data: {
-              "roomId": roomId,
-              "member": newMembers[0]
-            }
+            data: mem.toEsObject(newMembers[0]["name"], newMembers[0]["picture"])
           );
         }
       } else {
@@ -399,22 +397,21 @@ class FirebaseRoomRepository {
         for (int i = 0; i < newMembersIds.length; i++) {
           DocumentReference<Map<String, dynamic>> newMemberRef = membersRef.doc(newMembersIds[i]);
           
-          batch.set(newMemberRef, {
-            "roomId": roomId,
-            "userId": newMembersIds[i]
-          });
+          var mem = Member(roomId: roomId, memberId: newMembersIds[i]);
+
+          batch.set(newMemberRef, mem.toDocument());
 
           if (newMembers != null) {
             ndjsonData.addAll([
-              { "index": { "_index": "members", "_id": newMembersIds[i] } },
-              newMembers[i]
+              { "index": { "_index": "members", "_id": "$roomId${newMembersIds[i]}" } },
+              mem.toEsObject(newMembers[i]["name"], newMembers[i]["picture"])
             ]);
           }
         }
 
         await batch.commit();
 
-        if (newMembers != null) {
+        if (ndjsonData.isNotEmpty) {
           await esClient.post(
             "/_bulk",
             data: "${ndjsonData.map(jsonEncode).join("\n")}\n",
@@ -466,7 +463,7 @@ class FirebaseRoomRepository {
   /// If [pitId] is null, it will inject new PIT for data consistency.
   /// Returns a tuple with [List] of [String] ids, isPrivate [bool]s, names and pictures urls of type [String].
   /// Name and picture url values are dependent on whether the room is private or not (either room values or private chat room friend values).
-  /// On top of that PIT id and search_after content of type [List] of [String].
+  /// On top of that PIT id and search_after content.
   Future<(List<(String, bool, String, String)>, String, List<dynamic>?)> searchChatRooms(
     String query,
     String currUserId,
@@ -487,7 +484,7 @@ class FirebaseRoomRepository {
       var rSearchRes = await esClient.get(
         "/_search",
         data: {
-          "size": 10,
+          "size": 20,
           "pit": {
             "id": pitId,
             "keep_alive": keepAliveMinutes
@@ -618,11 +615,9 @@ class FirebaseRoomRepository {
             { "lastMessageTimestamp": "desc" },
             { "id": "asc" } // For uniqueness
           ],
-          if (!isInitial) "search_after": searchAfterContent!
+          if (searchAfterContent != null) "search_after": searchAfterContent
         }
       );
-
-      log.w("DZIEJE $rSearchRes");      // TODO fix it
 
       List<dynamic> rHits = rSearchRes.data["hits"]["hits"];
       if (rHits.isEmpty) {
@@ -644,6 +639,180 @@ class FirebaseRoomRepository {
       throw Exception(e);
     } catch (e) {
       log.e("Searching for chat rooms failed: $e");
+      throw Exception(e);
+    }
+  }
+
+  /// Performs a full-text search for messages through elasticsearch by [query] inside room with id [roomId].
+  /// Pagination is allowed with [searchAfterContent] parameter that stores search_after.
+  /// If [pitId] is null, it will inject new PIT for data consistency.
+  /// Returns a tuple with [List] of [Message]s, senders' [String] names and picture urls, PIT id and search_after content.
+  Future<(List<(Message, String, String)>, String, List<dynamic>?)> searchMessages(
+    String query,
+    String currUserId,
+    String roomId,
+    String? pitId,
+    List<dynamic>? searchAfterContent
+  ) async {
+    log.i("searchMessages() invoked...");
+    
+    try {
+      String keepAliveMinutes = "1m";
+      bool isInitial = pitId == null;
+
+      if (isInitial) {
+        var mPitRes = await esClient.post("/messages/_pit?keep_alive=$keepAliveMinutes");
+        pitId = mPitRes.data["id"];
+      }
+
+      var mSearchRes = await esClient.get(
+        "/_search",
+        data: {
+          "size": 20,
+          "pit": {
+            "id": pitId,
+            "keep_alive": keepAliveMinutes
+          },
+          "query": {
+            "bool": {
+              "must": [
+                { "term": { "roomId": roomId } },
+                {
+                  "match": {
+                    "content": {
+                      "query": query,
+                      "fuzziness": "auto"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "_source": ["id", "edited", "content", "picture", "senderId", "timestamp"],
+          "sort": [
+            { "timestamp": "desc" },
+            { "id": "asc" } // For uniqueness
+          ],
+          if (searchAfterContent != null) "search_after": searchAfterContent
+        }
+      );
+
+      List<dynamic> mHits = mSearchRes.data["hits"]["hits"];
+      if (mHits.isEmpty) {
+        log.i("Searching for messages successful -> no values found");
+        return (<(Message, String, String)>[], pitId!, searchAfterContent);
+      }
+
+      List<Message> messagesMatches = mHits.map((hit) => Message.fromEsObject(hit["_source"])).toList();
+
+      var sSearchRes = await esClient.get(
+        "/users/_search",
+        data: {
+          "size": 20,
+          "query": {
+            "bool": {
+              "filter": [
+                { "terms": { "id": messagesMatches.map((msg) => msg.senderId).toList() } }
+              ]
+            }
+          },
+          "_source": ["id", "name", "picture"]
+        }
+      );
+
+      List<dynamic> sHits = sSearchRes.data["hits"]["hits"];
+
+      Map<String, (String, String)> senderMap = {};
+      for (var s in sHits) {
+        var src = s["_source"];
+        senderMap[src["id"]] = (src["name"], src["picture"]);
+      }
+
+      List<(Message, String, String)> retVals = [];
+      for (var msm in messagesMatches) {
+        retVals.add((msm, senderMap[msm.senderId]!.$1, senderMap[msm.senderId]!.$2));
+      }
+
+      searchAfterContent = mHits.last["sort"];
+
+      log.i("Searching messages for room with id \"$roomId\" successful");
+      return (retVals, pitId!, searchAfterContent);
+    } on DioException catch (e) {
+      log.e("Searching for messages failed: ${e.response}");
+      throw Exception(e);
+    } catch (e) {
+      log.e("Searching for messages failed: $e");
+      throw Exception(e);
+    }
+  }
+
+  /// Searches for members through elasticsearch by [query] using n-grams inside room with id [roomId].
+  /// Pagination is allowed with [searchAfterContent] parameter that stores search_after.
+  /// If [pitId] is null, it will inject new PIT for data consistency.
+  /// Returns a tuple with [List] of [Member]s, members' names and picture urls, PIT id and search_after content.
+  Future<(List<(Member, String, String)>, String, List<dynamic>?)> searchGroupMembers(
+    String query,
+    String currUserId,
+    String roomId,
+    String? pitId,
+    List<dynamic>? searchAfterContent
+  ) async {
+    log.i("searchGroupMembers() invoked...");
+    
+    try {
+      String keepAliveMinutes = "1m";
+      bool isInitial = pitId == null;
+
+      if (isInitial) {
+        var mPitRes = await esClient.post("/members/_pit?keep_alive=$keepAliveMinutes");
+        pitId = mPitRes.data["id"];
+      }
+
+      var mSearchRes = await esClient.get(
+        "/_search",
+        data: {
+          "size": 20,
+          "pit": {
+            "id": pitId,
+            "keep_alive": keepAliveMinutes
+          },
+          "query": {
+            "bool": {
+              "must": [
+                { "term": { "roomId": roomId } },
+                { "match_phrase": { "member.name": query } }
+              ]
+            }
+          },
+          "sort": [
+            { "member.name": "asc" },
+            { "timestamp": "desc" },
+            { "id": "asc" } // For uniqueness
+          ],
+          if (searchAfterContent != null) "search_after": searchAfterContent
+        }
+      );
+
+      List<dynamic> mHits = mSearchRes.data["hits"]["hits"];
+      if (mHits.isEmpty) {
+        log.i("Searching for members for room with id \"$roomId\" successful -> no values found");
+        return (<(Member, String, String)>[], pitId!, searchAfterContent);
+      }
+
+      List<(Member, String, String)> membersMatches = mHits.map((hit) {
+        var src = hit["_source"];
+        return (Member.fromEsObject(src), src["member.name"] as String, src["member.picture"] as String);
+      }).toList();
+
+      searchAfterContent = mHits.isNotEmpty ? mHits.last["sort"] : null;
+
+      log.i("Searching for members for room with id \"$roomId\" successful");
+      return (membersMatches, pitId!, searchAfterContent);
+    } on DioException catch (e) {
+      log.e("Searching for members for room with id \"$roomId\" failed: ${e.response}");
+      throw Exception(e);
+    } catch (e) {
+      log.e("Searching for members for room with id \"$roomId\" failed: $e");
       throw Exception(e);
     }
   }
