@@ -63,10 +63,14 @@ class Member extends Equatable {
   }
 
   /// Data serialization for elasticsearch.
-  JsonMap toEsObject() {
+  JsonMap toEsObject(String memberUsername, String memberPicUrl) {
     return {
       "roomId": roomId,
-      "memberId": memberId,
+      "member": {
+        "id": memberId,
+        "name": memberUsername,
+        "picture": memberPicUrl
+      },
       if (kickOutTime != null) "kickOutTime": kickOutTime!.toDate().toIso8601String()
     };
   }
@@ -75,7 +79,7 @@ class Member extends Equatable {
   static Member fromEsObject(JsonMap doc) {
     return Member(
       roomId: doc["roomId"] as String,
-      memberId: doc["user.id"] as String,
+      memberId: doc["member.id"] as String,
       kickOutTime: (doc["kickOutTime"] != null) ? Timestamp.fromDate(DateTime.parse(doc["kickOutTime"] as String)) : null
     );
   }
