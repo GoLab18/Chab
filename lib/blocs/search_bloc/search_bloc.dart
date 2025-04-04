@@ -104,7 +104,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
             final (messages, pitId, searchAfterContent) =
               await roomRepository.searchMessages(event.query, event.userId, event.roomId!, event.pitId, event.searchAfterContent);
 
-            List<(Message, String, String)> msgs;
+            List<(Message, String, String, String?)> msgs;
             if (event.previousResults != null) {
               msgs = event.previousResults;
               msgs.addAll(messages);

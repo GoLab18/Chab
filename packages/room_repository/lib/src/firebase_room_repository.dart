@@ -647,7 +647,7 @@ class FirebaseRoomRepository {
   /// Pagination is allowed with [searchAfterContent] parameter that stores search_after.
   /// If [pitId] is null, it will inject new PIT for data consistency.
   /// Returns a tuple with [List] of [Message]s, senders' [String] names and picture urls, PIT id and search_after content.
-  Future<(List<(Message, String, String)>, String, List<dynamic>?)> searchMessages(
+  Future<(List<(Message, String, String, String?)>, String, List<dynamic>?)> searchMessages(
     String query,
     String currUserId,
     String roomId,
@@ -688,6 +688,11 @@ class FirebaseRoomRepository {
               ]
             }
           },
+          "highlight": {
+            "fields": {
+              "content": {}
+            }
+          },
           "_source": ["id", "edited", "content", "picture", "senderId", "timestamp"],
           "sort": [
             { "timestamp": "desc" },
@@ -700,7 +705,7 @@ class FirebaseRoomRepository {
       List<dynamic> mHits = mSearchRes.data["hits"]["hits"];
       if (mHits.isEmpty) {
         log.i("Searching for messages successful -> no values found");
-        return (<(Message, String, String)>[], pitId!, searchAfterContent);
+        return (<(Message, String, String, String?)>[], pitId!, searchAfterContent);
       }
 
       List<Message> messagesMatches = mHits.map((hit) => Message.fromEsObject(hit["_source"])).toList();
@@ -728,9 +733,14 @@ class FirebaseRoomRepository {
         senderMap[src["id"]] = (src["name"], src["picture"]);
       }
 
-      List<(Message, String, String)> retVals = [];
+      List<(Message, String, String, String?)> retVals = [];
       for (var msm in messagesMatches) {
-        retVals.add((msm, senderMap[msm.senderId]!.$1, senderMap[msm.senderId]!.$2));
+        String? highlightedContent = mHits.firstWhere(
+          (hit) => hit["_source"]["id"] == msm.id,
+          orElse: () => {"highlight": {}}
+        )["highlight"]?["content"]?.first;
+        
+        retVals.add((msm, senderMap[msm.senderId]!.$1, senderMap[msm.senderId]!.$2, highlightedContent));
       }
 
       searchAfterContent = mHits.last["sort"];

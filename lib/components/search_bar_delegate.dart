@@ -195,6 +195,7 @@ class SearchBarDelegate extends SearchDelegate {
           message: state.results[index].$1,
           name: state.results[index].$2,
           picUrl: state.results[index].$3,
+          highlightedContent: state.results[index].$4,
           currUserId: usrBloc.state.user!.id
         )
       ),
