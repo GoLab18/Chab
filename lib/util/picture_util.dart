@@ -18,8 +18,6 @@ class PictureUtil {
 
     XFile? image = await imagePicker.pickImage(
       source: ImageSource.gallery,
-      maxHeight: 320,
-      maxWidth: 320,
       imageQuality: 100
     );
 
