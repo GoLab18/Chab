@@ -66,10 +66,10 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
 
   }
 
-  String assertFriendshipStatusString([InviteStatus? status, bool isFromCurrUserInvite = true]) {
+  String assertFriendshipStatusString([InviteStatus? status, bool isFromCurrUserInvite = true, String? fromUserId]) {
     return switch (status) {
       null => "Not a friend",
-      InviteStatus.declined => "Your invite was declined",
+      InviteStatus.declined => (fromUserId! == widget.usrBloc.state.user!.id) ? "Your invite was declined" : "You declined the invite",
       InviteStatus.pending => isFromCurrUserInvite ? "Invite sent" : "Invite received",
       InviteStatus.accepted => (friendship != null) ? "Friends since ${DateUtil.getLongDateFormatFromNow(friendship!.since.toDate())}" : "Accepted"
     };
@@ -133,7 +133,7 @@ class _UserWithInviteTileState extends State<UserWithInviteTile> {
                         Text(
                           (invite == null)
                             ? assertFriendshipStatusString()
-                            : assertFriendshipStatusString(invite!.status, (invite!.fromUser != widget.user.id) ? true : false),
+                            : assertFriendshipStatusString(invite!.status, (invite!.fromUser != widget.user.id) ? true : false, invite!.fromUser),
                           maxLines: 1,
                           style: TextStyle(
                             fontSize: 12,
