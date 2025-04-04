@@ -7,7 +7,7 @@ enum RoomsStatus {
 }
 
 class RoomsState {
-  final Stream<List<Room>>? roomsList;
+  final List<Room>? roomsList;
   final RoomsStatus status;
 
   const RoomsState({
@@ -17,7 +17,7 @@ class RoomsState {
 
   const RoomsState.loading() : this();
 
-  const RoomsState.success(Stream<List<Room>> roomsList) : this(roomsList: roomsList, status: RoomsStatus.success);
+  const RoomsState.success(List<Room> roomsList) : this(roomsList: roomsList, status: RoomsStatus.success);
 
   const RoomsState.failure() : this(status: RoomsStatus.failure);
 }

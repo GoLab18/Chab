@@ -7,13 +7,13 @@ sealed class RoomsEvent extends Equatable {
   List<Object> get props => [];
 }
 
-final class UserRoomsRequested extends RoomsEvent {
-  final String userId;
+final class RoomsDataChangedDone extends RoomsEvent {
+  final List<Room> rooms;
 
-  const UserRoomsRequested({
-    required this.userId
-  });
+  const RoomsDataChangedDone(this.rooms);
   
   @override
-  List<Object> get props => [userId];
+  List<Object> get props => [rooms];
 }
+
+final class RoomsDataErr extends RoomsEvent {}

@@ -23,11 +23,8 @@ class AuthGate extends StatelessWidget {
             providers: [
               BlocProvider(
                 create: (context) => RoomsBloc(
-                  roomRepository: context.read<FirebaseRoomRepository>()
-                )..add(
-                  UserRoomsRequested(
-                    userId: state.user!.uid
-                  )
+                  roomRepository: context.read<FirebaseRoomRepository>(),
+                  userId: state.user!.uid
                 )
               ),
               BlocProvider(
