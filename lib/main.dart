@@ -13,7 +13,8 @@ import 'package:user_repository/user_repository.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  /// Initialize firebase
+  await dotenv.load();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform
   );
@@ -21,8 +22,6 @@ void main() async {
   await SharedPreferencesUtil.init();
 
   await lockPhoneOrientationVertical();
-
-  await dotenv.load();
 
   final esClient = await EsConfig.setup(dotenv.env);
 

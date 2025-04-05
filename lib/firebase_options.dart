@@ -3,17 +3,8 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Default [FirebaseOptions] for use with your Firebase apps.
-///
-/// Example:
-/// ```dart
-/// import 'firebase_options.dart';
-/// // ...
-/// await Firebase.initializeApp(
-///   options: DefaultFirebaseOptions.currentPlatform,
-/// );
-/// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -49,21 +40,21 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBZkse9EE6nyRwOYH_qSaLzgIcOsZ0HzdQ',
-    appId: '1:800575881697:android:2d493f5a4dbca05b54d2a0',
-    messagingSenderId: '800575881697',
-    projectId: 'chab-bb409',
-    storageBucket: 'chab-bb409.appspot.com',
+  static FirebaseOptions android = FirebaseOptions(
+    apiKey: dotenv.env["FIREBASE_ANDROID_API_KEY"]!,
+    appId: dotenv.env["FIREBASE_ANDROID_APP_ID"]!,
+    messagingSenderId: dotenv.env["FIREBASE_MESSAGING_SENDER_ID"]!,
+    projectId: dotenv.env["FIREBASE_PROJECT_ID"]!,
+    storageBucket: dotenv.env["FIREBASE_STORAGE_BUCKET"]!,
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyC_tz_Nbw6TZhKrn9lJ9PRHR5lSOQ8y0lE',
-    appId: '1:800575881697:ios:c8345cb2da70f4da54d2a0',
-    messagingSenderId: '800575881697',
-    projectId: 'chab-bb409',
-    storageBucket: 'chab-bb409.appspot.com',
-    iosBundleId: 'com.example.chatiseApp',
+  static FirebaseOptions ios = FirebaseOptions(
+    apiKey: dotenv.env["FIREBASE_IOS_API_KEY"]!,
+    appId: dotenv.env["FIREBASE_IOS_APP_ID"]!,
+    messagingSenderId: dotenv.env["FIREBASE_MESSAGING_SENDER_ID"]!,
+    projectId: dotenv.env["FIREBASE_PROJECT_ID"]!,
+    storageBucket: dotenv.env["FIREBASE_STORAGE_BUCKET"]!,
+    iosBundleId: dotenv.env["FIREBASE_IOS_BUNDLE_ID"]!,
   );
 
 }
